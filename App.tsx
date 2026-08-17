@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { HomeScreen } from "./components/HomeScreen";
 import { WalkCompleteScreen } from "./components/WalkCompleteScreen";
@@ -52,10 +52,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>waltz</Text>
-      <Text style={styles.dog}>🐕〰️</Text>
-      <Text style={styles.name}>Janggo</Text>
-
       {walkFinished ? (
         <WalkCompleteScreen
           seconds={seconds}
@@ -81,23 +77,8 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  logo: {
-    fontSize: 48,
-    fontWeight: "700",
-    marginBottom: 24,
-  },
-  dog: {
-    fontSize: 64,
-    marginBottom: 24,
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: "600",
-    marginBottom: 8,
+    backgroundColor: "#F8F3E9",
+    paddingHorizontal: 18,
+    paddingTop: 20,
   },
 });
