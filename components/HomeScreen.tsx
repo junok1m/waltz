@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Walk } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 
@@ -42,7 +42,7 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
   const calendar = buildMonthCalendar(now, activeDates);
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={styles.screen}>
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.logo}>waltz</Text>
@@ -53,84 +53,86 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
         </View>
       </View>
 
-      <View style={styles.calendarCard}>
-        <View style={styles.monthHeader}>
-          <Text style={styles.monthArrow}>‹</Text>
-          <Text style={styles.monthTitle}>{monthFormatter.format(now)}</Text>
-          <Text style={styles.monthArrow}>›</Text>
-        </View>
-
-        <View style={styles.weekRow}>
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <Text key={day} style={styles.weekLabel}>{day}</Text>
-          ))}
-        </View>
-
-        <View style={styles.calendarGrid}>
-          {calendar.map((cell, index) => (
-            <View key={`${cell.day ?? "blank"}-${index}`} style={styles.dayCell}>
-              {cell.day !== null && (
-                <>
-                  <Text style={styles.dayNumber}>{cell.day}</Text>
-                  <Text style={[styles.paw, !cell.active && styles.pawHidden]}>🐾</Text>
-                </>
-              )}
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.monthStats}>
-          <View style={styles.monthStatItem}>
-            <Text style={styles.monthStatIcon}>🐾</Text>
-            <View>
-              <Text style={styles.monthStatLabel}>Total walks</Text>
-              <Text style={styles.monthStatValue}>{monthWalks.length}</Text>
-            </View>
+      <View style={styles.dashboard}>
+        <View style={styles.calendarCard}>
+          <View style={styles.monthHeader}>
+            <Text style={styles.monthArrow}>‹</Text>
+            <Text style={styles.monthTitle}>{monthFormatter.format(now)}</Text>
+            <Text style={styles.monthArrow}>›</Text>
           </View>
 
-          <View style={styles.divider} />
+          <View style={styles.weekRow}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <Text key={day} style={styles.weekLabel}>{day}</Text>
+            ))}
+          </View>
 
-          <View style={styles.monthStatItem}>
-            <Text style={styles.monthStatIcon}>⛰️</Text>
-            <View>
-              <Text style={styles.monthStatLabel}>Total distance</Text>
-              <Text style={styles.monthStatValue}>{monthDistance.toFixed(1)} km</Text>
+          <View style={styles.calendarGrid}>
+            {calendar.map((cell, index) => (
+              <View key={`${cell.day ?? "blank"}-${index}`} style={styles.dayCell}>
+                {cell.day !== null && (
+                  <>
+                    <Text style={styles.dayNumber}>{cell.day}</Text>
+                    <Text style={[styles.paw, !cell.active && styles.pawHidden]}>🐾</Text>
+                  </>
+                )}
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.monthStats}>
+            <View style={styles.monthStatItem}>
+              <Text style={styles.monthStatIcon}>🐾</Text>
+              <View>
+                <Text style={styles.monthStatLabel}>Total walks</Text>
+                <Text style={styles.monthStatValue}>{monthWalks.length}</Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.monthStatItem}>
+              <Text style={styles.monthStatIcon}>⛰️</Text>
+              <View>
+                <Text style={styles.monthStatLabel}>Total distance</Text>
+                <Text style={styles.monthStatValue}>{monthDistance.toFixed(1)} km</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <Pressable style={styles.startButton} onPress={onStartWalk}>
-        <Text style={styles.startButtonText}>🐾  START WALK</Text>
-      </Pressable>
-
-      <View style={styles.quickRow}>
-        <Pressable style={styles.quickCard}>
-          <View style={[styles.quickIconBubble, styles.trophyBubble]}>
-            <Text style={styles.quickIcon}>🏆</Text>
-          </View>
-          <Text style={styles.quickTitle}>Leaderboard</Text>
-          <Text style={styles.quickText}>See how you rank</Text>
-          <Text style={styles.quickArrow}>›</Text>
+        <Pressable style={styles.startButton} onPress={onStartWalk}>
+          <Text style={styles.startButtonText}>🐾  START WALK</Text>
         </Pressable>
 
-        <Pressable style={styles.quickCard}>
-          <View style={[styles.quickIconBubble, styles.statsBubble]}>
-            <Text style={styles.quickIcon}>📊</Text>
-          </View>
-          <Text style={styles.quickTitle}>Stats</Text>
-          <Text style={styles.quickText}>Your data playground</Text>
-          <Text style={styles.quickArrow}>›</Text>
-        </Pressable>
+        <View style={styles.quickRow}>
+          <Pressable style={styles.quickCard}>
+            <View style={[styles.quickIconBubble, styles.trophyBubble]}>
+              <Text style={styles.quickIcon}>🏆</Text>
+            </View>
+            <Text style={styles.quickTitle}>Leaderboard</Text>
+            <Text style={styles.quickText}>See how you rank</Text>
+            <Text style={styles.quickArrow}>›</Text>
+          </Pressable>
 
-        <Pressable style={styles.quickCard}>
-          <View style={[styles.quickIconBubble, styles.challengeBubble]}>
-            <Text style={styles.quickIcon}>🏅</Text>
-          </View>
-          <Text style={styles.quickTitle}>Challenges</Text>
-          <Text style={styles.quickText}>Earn weird little badges</Text>
-          <Text style={styles.quickArrow}>›</Text>
-        </Pressable>
+          <Pressable style={styles.quickCard}>
+            <View style={[styles.quickIconBubble, styles.statsBubble]}>
+              <Text style={styles.quickIcon}>📊</Text>
+            </View>
+            <Text style={styles.quickTitle}>Stats</Text>
+            <Text style={styles.quickText}>Your data playground</Text>
+            <Text style={styles.quickArrow}>›</Text>
+          </Pressable>
+
+          <Pressable style={styles.quickCard}>
+            <View style={[styles.quickIconBubble, styles.challengeBubble]}>
+              <Text style={styles.quickIcon}>🏅</Text>
+            </View>
+            <Text style={styles.quickTitle}>Challenges</Text>
+            <Text style={styles.quickText}>Earn weird little badges</Text>
+            <Text style={styles.quickArrow}>›</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.bottomNav}>
@@ -156,17 +158,17 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
           <Text style={styles.navLabel}>Me</Text>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 14 },
+  screen: { flex: 1 },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: 12,
   },
   logo: {
     fontSize: 42,
@@ -191,12 +193,17 @@ const styles = StyleSheet.create({
   },
   profileDog: { fontSize: 30 },
 
+  dashboard: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingBottom: 10,
+  },
   calendarCard: {
     backgroundColor: "#FFFDF8",
     borderRadius: 28,
     paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
     shadowColor: "#6A5B47",
     shadowOpacity: 0.08,
     shadowRadius: 16,
@@ -207,7 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   monthArrow: { fontSize: 28, color: "#2B251F", paddingHorizontal: 4 },
   monthTitle: {
@@ -216,7 +223,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#2B251F",
   },
-  weekRow: { flexDirection: "row", marginBottom: 2 },
+  weekRow: { flexDirection: "row", marginBottom: 1 },
   weekLabel: {
     width: "14.2857%",
     textAlign: "center",
@@ -226,7 +233,7 @@ const styles = StyleSheet.create({
   calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
   dayCell: {
     width: "14.2857%",
-    height: 37,
+    height: 35,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -238,8 +245,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: "#EEE5D7",
-    marginTop: 10,
-    paddingTop: 12,
+    marginTop: 8,
+    paddingTop: 10,
   },
   monthStatItem: {
     flex: 1,
@@ -264,10 +271,9 @@ const styles = StyleSheet.create({
   },
 
   startButton: {
-    marginTop: 14,
     backgroundColor: "#8C9670",
     borderRadius: 22,
-    paddingVertical: 17,
+    paddingVertical: 16,
     alignItems: "center",
   },
   startButtonText: {
@@ -277,10 +283,10 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
-  quickRow: { flexDirection: "row", gap: 8, marginTop: 12 },
+  quickRow: { flexDirection: "row", gap: 8 },
   quickCard: {
     flex: 1,
-    height: 126,
+    height: 122,
     backgroundColor: "#FFFDF8",
     borderRadius: 20,
     padding: 11,
@@ -319,7 +325,6 @@ const styles = StyleSheet.create({
   },
 
   bottomNav: {
-    marginTop: 12,
     height: 68,
     borderRadius: 25,
     backgroundColor: "#FFFDF8",
