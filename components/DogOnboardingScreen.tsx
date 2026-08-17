@@ -82,7 +82,7 @@ export function DogOnboardingScreen({ userId, onCreated, onCancel, addingAnother
 
       <View style={styles.card}>
         <Text style={styles.label}>Dog’s name *</Text>
-        <TextInput value={name} onChangeText={setName} placeholder="Janggo" placeholderTextColor="#A0968D" style={styles.input} />
+        <TextInput value={name} onChangeText={setName} placeholder={addingAnotherDog ? "Wang Wang Smith" : "Woof Kim"} placeholderTextColor="#A0968D" style={styles.input} />
 
         <Text style={[styles.label, styles.sectionGap]}>Birthday 🎂</Text>
         <Text style={styles.warning}>Not yours. Your dog’s!</Text>
@@ -113,7 +113,7 @@ export function DogOnboardingScreen({ userId, onCreated, onCancel, addingAnother
       </View>
 
       <Pressable style={styles.continueButton} onPress={saveDog} disabled={busy}>
-        <Text style={styles.continueText}>{busy ? "SAVING…" : `${name.trim() || "YOUR DOG"} IS READY TO WALTZ`}</Text>
+        <Text style={styles.continueText}>{busy ? "SAVING…" : addingAnotherDog ? `${name.trim() || "NEW BUDDY"} JOINS THE PACK` : `${name.trim() || "YOUR DOG"} IS READY TO WALTZ`}</Text>
       </Pressable>
     </View>
   );
