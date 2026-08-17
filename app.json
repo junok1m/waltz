@@ -2,6 +2,7 @@
   "expo": {
     "name": "waltz",
     "slug": "waltz",
+    "scheme": "waltz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +23,9 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser",
+      "expo-sqlite"
     ]
   }
 }
