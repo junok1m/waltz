@@ -10,20 +10,31 @@ async function createSessionFromUrl(url: string) {
   const parsed = Linking.parse(url);
   const params = parsed.queryParams ?? {};
 
+  const code = typeof params.code === "string" ? params.code : undefined;
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    return data;
+  }
+
+  // Keep support for implicit-token callbacks in case the auth flow changes.
   const accessToken = typeof params.access_token === "string" ? params.access_token : undefined;
   const refreshToken = typeof params.refresh_token === "string" ? params.refresh_token : undefined;
 
-  if (!accessToken || !refreshToken) {
-    throw new Error("Google sign-in returned without a Supabase session.");
+  if (accessToken && refreshToken) {
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) throw error;
+    return data;
   }
 
-  const { data, error } = await supabase.auth.setSession({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-  });
+  const errorDescription =
+    typeof params.error_description === "string" ? params.error_description : undefined;
 
-  if (error) throw error;
-  return data;
+  throw new Error(errorDescription ?? "Google sign-in returned without an authorization code or session.");
 }
 
 export async function signInWithGoogle() {
