@@ -1,5 +1,7 @@
 import { supabase } from "../lib/supabase";
 
+const AUTH_CALLBACK_URL = "waltz://auth/callback";
+
 export async function signInWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -7,7 +9,14 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signUpWithEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: AUTH_CALLBACK_URL,
+    },
+  });
+
   if (error) throw error;
   return data;
 }
