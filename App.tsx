@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { HomeScreen } from "./components/HomeScreen";
+import { ProfileScreen } from "./components/ProfileScreen";
 import { WalkCompleteScreen } from "./components/WalkCompleteScreen";
 import { WalkingScreen } from "./components/WalkingScreen";
 import { useWalkTracker } from "./hooks/useWalkTracker";
@@ -15,13 +16,17 @@ import { createWalk, fetchWalks } from "./services/walks";
 import { Dog } from "./types/dog";
 import { Walk } from "./types/walk";
 
+type AppPage = "home" | "profile" | "add-dog";
+
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [dogs, setDogs] = useState<Dog[]>([]);
+  const [activeDogId, setActiveDogId] = useState("");
   const [dogsLoading, setDogsLoading] = useState(false);
   const [walks, setWalks] = useState<Walk[]>([]);
+  const [page, setPage] = useState<AppPage>("home");
 
   const {
     isWalking,
@@ -42,6 +47,7 @@ export default function App() {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setAuthReady(true);
+      if (!nextSession) setPage("home");
     });
 
     return () => authListener.subscription.unsubscribe();
@@ -50,6 +56,7 @@ export default function App() {
   useEffect(() => {
     if (!session?.user.id) {
       setDogs([]);
+      setActiveDogId("");
       return;
     }
 
@@ -57,15 +64,18 @@ export default function App() {
   }, [session?.user.id]);
 
   useEffect(() => {
-    if (session) {
-      loadWalks();
-    }
+    if (session) loadWalks();
   }, [session]);
 
   async function loadDogs(userId: string) {
     setDogsLoading(true);
     try {
-      setDogs(await fetchDogsForUser(userId));
+      const nextDogs = await fetchDogsForUser(userId);
+      setDogs(nextDogs);
+      setActiveDogId((current) => {
+        if (current && nextDogs.some((dog) => dog.id === current)) return current;
+        return nextDogs[0]?.id ?? "";
+      });
     } catch (error) {
       console.error("Load dogs error:", error);
     } finally {
@@ -82,7 +92,7 @@ export default function App() {
   }
 
   async function saveWalk() {
-    const activeDog = dogs[0];
+    const activeDog = dogs.find((dog) => dog.id === activeDogId) ?? dogs[0];
     if (!activeDog) {
       Alert.alert("No dog selected", "Add a walking buddy first.");
       return;
@@ -105,9 +115,7 @@ export default function App() {
     }
   }
 
-  if (!fontsLoaded || !authReady) {
-    return <View style={styles.container} />;
-  }
+  if (!fontsLoaded || !authReady) return <View style={styles.container} />;
 
   if (!session) {
     return (
@@ -118,16 +126,45 @@ export default function App() {
     );
   }
 
-  if (dogsLoading) {
-    return <View style={styles.container} />;
-  }
+  if (dogsLoading) return <View style={styles.container} />;
 
   if (dogs.length === 0) {
     return (
       <View style={styles.container}>
+        <DogOnboardingScreen userId={session.user.id} onCreated={() => loadDogs(session.user.id)} />
+        <StatusBar style="dark" />
+      </View>
+    );
+  }
+
+  if (page === "add-dog") {
+    return (
+      <View style={styles.container}>
         <DogOnboardingScreen
           userId={session.user.id}
-          onCreated={() => loadDogs(session.user.id)}
+          addingAnotherDog
+          onCancel={() => setPage("profile")}
+          onCreated={async () => {
+            await loadDogs(session.user.id);
+            setPage("profile");
+          }}
+        />
+        <StatusBar style="dark" />
+      </View>
+    );
+  }
+
+  if (page === "profile" && !isWalking && !walkFinished) {
+    return (
+      <View style={styles.container}>
+        <ProfileScreen
+          session={session}
+          dogs={dogs}
+          activeDogId={activeDogId}
+          walks={walks}
+          onSelectDog={setActiveDogId}
+          onAddDog={() => setPage("add-dog")}
+          onBackHome={() => setPage("home")}
         />
         <StatusBar style="dark" />
       </View>
@@ -137,22 +174,12 @@ export default function App() {
   return (
     <View style={styles.container}>
       {walkFinished ? (
-        <WalkCompleteScreen
-          seconds={seconds}
-          distance={distance}
-          onSave={saveWalk}
-          onDiscard={resetWalk}
-        />
+        <WalkCompleteScreen seconds={seconds} distance={distance} onSave={saveWalk} onDiscard={resetWalk} />
       ) : isWalking ? (
-        <WalkingScreen
-          seconds={seconds}
-          distance={distance}
-          onStopWalk={stopWalk}
-        />
+        <WalkingScreen seconds={seconds} distance={distance} onStopWalk={stopWalk} />
       ) : (
-        <HomeScreen walks={walks} onStartWalk={startWalk} />
+        <HomeScreen walks={walks} onStartWalk={startWalk} onOpenProfile={() => setPage("profile")} />
       )}
-
       <StatusBar style="dark" />
     </View>
   );
