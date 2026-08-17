@@ -5,6 +5,7 @@ import { calculateWalkStreak } from "../utils/streak";
 type Props = {
   walks: Walk[];
   onStartWalk: () => void;
+  onOpenProfile: () => void;
 };
 
 const monthFormatter = new Intl.DateTimeFormat("en-AU", {
@@ -33,7 +34,7 @@ function buildMonthCalendar(now: Date, activeDates: Set<number>) {
   return cells.map((day) => ({ day, active: day !== null && activeDates.has(day) }));
 }
 
-export function HomeScreen({ walks, onStartWalk }: Props) {
+export function HomeScreen({ walks, onStartWalk, onOpenProfile }: Props) {
   const now = new Date();
   const streak = calculateWalkStreak(walks);
   const monthWalks = getMonthWalks(walks, now);
@@ -48,9 +49,9 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
           <Text style={styles.logo}>waltz</Text>
           <Text style={styles.streak}>🔥 {streak} day{streak === 1 ? "" : "s"} streak</Text>
         </View>
-        <View style={styles.profileBubble}>
+        <Pressable style={styles.profileBubble} onPress={onOpenProfile}>
           <Text style={styles.profileDog}>🐕</Text>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.dashboard}>
@@ -153,10 +154,10 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
           <Text style={styles.navIcon}>♡</Text>
           <Text style={styles.navLabel}>Community</Text>
         </View>
-        <View style={styles.navItem}>
+        <Pressable style={styles.navItem} onPress={onOpenProfile}>
           <Text style={styles.navIcon}>♙</Text>
           <Text style={styles.navLabel}>Me</Text>
-        </View>
+        </Pressable>
       </View>
     </View>
   );
@@ -164,203 +165,47 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  logo: {
-    fontFamily: "Schoolbell_400Regular",
-    fontSize: 52,
-    letterSpacing: 1,
-    color: "#1D1A17",
-    lineHeight: 56,
-  },
-  streak: {
-    marginTop: 4,
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#E87859",
-  },
-  profileBubble: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: "#F1E7D7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  logo: { fontFamily: "Schoolbell_400Regular", fontSize: 52, letterSpacing: 1, color: "#1D1A17", lineHeight: 56 },
+  streak: { marginTop: 4, fontSize: 22, fontWeight: "700", color: "#E87859" },
+  profileBubble: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
   profileDog: { fontSize: 30 },
-
-  dashboard: {
-    flex: 1,
-    justifyContent: "space-between",
-    paddingBottom: 10,
-  },
-  calendarCard: {
-    backgroundColor: "#FFFDF8",
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 12,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 2,
-  },
-  monthHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
+  dashboard: { flex: 1, justifyContent: "space-between", paddingBottom: 10 },
+  calendarCard: { backgroundColor: "#FFFDF8", borderRadius: 28, paddingHorizontal: 18, paddingTop: 12, paddingBottom: 12, shadowColor: "#6A5B47", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  monthHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   monthArrow: { fontSize: 28, color: "#2B251F", paddingHorizontal: 4 },
-  monthTitle: {
-    textAlign: "center",
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#2B251F",
-  },
+  monthTitle: { textAlign: "center", fontSize: 22, fontWeight: "600", color: "#2B251F" },
   weekRow: { flexDirection: "row", marginBottom: 1 },
-  weekLabel: {
-    width: "14.2857%",
-    textAlign: "center",
-    fontSize: 11,
-    color: "#756B60",
-  },
+  weekLabel: { width: "14.2857%", textAlign: "center", fontSize: 11, color: "#756B60" },
   calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
-  dayCell: {
-    width: "14.2857%",
-    height: 35,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  dayCell: { width: "14.2857%", height: 35, alignItems: "center", justifyContent: "center" },
   dayNumber: { fontSize: 14, color: "#2D2823", lineHeight: 17 },
   paw: { fontSize: 9, marginTop: -1, lineHeight: 10 },
   pawHidden: { opacity: 0 },
-  monthStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#EEE5D7",
-    marginTop: 8,
-    paddingTop: 10,
-  },
-  monthStatItem: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 9,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  monthStats: { flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: "#EEE5D7", marginTop: 8, paddingTop: 10 },
+  monthStatItem: { flex: 1, flexDirection: "row", gap: 9, alignItems: "center", justifyContent: "center" },
   monthStatIcon: { fontSize: 21 },
   monthStatLabel: { fontSize: 12, color: "#756B60" },
-  monthStatValue: {
-    marginTop: 1,
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1D1A17",
-  },
-  divider: {
-    width: 1,
-    height: 38,
-    backgroundColor: "#EEE5D7",
-    marginHorizontal: 10,
-  },
-
-  startButton: {
-    backgroundColor: "#8C9670",
-    borderRadius: 22,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  startButtonText: {
-    fontFamily: "Schoolbell_400Regular",
-    color: "#FFFDF8",
-    fontSize: 26,
-    letterSpacing: 1.5,
-  },
-
+  monthStatValue: { marginTop: 1, fontSize: 22, fontWeight: "700", color: "#1D1A17" },
+  divider: { width: 1, height: 38, backgroundColor: "#EEE5D7", marginHorizontal: 10 },
+  startButton: { backgroundColor: "#8C9670", borderRadius: 22, paddingVertical: 16, alignItems: "center" },
+  startButtonText: { fontFamily: "Schoolbell_400Regular", color: "#FFFDF8", fontSize: 26, letterSpacing: 1.5 },
   quickRow: { flexDirection: "row", gap: 8 },
-  quickCard: {
-    flex: 1,
-    height: 122,
-    backgroundColor: "#FFFDF8",
-    borderRadius: 20,
-    padding: 11,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.05,
-    shadowRadius: 9,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 1,
-  },
-  quickIconBubble: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 7,
-  },
+  quickCard: { flex: 1, height: 122, backgroundColor: "#FFFDF8", borderRadius: 20, padding: 11, shadowColor: "#6A5B47", shadowOpacity: 0.05, shadowRadius: 9, shadowOffset: { width: 0, height: 5 }, elevation: 1 },
+  quickIconBubble: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", marginBottom: 7 },
   trophyBubble: { backgroundColor: "#F6EBC4" },
   statsBubble: { backgroundColor: "#E5EBDD" },
   challengeBubble: { backgroundColor: "#F7DDD4" },
   quickIcon: { fontSize: 22 },
   quickTitle: { fontSize: 14, fontWeight: "700", color: "#1D1A17" },
-  quickText: {
-    marginTop: 3,
-    fontSize: 10,
-    lineHeight: 13,
-    color: "#6A625A",
-    paddingRight: 8,
-  },
-  quickArrow: {
-    position: "absolute",
-    right: 9,
-    bottom: 8,
-    fontSize: 22,
-    color: "#423C36",
-  },
-
-  bottomNav: {
-    height: 68,
-    borderRadius: 25,
-    backgroundColor: "#FFFDF8",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 4,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.07,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 2,
-  },
+  quickText: { marginTop: 3, fontSize: 10, lineHeight: 13, color: "#6A625A", paddingRight: 8 },
+  quickArrow: { position: "absolute", right: 9, bottom: 8, fontSize: 22, color: "#423C36" },
+  bottomNav: { height: 68, borderRadius: 25, backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: 4, shadowColor: "#6A5B47", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 2 },
   navItem: { width: 60, alignItems: "center", justifyContent: "center" },
   navIcon: { fontSize: 23, color: "#332E29" },
   navIconActive: { fontSize: 23, color: "#78845C" },
   navLabel: { marginTop: 2, fontSize: 10, color: "#443D37" },
-  navLabelActive: {
-    marginTop: 2,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#78845C",
-  },
-  pawNavButton: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: "#89936B",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -22,
-    shadowColor: "#53603E",
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
+  navLabelActive: { marginTop: 2, fontSize: 10, fontWeight: "700", color: "#78845C" },
+  pawNavButton: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#89936B", alignItems: "center", justifyContent: "center", marginTop: -22, shadowColor: "#53603E", shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   pawNavIcon: { fontSize: 27 },
 });
