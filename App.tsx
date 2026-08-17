@@ -98,8 +98,15 @@ export default function App() {
       return;
     }
 
+    if (!session?.user.id) {
+      Alert.alert("Session expired", "Please sign in again before saving this walk.");
+      return;
+    }
+
     try {
       await createWalk({
+        userId: session.user.id,
+        dogId: activeDog.id,
         dogName: activeDog.name,
         distanceKm: distance,
         durationSeconds: seconds,
