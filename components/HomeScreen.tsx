@@ -171,11 +171,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   logo: {
-    fontSize: 42,
-    fontWeight: "700",
-    letterSpacing: 3,
+    fontFamily: "Schoolbell_400Regular",
+    fontSize: 52,
+    letterSpacing: 1,
     color: "#1D1A17",
-    lineHeight: 46,
+    lineHeight: 56,
   },
   streak: {
     marginTop: 4,
@@ -277,10 +277,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   startButtonText: {
+    fontFamily: "Schoolbell_400Regular",
     color: "#FFFDF8",
-    fontSize: 19,
-    fontWeight: "700",
-    letterSpacing: 2,
+    fontSize: 26,
+    letterSpacing: 1.5,
   },
 
   quickRow: { flexDirection: "row", gap: 8 },
