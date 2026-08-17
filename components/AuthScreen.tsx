@@ -1,12 +1,24 @@
 import { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { signInWithEmail, signUpWithEmail } from "../services/auth";
+import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/auth";
 
 export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-up");
   const [busy, setBusy] = useState(false);
+
+  async function submitGoogleAuth() {
+    setBusy(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Something went wrong";
+      Alert.alert("Google sign-in failed", message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submitEmailAuth() {
     if (!email.trim() || password.length < 6) {
@@ -43,12 +55,16 @@ export function AuthScreen() {
       </View>
 
       <View style={styles.card}>
-        <Pressable style={[styles.socialButton, styles.appleButton]}>
+        <Pressable style={[styles.socialButton, styles.appleButton]} disabled={busy}>
           <Text style={styles.appleText}>  Continue with Apple</Text>
         </Pressable>
 
-        <Pressable style={[styles.socialButton, styles.googleButton]}>
-          <Text style={styles.googleText}>G  Continue with Google</Text>
+        <Pressable
+          style={[styles.socialButton, styles.googleButton, busy && styles.buttonDisabled]}
+          onPress={submitGoogleAuth}
+          disabled={busy}
+        >
+          <Text style={styles.googleText}>{busy ? "Opening Google…" : "G  Continue with Google"}</Text>
         </Pressable>
 
         <View style={styles.orRow}>
@@ -82,13 +98,13 @@ export function AuthScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => setMode(mode === "sign-up" ? "sign-in" : "sign-up")}>
+        <Pressable onPress={() => setMode(mode === "sign-up" ? "sign-in" : "sign-up")} disabled={busy}>
           <Text style={styles.switchText}>
             {mode === "sign-up" ? "Already have an account? Log in" : "New here? Create an account"}
           </Text>
         </Pressable>
 
-        <Text style={styles.note}>Apple and Google are next. The buttons are dressed and waiting for their OAuth paperwork.</Text>
+        <Text style={styles.note}>Google is live. Apple is next in line for its paperwork.</Text>
       </View>
     </View>
   );
@@ -117,6 +133,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   socialButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  buttonDisabled: { opacity: 0.6 },
   appleButton: { backgroundColor: "#171513" },
   appleText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   googleButton: { borderWidth: 1, borderColor: "#DED6CB", backgroundColor: "#FFF" },
