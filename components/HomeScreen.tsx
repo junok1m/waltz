@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Walk } from "../types/walk";
+import { calculateWalkStreak } from "../utils/streak";
 
 type Props = {
   walks: Walk[];
@@ -8,10 +9,13 @@ type Props = {
 
 export function HomeScreen({ walks, onStartWalk }: Props) {
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
+  const streak = calculateWalkStreak(walks);
 
   return (
     <>
-      <Text style={styles.streak}>🔥 0 day streak</Text>
+      <Text style={styles.streak}>
+        🔥 {streak} day{streak === 1 ? "" : "s"} streak
+      </Text>
       <Text style={styles.stats}>
         🐾 {walks.length} walks · {totalDistance.toFixed(2)} km
       </Text>
