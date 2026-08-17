@@ -5,9 +5,11 @@ import { createDog } from "../services/dogs";
 type Props = {
   userId: string;
   onCreated: () => void;
+  onCancel?: () => void;
+  addingAnotherDog?: boolean;
 };
 
-export function DogOnboardingScreen({ userId, onCreated }: Props) {
+export function DogOnboardingScreen({ userId, onCreated, onCancel, addingAnotherDog = false }: Props) {
   const currentYear = new Date().getFullYear();
   const [name, setName] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -64,20 +66,23 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
   return (
     <View style={styles.screen}>
       <View>
-        <Text style={styles.eyebrow}>FIRST THINGS FIRST</Text>
-        <Text style={styles.title}>Who’s your walking buddy? 🐕</Text>
-        <Text style={styles.subtitle}>You can add more dogs later. Multi-dog households, we see you.</Text>
+        {onCancel && (
+          <Pressable onPress={onCancel} style={styles.cancelButton}>
+            <Text style={styles.cancelText}>‹ Back</Text>
+          </Pressable>
+        )}
+        <Text style={styles.eyebrow}>{addingAnotherDog ? "THE MORE THE MERRIER" : "FIRST THINGS FIRST"}</Text>
+        <Text style={styles.title}>{addingAnotherDog ? "Add another walking buddy 🐕" : "Who’s your walking buddy? 🐕"}</Text>
+        <Text style={styles.subtitle}>
+          {addingAnotherDog
+            ? "Every dog gets their own profile, stats and tiny neighborhood fame."
+            : "You can add more dogs later. Multi-dog households, we see you."}
+        </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.label}>Dog’s name *</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Janggo"
-          placeholderTextColor="#A0968D"
-          style={styles.input}
-        />
+        <TextInput value={name} onChangeText={setName} placeholder="Janggo" placeholderTextColor="#A0968D" style={styles.input} />
 
         <Text style={[styles.label, styles.sectionGap]}>Birthday 🎂</Text>
         <Text style={styles.warning}>Not yours. Your dog’s!</Text>
@@ -86,50 +91,20 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
         <View style={styles.dateRow}>
           <View style={styles.yearField}>
             <Text style={styles.miniLabel}>Year *</Text>
-            <TextInput
-              value={birthYear}
-              onChangeText={setBirthYear}
-              placeholder="2021"
-              placeholderTextColor="#A0968D"
-              keyboardType="number-pad"
-              maxLength={4}
-              style={styles.input}
-            />
+            <TextInput value={birthYear} onChangeText={setBirthYear} placeholder="2021" placeholderTextColor="#A0968D" keyboardType="number-pad" maxLength={4} style={styles.input} />
           </View>
           <View style={styles.smallField}>
             <Text style={styles.miniLabel}>Month</Text>
-            <TextInput
-              value={birthMonth}
-              onChangeText={setBirthMonth}
-              placeholder="6"
-              placeholderTextColor="#A0968D"
-              keyboardType="number-pad"
-              maxLength={2}
-              style={styles.input}
-            />
+            <TextInput value={birthMonth} onChangeText={setBirthMonth} placeholder="6" placeholderTextColor="#A0968D" keyboardType="number-pad" maxLength={2} style={styles.input} />
           </View>
           <View style={styles.smallField}>
             <Text style={styles.miniLabel}>Day</Text>
-            <TextInput
-              value={birthDay}
-              onChangeText={setBirthDay}
-              placeholder="1"
-              placeholderTextColor="#A0968D"
-              keyboardType="number-pad"
-              maxLength={2}
-              style={styles.input}
-            />
+            <TextInput value={birthDay} onChangeText={setBirthDay} placeholder="1" placeholderTextColor="#A0968D" keyboardType="number-pad" maxLength={2} style={styles.input} />
           </View>
         </View>
 
         <Text style={[styles.label, styles.sectionGap]}>Breed</Text>
-        <TextInput
-          value={breed}
-          onChangeText={setBreed}
-          placeholder="Optional"
-          placeholderTextColor="#A0968D"
-          style={styles.input}
-        />
+        <TextInput value={breed} onChangeText={setBreed} placeholder="Optional" placeholderTextColor="#A0968D" style={styles.input} />
 
         <View style={styles.photoPlaceholder}>
           <Text style={styles.photoDog}>🐕</Text>
@@ -146,6 +121,8 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between", paddingBottom: 22 },
+  cancelButton: { alignSelf: "flex-start", marginBottom: 8, paddingVertical: 4, paddingRight: 12 },
+  cancelText: { fontSize: 15, fontWeight: "700", color: "#6D645B" },
   eyebrow: { fontSize: 12, fontWeight: "800", letterSpacing: 1.8, color: "#8C9670" },
   title: { marginTop: 10, fontSize: 30, lineHeight: 36, fontWeight: "800", color: "#1D1A17" },
   subtitle: { marginTop: 10, fontSize: 15, lineHeight: 22, color: "#726960" },
