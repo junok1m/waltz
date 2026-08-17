@@ -1,40 +1,36 @@
-import * as Linking from "expo-linking";
+import { makeRedirectUri } from "expo-auth-session";
+import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as WebBrowser from "expo-web-browser";
 import { supabase } from "../lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const AUTH_CALLBACK_URL = Linking.createURL("auth/callback");
+const AUTH_CALLBACK_URL = makeRedirectUri({
+  scheme: "waltz",
+  path: "auth/callback",
+});
 
 async function createSessionFromUrl(url: string) {
-  const parsed = Linking.parse(url);
-  const params = parsed.queryParams ?? {};
+  const { params, errorCode } = QueryParams.getQueryParams(url);
 
-  const code = typeof params.code === "string" ? params.code : undefined;
-  if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
-    return data;
+  if (errorCode) {
+    throw new Error(String(params.error_description ?? errorCode));
   }
 
-  // Keep support for implicit-token callbacks in case the auth flow changes.
   const accessToken = typeof params.access_token === "string" ? params.access_token : undefined;
   const refreshToken = typeof params.refresh_token === "string" ? params.refresh_token : undefined;
 
-  if (accessToken && refreshToken) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (error) throw error;
-    return data;
+  if (!accessToken || !refreshToken) {
+    throw new Error("Google sign-in returned without a Supabase session.");
   }
 
-  const errorDescription =
-    typeof params.error_description === "string" ? params.error_description : undefined;
+  const { data, error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
 
-  throw new Error(errorDescription ?? "Google sign-in returned without an authorization code or session.");
+  if (error) throw error;
+  return data;
 }
 
 export async function signInWithGoogle() {
