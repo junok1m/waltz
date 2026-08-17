@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { Schoolbell_400Regular, useFonts } from "@expo-google-fonts/schoolbell";
 import { HomeScreen } from "./components/HomeScreen";
 import { WalkCompleteScreen } from "./components/WalkCompleteScreen";
 import { WalkingScreen } from "./components/WalkingScreen";
@@ -9,6 +10,7 @@ import { createWalk, fetchWalks } from "./services/walks";
 import { Walk } from "./types/walk";
 
 export default function App() {
+  const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
   const [walks, setWalks] = useState<Walk[]>([]);
   const {
     isWalking,
@@ -48,6 +50,10 @@ export default function App() {
       console.error(error);
       Alert.alert("Save failed", message);
     }
+  }
+
+  if (!fontsLoaded) {
+    return <View style={styles.container} />;
   }
 
   return (
