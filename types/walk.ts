@@ -9,4 +9,6 @@ export type Walk = {
   distance_km: number;
   duration_seconds: number;
   ended_at: string;
+  route_points?: Point[] | null;
+  share_route?: boolean;
 };
