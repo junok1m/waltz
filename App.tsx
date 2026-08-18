@@ -24,7 +24,8 @@ export default function App() {
   const [dogsLoading, setDogsLoading] = useState(false);
   const [walks, setWalks] = useState<Walk[]>([]);
   const [tab, setTab] = useState<AppTab>("home");
-  const { isWalking, walkFinished, seconds, distance, startWalk, stopWalk, resetWalk } = useWalkTracker();
+  const [shareRoute, setShareRoute] = useState(false);
+  const { isWalking, walkFinished, seconds, distance, points, startWalk, stopWalk, resetWalk } = useWalkTracker();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
@@ -33,17 +34,16 @@ export default function App() {
   }, []);
 
   useEffect(() => { if (!session?.user.id) { setDogs([]); setWalks([]); setTab("home"); return; } loadDogs(session.user.id); loadWalks(); }, [session?.user.id]);
-
   async function loadDogs(userId: string) { setDogsLoading(true); try { setDogs(await fetchDogsForUser(userId)); } catch (error) { console.error("Load dogs error:", error); } finally { setDogsLoading(false); } }
   async function loadWalks() { try { setWalks(await fetchWalks()); } catch (error) { console.error("Load walks error:", error); } }
-  function beginWalk() { setTab("home"); startWalk(); }
+  function beginWalk(shouldShare = false) { setShareRoute(shouldShare); setTab("home"); startWalk(); }
 
   async function saveWalk() {
     const activeDog = dogs[0];
     if (!activeDog) { Alert.alert("No dog selected", "Add a walking buddy first."); return; }
     if (!session?.user.id) { Alert.alert("Session expired", "Please sign in again before saving this walk."); return; }
     try {
-      await createWalk({ userId: session.user.id, dogId: activeDog.id, dogName: activeDog.name, distanceKm: distance, durationSeconds: seconds });
+      await createWalk({ userId: session.user.id, dogId: activeDog.id, dogName: activeDog.name, distanceKm: distance, durationSeconds: seconds, routePoints: points, shareRoute });
       await loadWalks();
       Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
       resetWalk();
@@ -54,7 +54,6 @@ export default function App() {
   }
 
   async function signOut() { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); }
-
   if (!fontsLoaded || !authReady) return <View style={styles.container} />;
   if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
   if (dogsLoading) return <View style={styles.container} />;
@@ -62,8 +61,8 @@ export default function App() {
 
   let content;
   if (walkFinished) content = <WalkCompleteScreen seconds={seconds} distance={distance} onSave={saveWalk} onDiscard={resetWalk} />;
-  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} onStopWalk={stopWalk} />;
-  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={dogs[0]} onBack={() => setTab("home")} onStartWalk={beginWalk} onSignOut={signOut} />;
+  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={dogs[0].name} onStopWalk={stopWalk} />;
+  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={dogs[0]} onBack={() => setTab("home")} onStartWalk={() => beginWalk(false)} onSignOut={signOut} />;
   else content = <HomeScreen walks={walks} onStartWalk={beginWalk} onNavigate={setTab} />;
 
   return <View style={styles.container}>{content}<StatusBar style="dark" /></View>;
