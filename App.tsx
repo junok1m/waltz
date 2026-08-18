@@ -41,7 +41,7 @@ export default function App() {
   const activeDog=dogs[0];let content;
   if(walkFinished)content=<WalkCompleteScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} shareRoute={shareRoute} tags={walkTags} onTagsChange={setWalkTags} onShareRouteChange={setShareRoute} onSave={saveWalk} onDiscard={discardWalk}/>;
   else if(isWalking)content=<WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} onStopWalk={stopWalk}/>;
-  else if(tab!=="home")content=<HubScreen tab={tab} walks={walks} badges={badges} dog={activeDog} onNavigate={setTab} onStartWalk={()=>beginWalk(false)} onSignOut={signOut}/>;
+  else if(tab!=="home")content=<HubScreen tab={tab} walks={walks} badges={badges} dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} onSignOut={signOut}/>;
   else content=<HomeScreen walks={walks} onStartWalk={beginWalk} onNavigate={setTab}/>;
   return <View style={styles.container}>{content}<StatusBar style="dark"/></View>;
 }
