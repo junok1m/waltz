@@ -59,10 +59,11 @@ export default function App() {
   if (dogsLoading) return <View style={styles.container} />;
   if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={() => loadDogs(session.user.id)} /><StatusBar style="dark" /></View>;
 
+  const activeDog = dogs[0];
   let content;
-  if (walkFinished) content = <WalkCompleteScreen seconds={seconds} distance={distance} onSave={saveWalk} onDiscard={resetWalk} />;
-  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={dogs[0].name} onStopWalk={stopWalk} />;
-  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={dogs[0]} onBack={() => setTab("home")} onStartWalk={() => beginWalk(false)} onSignOut={signOut} />;
+  if (walkFinished) content = <WalkCompleteScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} shareRoute={shareRoute} onShareRouteChange={setShareRoute} onSave={saveWalk} onDiscard={resetWalk} />;
+  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} onStopWalk={stopWalk} />;
+  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={activeDog} onBack={() => setTab("home")} onStartWalk={() => beginWalk(false)} onSignOut={signOut} />;
   else content = <HomeScreen walks={walks} onStartWalk={beginWalk} onNavigate={setTab} />;
 
   return <View style={styles.container}>{content}<StatusBar style="dark" /></View>;
