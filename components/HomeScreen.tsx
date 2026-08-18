@@ -1,4 +1,14 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ChartColumn,
+  Dog,
+  Flame,
+  House,
+  MapPin,
+  Medal,
+  PawPrint,
+  Trophy,
+} from "@sketchyicons/react-native";
 import { Walk } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 
@@ -46,7 +56,10 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.logo}>waltz</Text>
-          <Text style={styles.streak}>🔥 {streak} day{streak === 1 ? "" : "s"} streak</Text>
+          <View style={styles.streakRow}>
+            <Flame size={22} strokeWidth={2} color="#E87859" />
+            <Text style={styles.streak}>{streak} day{streak === 1 ? "" : "s"} streak</Text>
+          </View>
         </View>
         <View style={styles.profileBubble}>
           <Text style={styles.profileDog}>🐕</Text>
@@ -102,13 +115,16 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
         </View>
 
         <Pressable style={styles.startButton} onPress={onStartWalk}>
-          <Text style={styles.startButtonText}>🐾  START WALK</Text>
+          <View style={styles.startButtonContent}>
+            <PawPrint size={28} strokeWidth={2} color="#FFFDF8" />
+            <Text style={styles.startButtonText}>START WALK</Text>
+          </View>
         </Pressable>
 
         <View style={styles.quickRow}>
           <Pressable style={styles.quickCard}>
             <View style={[styles.quickIconBubble, styles.trophyBubble]}>
-              <Text style={styles.quickIcon}>🏆</Text>
+              <Trophy size={24} strokeWidth={2} color="#1D1A17" />
             </View>
             <Text style={styles.quickTitle}>Leaderboard</Text>
             <Text style={styles.quickText}>See how you rank</Text>
@@ -117,7 +133,7 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
 
           <Pressable style={styles.quickCard}>
             <View style={[styles.quickIconBubble, styles.statsBubble]}>
-              <Text style={styles.quickIcon}>📊</Text>
+              <ChartColumn size={24} strokeWidth={2} color="#1D1A17" />
             </View>
             <Text style={styles.quickTitle}>Stats</Text>
             <Text style={styles.quickText}>Your data playground</Text>
@@ -126,7 +142,7 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
 
           <Pressable style={styles.quickCard}>
             <View style={[styles.quickIconBubble, styles.challengeBubble]}>
-              <Text style={styles.quickIcon}>🏅</Text>
+              <Medal size={24} strokeWidth={2} color="#1D1A17" />
             </View>
             <Text style={styles.quickTitle}>Challenges</Text>
             <Text style={styles.quickText}>Earn weird little badges</Text>
@@ -137,16 +153,16 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
 
       <View style={styles.bottomNav}>
         <View style={styles.navItem}>
-          <Text style={styles.navIconActive}>⌂</Text>
+          <House size={23} strokeWidth={2} color="#78845C" />
           <Text style={styles.navLabelActive}>Home</Text>
         </View>
         <View style={styles.navItem}>
-          <Text style={styles.navIcon}>⌖</Text>
+          <MapPin size={23} strokeWidth={2} color="#332E29" />
           <Text style={styles.navLabel}>Map</Text>
         </View>
 
         <Pressable style={styles.pawNavButton} onPress={onStartWalk}>
-          <Text style={styles.pawNavIcon}>🐾</Text>
+          <PawPrint size={28} strokeWidth={2} color="#FFFDF8" />
         </Pressable>
 
         <View style={styles.navItem}>
@@ -154,7 +170,7 @@ export function HomeScreen({ walks, onStartWalk }: Props) {
           <Text style={styles.navLabel}>Community</Text>
         </View>
         <View style={styles.navItem}>
-          <Text style={styles.navIcon}>♙</Text>
+          <Dog size={23} strokeWidth={2} color="#332E29" />
           <Text style={styles.navLabel}>Me</Text>
         </View>
       </View>
@@ -177,8 +193,13 @@ const styles = StyleSheet.create({
     color: "#1D1A17",
     lineHeight: 56,
   },
-  streak: {
+  streakRow: {
     marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  streak: {
     fontSize: 22,
     fontWeight: "700",
     color: "#E87859",
@@ -276,6 +297,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
+  startButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   startButtonText: {
     fontFamily: "Schoolbell_400Regular",
     color: "#FFFDF8",
@@ -307,7 +333,6 @@ const styles = StyleSheet.create({
   trophyBubble: { backgroundColor: "#F6EBC4" },
   statsBubble: { backgroundColor: "#E5EBDD" },
   challengeBubble: { backgroundColor: "#F7DDD4" },
-  quickIcon: { fontSize: 22 },
   quickTitle: { fontSize: 14, fontWeight: "700", color: "#1D1A17" },
   quickText: {
     marginTop: 3,
@@ -340,7 +365,6 @@ const styles = StyleSheet.create({
   },
   navItem: { width: 60, alignItems: "center", justifyContent: "center" },
   navIcon: { fontSize: 23, color: "#332E29" },
-  navIconActive: { fontSize: 23, color: "#78845C" },
   navLabel: { marginTop: 2, fontSize: 10, color: "#443D37" },
   navLabelActive: {
     marginTop: 2,
@@ -362,5 +386,4 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  pawNavIcon: { fontSize: 27 },
 });
