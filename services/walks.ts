@@ -11,6 +11,7 @@ export async function createWalk(input: {
   userId: string;
   dogId: string;
   dogName: string;
+  title: string;
   distanceKm: number;
   durationSeconds: number;
   routePoints: Point[];
@@ -22,6 +23,7 @@ export async function createWalk(input: {
     .insert({
       user_id: input.userId,
       dog_name: input.dogName,
+      title: input.title.trim(),
       distance_km: input.distanceKm,
       duration_seconds: input.durationSeconds,
       route_points: input.routePoints,
