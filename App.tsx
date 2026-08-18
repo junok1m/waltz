@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { HomeScreen } from "./components/HomeScreen";
+import { AppTab, HubScreen } from "./components/HubScreen";
 import { WalkCompleteScreen } from "./components/WalkCompleteScreen";
 import { WalkingScreen } from "./components/WalkingScreen";
 import { useWalkTracker } from "./hooks/useWalkTracker";
@@ -22,148 +23,49 @@ export default function App() {
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [dogsLoading, setDogsLoading] = useState(false);
   const [walks, setWalks] = useState<Walk[]>([]);
-
-  const {
-    isWalking,
-    walkFinished,
-    seconds,
-    distance,
-    startWalk,
-    stopWalk,
-    resetWalk,
-  } = useWalkTracker();
+  const [tab, setTab] = useState<AppTab>("home");
+  const { isWalking, walkFinished, seconds, distance, startWalk, stopWalk, resetWalk } = useWalkTracker();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setAuthReady(true);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      setAuthReady(true);
-    });
-
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => { setSession(nextSession); setAuthReady(true); });
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!session?.user.id) {
-      setDogs([]);
-      return;
-    }
+  useEffect(() => { if (!session?.user.id) { setDogs([]); setWalks([]); setTab("home"); return; } loadDogs(session.user.id); loadWalks(); }, [session?.user.id]);
 
-    loadDogs(session.user.id);
-  }, [session?.user.id]);
-
-  useEffect(() => {
-    if (session) {
-      loadWalks();
-    }
-  }, [session]);
-
-  async function loadDogs(userId: string) {
-    setDogsLoading(true);
-    try {
-      setDogs(await fetchDogsForUser(userId));
-    } catch (error) {
-      console.error("Load dogs error:", error);
-    } finally {
-      setDogsLoading(false);
-    }
-  }
-
-  async function loadWalks() {
-    try {
-      setWalks(await fetchWalks());
-    } catch (error) {
-      console.error("Load walks error:", error);
-    }
-  }
+  async function loadDogs(userId: string) { setDogsLoading(true); try { setDogs(await fetchDogsForUser(userId)); } catch (error) { console.error("Load dogs error:", error); } finally { setDogsLoading(false); } }
+  async function loadWalks() { try { setWalks(await fetchWalks()); } catch (error) { console.error("Load walks error:", error); } }
+  function beginWalk() { setTab("home"); startWalk(); }
 
   async function saveWalk() {
     const activeDog = dogs[0];
-    if (!activeDog) {
-      Alert.alert("No dog selected", "Add a walking buddy first.");
-      return;
-    }
-
+    if (!activeDog) { Alert.alert("No dog selected", "Add a walking buddy first."); return; }
     try {
-      await createWalk({
-        dogName: activeDog.name,
-        distanceKm: distance,
-        durationSeconds: seconds,
-      });
-
+      await createWalk({ dogName: activeDog.name, distanceKm: distance, durationSeconds: seconds });
       await loadWalks();
       Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
       resetWalk();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      console.error(error);
-      Alert.alert("Save failed", message);
+      console.error(error); Alert.alert("Save failed", message);
     }
   }
 
-  if (!fontsLoaded || !authReady) {
-    return <View style={styles.container} />;
-  }
+  async function signOut() { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); }
 
-  if (!session) {
-    return (
-      <View style={styles.container}>
-        <AuthScreen />
-        <StatusBar style="dark" />
-      </View>
-    );
-  }
+  if (!fontsLoaded || !authReady) return <View style={styles.container} />;
+  if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
+  if (dogsLoading) return <View style={styles.container} />;
+  if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={() => loadDogs(session.user.id)} /><StatusBar style="dark" /></View>;
 
-  if (dogsLoading) {
-    return <View style={styles.container} />;
-  }
+  let content;
+  if (walkFinished) content = <WalkCompleteScreen seconds={seconds} distance={distance} onSave={saveWalk} onDiscard={resetWalk} />;
+  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} onStopWalk={stopWalk} />;
+  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={dogs[0]} onBack={() => setTab("home")} onStartWalk={beginWalk} onSignOut={signOut} />;
+  else content = <HomeScreen walks={walks} onStartWalk={beginWalk} onNavigate={setTab} />;
 
-  if (dogs.length === 0) {
-    return (
-      <View style={styles.container}>
-        <DogOnboardingScreen
-          userId={session.user.id}
-          onCreated={() => loadDogs(session.user.id)}
-        />
-        <StatusBar style="dark" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      {walkFinished ? (
-        <WalkCompleteScreen
-          seconds={seconds}
-          distance={distance}
-          onSave={saveWalk}
-          onDiscard={resetWalk}
-        />
-      ) : isWalking ? (
-        <WalkingScreen
-          seconds={seconds}
-          distance={distance}
-          onStopWalk={stopWalk}
-        />
-      ) : (
-        <HomeScreen walks={walks} onStartWalk={startWalk} />
-      )}
-
-      <StatusBar style="dark" />
-    </View>
-  );
+  return <View style={styles.container}>{content}<StatusBar style="dark" /></View>;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F3E9",
-    paddingHorizontal: 18,
-    paddingTop: 68,
-    paddingBottom: 8,
-  },
-});
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: "#F8F3E9", paddingHorizontal: 18, paddingTop: 68, paddingBottom: 8 } });
