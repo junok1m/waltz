@@ -7,14 +7,14 @@ export async function fetchDogsForUser(userId: string): Promise<Dog[]> {
   return data ?? [];
 }
 
-export async function createDog(input: { ownerId:string; name:string; birthYear:number; birthMonth?:number|null; birthDay?:number|null; breed?:string|null }) {
-  const { data, error } = await supabase.from("dogs").insert({ owner_id:input.ownerId,name:input.name.trim(),birth_year:input.birthYear,birth_month:input.birthMonth??null,birth_day:input.birthDay??null,breed:input.breed?.trim()||null }).select("*").single();
+export async function createDog(input: { ownerId:string; name:string; birthYear:number; birthMonth?:number|null; birthDay?:number|null; breed?:string|null; profileLine?:string|null }) {
+  const { data, error } = await supabase.from("dogs").insert({ owner_id:input.ownerId,name:input.name.trim(),birth_year:input.birthYear,birth_month:input.birthMonth??null,birth_day:input.birthDay??null,breed:input.breed?.trim()||null,profile_line:input.profileLine?.trim()||null }).select("*").single();
   if (error) throw error;
   return data as Dog;
 }
 
-export async function updateDog(dogId:string,input:{name:string;breed?:string|null;avatarUrl?:string|null;birthYear:number;birthMonth?:number|null;birthDay?:number|null}) {
-  const values:any={name:input.name.trim(),breed:input.breed?.trim()||null,birth_year:input.birthYear,birth_month:input.birthMonth??null,birth_day:input.birthDay??null};
+export async function updateDog(dogId:string,input:{name:string;breed?:string|null;profileLine?:string|null;avatarUrl?:string|null;birthYear:number;birthMonth?:number|null;birthDay?:number|null}) {
+  const values:any={name:input.name.trim(),breed:input.breed?.trim()||null,profile_line:input.profileLine?.trim()||null,birth_year:input.birthYear,birth_month:input.birthMonth??null,birth_day:input.birthDay??null};
   if(input.avatarUrl!==undefined) values.avatar_url=input.avatarUrl;
   const {data,error}=await supabase.from("dogs").update(values).eq("id",dogId).select("*").single();
   if(error) throw error;
