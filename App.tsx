@@ -41,8 +41,9 @@ export default function App() {
   async function saveWalk() {
     const activeDog = dogs[0];
     if (!activeDog) { Alert.alert("No dog selected", "Add a walking buddy first."); return; }
+    if (!session?.user.id) { Alert.alert("Session expired", "Please sign in again before saving this walk."); return; }
     try {
-      await createWalk({ dogName: activeDog.name, distanceKm: distance, durationSeconds: seconds });
+      await createWalk({ userId: session.user.id, dogId: activeDog.id, dogName: activeDog.name, distanceKm: distance, durationSeconds: seconds });
       await loadWalks();
       Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
       resetWalk();
