@@ -21,13 +21,18 @@ export async function updateDog(dogId:string,input:{name:string;breed?:string|nu
   return data as Dog;
 }
 
+export async function deleteDog(dogId:string) {
+  const { error } = await supabase.from("dogs").delete().eq("id", dogId);
+  if (error) throw error;
+}
+
 export async function uploadDogAvatar(userId:string,dogId:string,uri:string) {
   const response=await fetch(uri);
   const blob=await response.blob();
   const ext=(uri.split(".").pop()?.split("?")[0]||"jpg").toLowerCase();
-  const path=`${userId}/${dogId}.${ext}`;
-  const {error}=await supabase.storage.from("dog-avatars").upload(path,blob,{contentType:blob.type||`image/${ext}`,upsert:true});
+  const path=`${userId}/${dogId}/${Date.now()}.${ext}`;
+  const {error}=await supabase.storage.from("dog-avatars").upload(path,blob,{contentType:blob.type||`image/${ext}`,upsert:false});
   if(error) throw error;
   const {data}=supabase.storage.from("dog-avatars").getPublicUrl(path);
-  return `${data.publicUrl}?v=${Date.now()}`;
+  return data.publicUrl;
 }
