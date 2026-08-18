@@ -7,7 +7,9 @@ export type WalkTag = "trail" | "swim" | "coffee";
 
 export type Walk = {
   id: number;
+  dog_id?: string | null;
   dog_name: string;
+  title?: string | null;
   distance_km: number;
   duration_seconds: number;
   ended_at: string;
