@@ -60,10 +60,6 @@ export function HomeScreen({ walks, onStartWalk, onNavigate }: Props) {
       </View>
     </View>
 
-    <Pressable style={s.start} onPress={askStart}>
-      <View style={s.startContent}><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /><Text style={s.startText}>START WALK</Text></View>
-    </Pressable>
-
     <View style={s.quick}>
       <Quick icon={<Trophy size={25} strokeWidth={2} color="#1D1A17" />} title="Leaderboard" onPress={() => onNavigate("leaderboard")} />
       <Quick icon={<ChartColumn size={25} strokeWidth={2} color="#1D1A17" />} title="Stats" onPress={() => onNavigate("stats")} />
