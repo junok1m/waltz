@@ -39,10 +39,17 @@ export function useWalkTracker() {
     locationSubscription.current = await Location.watchPositionAsync(
       { accuracy: Location.Accuracy.High, timeInterval: 2000, distanceInterval: 3 },
       (location) => {
-        const currentPoint: Point = { latitude: location.coords.latitude, longitude: location.coords.longitude };
-        if (previousPoint.current) {
-          setDistance((current) => current + getDistanceInKm(previousPoint.current!, currentPoint));
+        const currentPoint: Point = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        const priorPoint = previousPoint.current;
+
+        if (priorPoint) {
+          const segmentKm = getDistanceInKm(priorPoint, currentPoint);
+          setDistance((current) => current + segmentKm);
         }
+
         previousPoint.current = currentPoint;
         setPoints((current) => [...current, currentPoint]);
       }
