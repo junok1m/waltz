@@ -3,6 +3,8 @@ export type Point = {
   longitude: number;
 };
 
+export type WalkTag = "trail" | "swim" | "coffee";
+
 export type Walk = {
   id: number;
   dog_name: string;
@@ -11,4 +13,5 @@ export type Walk = {
   ended_at: string;
   route_points?: Point[] | null;
   share_route?: boolean;
+  tags?: WalkTag[] | null;
 };
