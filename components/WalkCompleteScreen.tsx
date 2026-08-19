@@ -1,18 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
 import { Coffee, Fish, Mountain, PartyPopper } from "@sketchyicons/react-native";
 import { Point, WalkTag } from "../types/walk";
 import { formatTime } from "../utils/time";
+import { WaltzMap } from "./WaltzMap";
 
 export function defaultWalkTitle(date:Date){const h=date.getHours();if(h<12)return"Morning waltz";if(h<18)return"Afternoon waltz";return"Night waltz";}
 type Props = { seconds:number; distance:number; points:Point[]; dogName:string; title:string; shareRoute:boolean; tags:WalkTag[]; onTitleChange:(title:string)=>void; onTagsChange:(tags:WalkTag[])=>void; onShareRouteChange:(share:boolean)=>void; onSave:()=>void; onDiscard:()=>void };
 
 export function WalkCompleteScreen({ seconds,distance,points,dogName,title,shareRoute,tags,onTitleChange,onTagsChange,onShareRouteChange,onSave,onDiscard }: Props) {
-  const mapRef = useRef<MapView | null>(null);
-  const firstPoint=points[0], lastPoint=points[points.length-1];
   useEffect(()=>{if(!title)onTitleChange(defaultWalkTitle(new Date()));},[title,onTitleChange]);
-  useEffect(()=>{ if(points.length<2)return; const timer=setTimeout(()=>mapRef.current?.fitToCoordinates(points,{edgePadding:{top:45,right:45,bottom:45,left:45},animated:false}),150); return()=>clearTimeout(timer); },[points]);
   const toggleTag=(tag:WalkTag)=>onTagsChange(tags.includes(tag)?tags.filter((x)=>x!==tag):[...tags,tag]);
 
   return <View style={styles.screen}>
@@ -20,7 +17,7 @@ export function WalkCompleteScreen({ seconds,distance,points,dogName,title,share
     <View style={styles.metricsRow}><View><Text style={styles.metricLabel}>DISTANCE</Text><Text style={styles.resultDistance}>{distance.toFixed(2)} km</Text></View><View><Text style={styles.metricLabel}>TIME</Text><Text style={styles.resultTime}>{formatTime(seconds)}</Text></View></View>
     <Text style={styles.dogLine}>{dogName} did a waltz</Text>
     <View><Text style={styles.fieldLabel}>Activity title</Text><TextInput value={title} onChangeText={onTitleChange} maxLength={60} placeholder={defaultWalkTitle(new Date())} style={styles.titleInput}/></View>
-    <View style={styles.mapWrap}>{lastPoint?<MapView ref={mapRef} style={StyleSheet.absoluteFill} initialRegion={{latitude:lastPoint.latitude,longitude:lastPoint.longitude,latitudeDelta:.008,longitudeDelta:.008}} onMapReady={()=>points.length>1&&mapRef.current?.fitToCoordinates(points,{edgePadding:{top:45,right:45,bottom:45,left:45},animated:false})}>{points.length>1?<Polyline coordinates={points} strokeWidth={5}/>:null}{firstPoint?<Marker coordinate={firstPoint} title="Start"/>:null}<Marker coordinate={lastPoint} title="Finish"/></MapView>:<View style={styles.noRoute}><Text style={styles.noRouteText}>No route points recorded for this walk.</Text></View>}</View>
+    <View style={styles.mapWrap}>{points.length?<WaltzMap points={points} dogName={dogName} interactive/>:<View style={styles.noRoute}><Text style={styles.noRouteText}>No route points recorded for this walk.</Text></View>}</View>
     <View style={styles.tagsCard}><Text style={styles.shareTitle}>Add some tags</Text><Text style={styles.tagHint}>Optional. Pick anything that happened on this waltz.</Text><View style={styles.tagsRow}><Tag selected={tags.includes("trail")} onPress={()=>toggleTag("trail")} icon={<Mountain size={20} strokeWidth={2}/>} label="Trail"/><Tag selected={tags.includes("swim")} onPress={()=>toggleTag("swim")} icon={<Fish size={20} strokeWidth={2}/>} label="Gone fishing"/><Tag selected={tags.includes("coffee")} onPress={()=>toggleTag("coffee")} icon={<Coffee size={20} strokeWidth={2}/>} label="Coffee stop"/></View></View>
     <View style={styles.shareCard}><View style={styles.shareCopyWrap}><Text style={styles.shareTitle}>Share this route?</Text><Text style={styles.shareCopy}>Your choice from the start is remembered. Only the finished route is shared, never your live location.</Text></View><View style={styles.shareChoice}><Text style={[styles.choiceLabel,!shareRoute&&styles.choiceActive]}>No</Text><Switch value={shareRoute} onValueChange={onShareRouteChange}/><Text style={[styles.choiceLabel,shareRoute&&styles.choiceActive]}>Yes</Text></View></View>
     <Pressable style={styles.button} onPress={onSave}><Text style={styles.buttonText}>SAVE WALK</Text></Pressable><Pressable onPress={onDiscard}><Text style={styles.discard}>Discard</Text></Pressable>
