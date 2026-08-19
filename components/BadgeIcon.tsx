@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { Balloon,Bird,Coffee,Fish,Flag,Flame,MoonStar,Mountain,Umbrella } from "@sketchyicons/react-native";
+import { Balloon,Bird,Coffee,Crown,Fish,Flag,Flame,KeyRound,MoonStar,Mountain,Umbrella } from "@sketchyicons/react-native";
 
 type BadgeMeta={title:string;color:string;icon:(size:number)=>React.ReactNode};
 
@@ -16,6 +16,8 @@ export const BADGE_META:Record<string,BadgeMeta>={
   "mileage-100":{title:"First 100 km",color:"#F6EBC4",icon:size=><Flag size={size} strokeWidth={2} color="#687455"/>},
   "mileage-500":{title:"First 500 km",color:"#F1DCD3",icon:size=><Flag size={size} strokeWidth={2} color="#687455"/>},
   "mileage-1000":{title:"First 1,000 km",color:"#DDE8EA",icon:size=><Flag size={size} strokeWidth={2} color="#687455"/>},
+  "urban-explorer":{title:"Urban explorer",color:"#E6E1F2",icon:size=><KeyRound size={size} strokeWidth={2} color="#6C6482"/>},
+  "local-royalty":{title:"Local royalty",color:"#F5E7B8",icon:size=><Crown size={size} strokeWidth={2} color="#8A7440"/>},
 };
 
 export function BadgeIcon({badgeId,size=56,showLabel=true}:{badgeId:string;size?:number;showLabel?:boolean}){
