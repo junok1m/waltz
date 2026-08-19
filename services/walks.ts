@@ -2,9 +2,23 @@ import { supabase } from "../lib/supabase";
 import { Point, Walk, WalkTag } from "../types/walk";
 
 export async function fetchWalks(): Promise<Walk[]> {
-  const { data, error } = await supabase.from("walks").select("*").order("ended_at", { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  const pageSize = 1000;
+  const all: Walk[] = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from("walks")
+      .select("*")
+      .order("ended_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    const page = data ?? [];
+    all.push(...page);
+    if (page.length < pageSize) break;
+  }
+
+  return all;
 }
 
 export async function createWalk(input: {
