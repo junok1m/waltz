@@ -53,3 +53,13 @@ export async function createWalk(input: {
   if (dogLinkError) { await supabase.from("walks").delete().eq("id", walk.id); throw dogLinkError; }
   return walk;
 }
+
+export async function setWalkHiddenFromProfile(walkId:number, hidden:boolean){
+  const { error } = await supabase.from("walks").update({ hidden_from_profile:hidden }).eq("id",walkId);
+  if(error) throw error;
+}
+
+export async function deleteWalk(walkId:number){
+  const { error } = await supabase.from("walks").delete().eq("id",walkId);
+  if(error) throw error;
+}
