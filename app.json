@@ -10,7 +10,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Waltz uses your photo library so you can choose a profile picture for your dog."
+        "NSPhotoLibraryUsageDescription": "Waltz uses your photo library so you can choose a profile picture for your dog.",
+        "NSLocationWhenInUseUsageDescription": "Waltz uses your location to draw your walk and show your current position on the map."
       }
     },
     "android": {
@@ -33,6 +34,18 @@
         "expo-image-picker",
         {
           "photosPermission": "Waltz uses your photo library so you can choose a profile picture for your dog."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Waltz uses your location to draw your walk and show your current position on the map."
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.20.1"
         }
       ]
     ]
