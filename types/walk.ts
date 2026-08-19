@@ -16,4 +16,5 @@ export type Walk = {
   route_points?: Point[] | null;
   share_route?: boolean;
   tags?: WalkTag[] | null;
+  is_mock?: boolean;
 };
