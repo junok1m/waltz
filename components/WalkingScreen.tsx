@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
 import { Point } from "../types/walk";
 import { formatTime } from "../utils/time";
+import { WaltzMap } from "./WaltzMap";
 
 type Props = { seconds: number; distance: number; points: Point[]; dogName: string; onStopWalk: () => void };
 
@@ -10,10 +10,7 @@ export function WalkingScreen({ seconds, distance, points, dogName, onStopWalk }
   return <View style={styles.screen}>
     <Text style={styles.walking}>{dogName} is walking...</Text>
     <View style={styles.mapWrap}>
-      {latest ? <MapView style={StyleSheet.absoluteFill} region={{ latitude: latest.latitude, longitude: latest.longitude, latitudeDelta: 0.008, longitudeDelta: 0.008 }}>
-        {points.length > 1 ? <Polyline coordinates={points} strokeWidth={5} /> : null}
-        <Marker coordinate={latest} title={dogName} />
-      </MapView> : <View style={styles.wait}><Text>📍 Finding your location...</Text></View>}
+      {latest ? <WaltzMap points={points} dogName={dogName} interactive showLocation /> : <View style={styles.wait}><Text>📍 Finding your location...</Text></View>}
     </View>
     <View style={styles.metrics}><View><Text style={styles.label}>TIME</Text><Text style={styles.timer}>{formatTime(seconds)}</Text></View><View><Text style={styles.label}>DISTANCE</Text><Text style={styles.distance}>{distance.toFixed(2)} km</Text></View></View>
     <Pressable style={styles.button} onPress={onStopWalk}><Text style={styles.buttonText}>STOP WALK</Text></Pressable>
