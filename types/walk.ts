@@ -15,6 +15,7 @@ export type Walk = {
   ended_at: string;
   route_points?: Point[] | null;
   share_route?: boolean;
+  hidden_from_profile?: boolean;
   tags?: WalkTag[] | null;
   is_mock?: boolean;
 };
