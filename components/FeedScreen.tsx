@@ -3,10 +3,11 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { Bone, ChartBar, Dog as DogIcon, House, PawPrint, Rss } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
-import { fetchFeedWalks, setWalkBoop } from "../services/boops";
+import { fetchFeedItems, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
-import { FeedWalk } from "../types/feed";
+import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
 import { formatTime } from "../utils/time";
+import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 
 type Props = {
   dog: Dog;
@@ -15,14 +16,14 @@ type Props = {
 };
 
 export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
-  const [walks, setWalks] = useState<FeedWalk[]>([]);
+  const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyWalkIds, setBusyWalkIds] = useState<Set<number>>(new Set());
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
     try {
-      setWalks(await fetchFeedWalks(dog.id, dog.owner_id));
+      setItems(await fetchFeedItems(dog.id, dog.owner_id));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not load the feed";
       console.error("Load feed error:", error);
@@ -40,9 +41,9 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
     if (walk.owner_id === dog.owner_id || busyWalkIds.has(walk.id)) return;
 
     setBusyWalkIds((current) => new Set(current).add(walk.id));
-    setWalks((current) =>
+    setItems((current) =>
       current.map((item) =>
-        item.id === walk.id
+        item.kind === "walk" && item.id === walk.id
           ? {
               ...item,
               booped_by_me: !item.booped_by_me,
@@ -82,7 +83,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={s.feed} showsVerticalScrollIndicator={false}>
-        {!loading && walks.length === 0 ? (
+        {!loading && items.length === 0 ? (
           <View style={s.empty}>
             <Text style={s.emptyDogs}>🐕 🐩 🦮</Text>
             <Text style={s.emptyTitle}>The feed is quiet... for now</Text>
@@ -90,7 +91,9 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
           </View>
         ) : null}
 
-        {walks.map((walk) => {
+        {items.map((item) => {
+          if (item.kind === "badge") return <BadgeEventCard key={`badge-${item.id}`} event={item} />;
+          const walk = item;
           const busy = busyWalkIds.has(walk.id);
           return (
             <View key={walk.id} style={s.card}>
@@ -153,6 +156,22 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
   );
 }
 
+function badgeMessage(event: FeedBadgeEvent) {
+  const distance = event.badge_id.match(/^mileage-(\d+)$/)?.[1];
+  if (distance) return `${event.dog_name} completed ${Number(distance).toLocaleString()} km`;
+  return `${event.dog_name} got the ${BADGE_META[event.badge_id]?.title ?? event.badge_id.replaceAll("-", " ")} badge`;
+}
+
+function BadgeEventCard({ event }: { event: FeedBadgeEvent }) {
+  return <View style={s.badgeCard}>
+    <BadgeIcon badgeId={event.badge_id} size={52} showLabel={false} />
+    <View style={s.badgeCopy}>
+      <Text style={s.badgeMessage}>{badgeMessage(event)}</Text>
+      <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
+    </View>
+  </View>;
+}
+
 function Nav({ icon, label, active, onPress }: { icon: React.ReactNode; label: string; active?: boolean; onPress: () => void }) {
   return <Pressable style={s.navItem} onPress={onPress}>{icon}<Text style={[s.navLabel, active && s.active]}>{label}</Text></Pressable>;
 }
@@ -168,6 +187,9 @@ const s = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1D1A17", marginTop: 10 },
   emptyText: { fontSize: 12, color: "#756B60", marginTop: 5 },
   card: { backgroundColor: "#FFFDF8", borderRadius: 24, padding: 15 },
+  badgeCard: { backgroundColor: "#FFFDF8", borderRadius: 24, padding: 15, flexDirection: "row", alignItems: "center", gap: 12 },
+  badgeCopy: { flex: 1 },
+  badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   cardHeader: { flexDirection: "row", alignItems: "center" },
   avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 21 },

@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { FeedWalk } from "../types/feed";
+import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
 
 type RawFeedDog = {
   id: string;
@@ -31,7 +31,7 @@ type RawBoop = {
   from_dog_id: string;
 };
 
-export async function fetchFeedWalks(activeDogId: string, activeOwnerId: string): Promise<FeedWalk[]> {
+export async function fetchFeedItems(activeDogId: string, activeOwnerId: string): Promise<FeedItem[]> {
   const { data, error } = await supabase
     .from("walks")
     .select(
@@ -59,7 +59,7 @@ export async function fetchFeedWalks(activeDogId: string, activeOwnerId: string)
     boops = (boopData ?? []) as RawBoop[];
   }
 
-  return walks.flatMap((walk) => {
+  const feedWalks = walks.flatMap<FeedWalk>((walk) => {
     const link = walk.walk_dogs[0];
     const dogValue = link?.dogs;
     const dog = Array.isArray(dogValue) ? dogValue[0] : dogValue;
@@ -67,6 +67,7 @@ export async function fetchFeedWalks(activeDogId: string, activeOwnerId: string)
 
     const walkBoops = boops.filter((boop) => boop.walk_id === walk.id);
     return [{
+      kind: "walk" as const,
       id: walk.id,
       user_id: walk.user_id,
       dog_id: dog.id,
@@ -84,6 +85,35 @@ export async function fetchFeedWalks(activeDogId: string, activeOwnerId: string)
       booped_by_me: walkBoops.some((boop) => boop.from_dog_id === activeDogId),
     }];
   });
+
+  const { data: badgeData, error: badgeError } = await supabase
+    .from("activity_events")
+    .select("id,dog_id,badge_id,created_at,dog:dogs!activity_events_dog_id_fkey(name,owner_id)")
+    .eq("event_type", "badge_earned")
+    .neq("dog.owner_id", activeOwnerId)
+    .not("badge_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (badgeError) throw badgeError;
+  const badgeEvents = (badgeData ?? []).flatMap<FeedBadgeEvent>((event) => {
+    const dogValue = event.dog as { name: string; owner_id: string } | { name: string; owner_id: string }[] | null;
+    const dog = Array.isArray(dogValue) ? dogValue[0] : dogValue;
+    if (!dog || dog.owner_id === activeOwnerId || !event.badge_id) return [];
+    return [{
+      kind: "badge" as const,
+      id: event.id,
+      dog_id: event.dog_id,
+      dog_name: dog.name,
+      owner_id: dog.owner_id,
+      badge_id: event.badge_id,
+      created_at: event.created_at,
+    }];
+  });
+
+  return [...feedWalks, ...badgeEvents]
+    .sort((a, b) => new Date(b.kind === "walk" ? b.ended_at : b.created_at).getTime() - new Date(a.kind === "walk" ? a.ended_at : a.created_at).getTime())
+    .slice(0, 30);
 }
 
 export async function setWalkBoop(input: {
