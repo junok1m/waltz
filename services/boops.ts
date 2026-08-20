@@ -31,7 +31,7 @@ type RawBoop = {
   from_dog_id: string;
 };
 
-export async function fetchFeedWalks(activeDogId: string): Promise<FeedWalk[]> {
+export async function fetchFeedWalks(activeDogId: string, activeOwnerId: string): Promise<FeedWalk[]> {
   const { data, error } = await supabase
     .from("walks")
     .select(
@@ -39,6 +39,7 @@ export async function fetchFeedWalks(activeDogId: string): Promise<FeedWalk[]> {
     )
     .eq("share_route", true)
     .eq("hidden_from_profile", false)
+    .neq("user_id", activeOwnerId)
     .order("ended_at", { ascending: false })
     .limit(30);
 
@@ -107,4 +108,14 @@ export async function setWalkBoop(input: {
     walk_id: input.walkId,
   });
   if (error) throw error;
+}
+
+export async function fetchBoopCountsByWalkIds(walkIds: number[]): Promise<Record<number, number>> {
+  if (!walkIds.length) return {};
+  const { data, error } = await supabase.from("boops").select("walk_id").in("walk_id", walkIds);
+  if (error) throw error;
+  return (data ?? []).reduce<Record<number, number>>((counts, boop) => {
+    counts[boop.walk_id] = (counts[boop.walk_id] ?? 0) + 1;
+    return counts;
+  }, {});
 }

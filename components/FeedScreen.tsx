@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ChartBar, Dog as DogIcon, HandHeart, House, PawPrint, Rss } from "@sketchyicons/react-native";
+import { Bone, ChartBar, Dog as DogIcon, House, PawPrint, Rss } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
+import { WaltzMap } from "./WaltzMap";
 import { fetchFeedWalks, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
 import { FeedWalk } from "../types/feed";
@@ -21,7 +22,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
   const loadFeed = useCallback(async () => {
     setLoading(true);
     try {
-      setWalks(await fetchFeedWalks(dog.id));
+      setWalks(await fetchFeedWalks(dog.id, dog.owner_id));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not load the feed";
       console.error("Load feed error:", error);
@@ -29,7 +30,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [dog.id]);
+  }, [dog.id, dog.owner_id]);
 
   useEffect(() => {
     loadFeed();
@@ -90,7 +91,6 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
         ) : null}
 
         {walks.map((walk) => {
-          const ownWalk = walk.owner_id === dog.owner_id;
           const busy = busyWalkIds.has(walk.id);
           return (
             <View key={walk.id} style={s.card}>
@@ -106,10 +106,14 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
                     })}
                   </Text>
                 </View>
-                {ownWalk ? <Text style={s.yours}>YOUR WALK</Text> : null}
               </View>
 
               <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
+              {walk.route_points.length ? (
+                <View style={s.map}>
+                  <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} />
+                </View>
+              ) : null}
               <View style={s.metrics}>
                 <Text style={s.metric}>{walk.distance_km.toFixed(2)} km</Text>
                 <Text style={s.dot}>·</Text>
@@ -121,14 +125,14 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
                   style={[
                     s.boopButton,
                     walk.booped_by_me && s.boopButtonActive,
-                    (ownWalk || busy) && s.boopButtonDisabled,
+                    busy && s.boopButtonDisabled,
                   ]}
-                  disabled={ownWalk || busy}
+                  disabled={busy}
                   onPress={() => toggleBoop(walk)}
                 >
-                  <HandHeart size={18} strokeWidth={2} color={walk.booped_by_me ? "#FFFDF8" : "#78845C"} />
+                  <Bone size={18} strokeWidth={2} color={walk.booped_by_me ? "#FFFDF8" : "#78845C"} />
                   <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>
-                    {ownWalk ? "Boops" : walk.booped_by_me ? "Booped" : "Boop"}
+                    {walk.booped_by_me ? "Booped" : "Boop"}
                   </Text>
                 </Pressable>
                 <Text style={s.boopCount}>{walk.boop_count} boop{walk.boop_count === 1 ? "" : "s"}</Text>
@@ -170,8 +174,8 @@ const s = StyleSheet.create({
   cardHeaderCopy: { flex: 1, marginLeft: 10 },
   dogName: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
-  yours: { fontSize: 8, fontWeight: "800", letterSpacing: 1, color: "#9A9187" },
   walkTitle: { fontSize: 18, fontWeight: "800", color: "#332E29", marginTop: 14 },
+  map: { height: 170, borderRadius: 18, overflow: "hidden", marginTop: 12 },
   metrics: { flexDirection: "row", alignItems: "center", marginTop: 5 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
   dot: { color: "#A99F93", marginHorizontal: 7 },
