@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { Flame, MapPin, PawPrint } from "@sketchyicons/react-native";
 import { Walk } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
@@ -11,14 +11,47 @@ type Props = {
 
 export function WaltzCalendar({ walks }: Props) {
   const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const [displayedMonth, setDisplayedMonth] = useState(currentMonth);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const streak = calculateWalkStreak(walks);
+
+  const moveMonth = (delta: number) => {
+    setDisplayedMonth((previous) => {
+      const next = new Date(
+        previous.getFullYear(),
+        previous.getMonth() + delta,
+        1,
+      );
+
+      if (next.getTime() > currentMonth.getTime()) {
+        return currentMonth;
+      }
+
+      return next;
+    });
+    setSelectedDay(null);
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx > 45) {
+          moveMonth(-1);
+        } else if (gesture.dx < -45) {
+          moveMonth(1);
+        }
+      },
+    }),
+  ).current;
 
   const monthWalks = walks.filter((walk) => {
     const date = new Date(walk.ended_at);
     return (
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
+      date.getMonth() === displayedMonth.getMonth() &&
+      date.getFullYear() === displayedMonth.getFullYear()
     );
   });
 
@@ -48,14 +81,14 @@ export function WaltzCalendar({ walks }: Props) {
   );
 
   const firstWeekday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
+    displayedMonth.getFullYear(),
+    displayedMonth.getMonth(),
     1,
   ).getDay();
 
   const daysInMonth = new Date(
-    now.getFullYear(),
-    now.getMonth() + 1,
+    displayedMonth.getFullYear(),
+    displayedMonth.getMonth() + 1,
     0,
   ).getDate();
 
@@ -64,14 +97,17 @@ export function WaltzCalendar({ walks }: Props) {
     ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
   ];
 
-  const month = new Intl.DateTimeFormat("en-AU", {
+  const monthName = new Intl.DateTimeFormat("en-AU", {
     month: "long",
-    year: "numeric",
-  }).format(now);
+  }).format(displayedMonth);
+  const year = displayedMonth.getFullYear();
 
   return (
-    <View style={s.container}>
-      <Text style={s.month}>{month}</Text>
+    <View style={s.container} {...panResponder.panHandlers}>
+      <View style={s.monthRow}>
+        <Text style={s.month}>{monthName}</Text>
+        <Text style={s.year}>{year}</Text>
+      </View>
 
       <View style={s.week}>
         {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
@@ -101,7 +137,7 @@ export function WaltzCalendar({ walks }: Props) {
       {selectedDay ? (
         <View style={s.dayDetail}>
           <Text style={s.dayTitle}>
-            {month.split(" ")[0]} {selectedDay}
+            {monthName} {selectedDay}
           </Text>
           {selectedWalks.length ? (
             <Text style={s.dayCopy}>
@@ -114,6 +150,13 @@ export function WaltzCalendar({ walks }: Props) {
           )}
         </View>
       ) : null}
+
+      <View style={s.streakLine}>
+        <Flame size={17} strokeWidth={2} color="#E87859" />
+        <Text style={s.streakText}>
+          {streak} day{streak === 1 ? "" : "s"} streak
+        </Text>
+      </View>
 
       <View style={s.stats}>
         <View style={s.statItem}>
@@ -131,14 +174,6 @@ export function WaltzCalendar({ walks }: Props) {
             <Text style={s.value}>{distance.toFixed(1)} km</Text>
           </View>
         </View>
-
-        <View style={s.statItem}>
-          <Flame size={18} strokeWidth={2} color="#E87859" />
-          <View>
-            <Text style={s.muted}>Streak</Text>
-            <Text style={s.value}>{streak} days</Text>
-          </View>
-        </View>
       </View>
     </View>
   );
@@ -149,16 +184,24 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 18,
   },
+  monthRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
   month: {
-    textAlign: "center",
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: "700",
-    marginBottom: 18,
     color: "#2B251F",
+  },
+  year: {
+    fontSize: 18,
+    color: "#756B60",
   },
   week: {
     flexDirection: "row",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   weekText: {
     width: "14.2857%",
@@ -204,27 +247,35 @@ const s = StyleSheet.create({
     color: "#655D54",
     marginTop: 2,
   },
-  stats: {
-    borderTopWidth: 1,
-    borderTopColor: "#EEE5D7",
-    marginTop: 12,
-    paddingTop: 14,
+  streakLine: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 18,
+  },
+  streakText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#655D54",
+  },
+  stats: {
+    marginTop: 18,
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   statItem: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
+    gap: 8,
+    minWidth: 120,
   },
   muted: {
     fontSize: 10,
     color: "#756B60",
   },
   value: {
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: "800",
     color: "#1D1A17",
     marginTop: 2,
