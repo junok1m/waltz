@@ -13,15 +13,14 @@ import {
   Dog,
   Flame,
   House,
-  MapPin,
   PawPrint,
   Rss,
 } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
+import { WaltzCalendar } from "./WaltzCalendar";
 import { Walk } from "../types/walk";
 import { Dog as DogType } from "../types/dog";
 import { calculateWalkStreak } from "../utils/streak";
-import { formatTime } from "../utils/time";
 
 type Props = {
   walks: Walk[];
@@ -38,58 +37,9 @@ export function HomeScreen({
   onNavigate,
   onOpenDogs,
 }: Props) {
-  const now = new Date();
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const [shareRoute, setShareRoute] = useState(false);
-
   const streak = calculateWalkStreak(walks);
-  const monthWalks = walks.filter((walk) => {
-    const date = new Date(walk.ended_at);
-    return (
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
-    );
-  });
-  const distance = monthWalks.reduce(
-    (sum, walk) => sum + walk.distance_km,
-    0,
-  );
-  const days = new Set(
-    monthWalks.map((walk) => new Date(walk.ended_at).getDate()),
-  );
-  const selectedWalks = selectedDay
-    ? monthWalks.filter(
-        (walk) => new Date(walk.ended_at).getDate() === selectedDay,
-      )
-    : [];
-  const selectedDistance = selectedWalks.reduce(
-    (sum, walk) => sum + walk.distance_km,
-    0,
-  );
-  const selectedSeconds = selectedWalks.reduce(
-    (sum, walk) => sum + walk.duration_seconds,
-    0,
-  );
-
-  const first = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    1,
-  ).getDay();
-  const count = new Date(
-    now.getFullYear(),
-    now.getMonth() + 1,
-    0,
-  ).getDate();
-  const cells: Array<number | null> = [
-    ...Array(first).fill(null),
-    ...Array.from({ length: count }, (_, index) => index + 1),
-  ];
-  const month = new Intl.DateTimeFormat("en-AU", {
-    month: "long",
-    year: "numeric",
-  }).format(now);
 
   return (
     <View style={s.screen}>
@@ -113,73 +63,7 @@ export function HomeScreen({
         </Pressable>
       </View>
 
-      <View style={s.card}>
-        <Text style={s.month}>{month}</Text>
-
-        <View style={s.week}>
-          {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
-            <Text key={index} style={s.weekText}>
-              {label}
-            </Text>
-          ))}
-        </View>
-
-        <View style={s.calendar}>
-          {cells.map((day, index) => (
-            <Pressable
-              disabled={day === null}
-              onPress={() => day !== null && setSelectedDay(day)}
-              key={index}
-              style={[
-                s.day,
-                day !== null && day === selectedDay && s.selectedDay,
-              ]}
-            >
-              <Text style={s.dayText}>{day ?? ""}</Text>
-              {day !== null && days.has(day) ? (
-                <PawPrint size={10} strokeWidth={2} color="#78845C" />
-              ) : null}
-            </Pressable>
-          ))}
-        </View>
-
-        {selectedDay ? (
-          <View style={s.dayDetail}>
-            <Text style={s.dayTitle}>
-              {month.split(" ")[0]} {selectedDay}
-            </Text>
-            {selectedWalks.length ? (
-              <Text style={s.dayCopy}>
-                {selectedWalks.length} walk
-                {selectedWalks.length === 1 ? "" : "s"} ·{" "}
-                {selectedDistance.toFixed(2)} km · {formatTime(selectedSeconds)}
-              </Text>
-            ) : (
-              <Text style={s.dayCopy}>
-                No walks yet. Tiny paws had a rest day 💤
-              </Text>
-            )}
-          </View>
-        ) : null}
-
-        <View style={s.stats}>
-          <View style={s.statItem}>
-            <PawPrint size={20} strokeWidth={2} color="#78845C" />
-            <View>
-              <Text style={s.muted}>Total walks</Text>
-              <Text style={s.value}>{monthWalks.length}</Text>
-            </View>
-          </View>
-
-          <View style={s.statItem}>
-            <MapPin size={20} strokeWidth={2} color="#78845C" />
-            <View>
-              <Text style={s.muted}>Total distance</Text>
-              <Text style={s.value}>{distance.toFixed(1)} km</Text>
-            </View>
-          </View>
-        </View>
-      </View>
+      <WaltzCalendar walks={walks} />
 
       <View style={s.nav}>
         <Nav
@@ -312,82 +196,6 @@ const s = StyleSheet.create({
   avatarImage: {
     width: "100%",
     height: "100%",
-  },
-  card: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  month: {
-    textAlign: "center",
-    fontSize: 21,
-    fontWeight: "700",
-    marginBottom: 8,
-    color: "#2B251F",
-  },
-  week: {
-    flexDirection: "row",
-  },
-  weekText: {
-    width: "14.2857%",
-    textAlign: "center",
-    fontSize: 11,
-    color: "#756B60",
-  },
-  calendar: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 4,
-  },
-  day: {
-    width: "14.2857%",
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  selectedDay: {
-    backgroundColor: "#E9E4D7",
-  },
-  dayText: {
-    fontSize: 13,
-    color: "#2D2823",
-  },
-  dayDetail: {
-    marginTop: 8,
-    padding: 10,
-    backgroundColor: "#F6F0E5",
-  },
-  dayTitle: {
-    fontWeight: "800",
-    fontSize: 13,
-  },
-  dayCopy: {
-    fontSize: 12,
-    color: "#655D54",
-    marginTop: 2,
-  },
-  stats: {
-    borderTopWidth: 1,
-    borderTopColor: "#EEE5D7",
-    marginTop: 7,
-    paddingTop: 10,
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  muted: {
-    fontSize: 11,
-    color: "#756B60",
-    marginTop: 3,
-  },
-  value: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#1D1A17",
-    marginTop: 2,
   },
   start: {
     backgroundColor: "#8C9670",
