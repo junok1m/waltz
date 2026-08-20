@@ -11,7 +11,6 @@ import {
 import {
   ChartBar,
   Dog,
-  Flame,
   House,
   PawPrint,
   Rss,
@@ -20,7 +19,6 @@ import { AppTab } from "./HubScreen";
 import { WaltzCalendar } from "./WaltzCalendar";
 import { Walk } from "../types/walk";
 import { Dog as DogType } from "../types/dog";
-import { calculateWalkStreak } from "../utils/streak";
 
 type Props = {
   walks: Walk[];
@@ -39,20 +37,11 @@ export function HomeScreen({
 }: Props) {
   const [startOpen, setStartOpen] = useState(false);
   const [shareRoute, setShareRoute] = useState(false);
-  const streak = calculateWalkStreak(walks);
 
   return (
     <View style={s.screen}>
       <View style={s.header}>
-        <View>
-          <Text style={s.logo}>waltz</Text>
-          <View style={s.streakRow}>
-            <Flame size={21} strokeWidth={2} color="#E87859" />
-            <Text style={s.streak}>
-              {streak} day{streak === 1 ? "" : "s"} streak
-            </Text>
-          </View>
-        </View>
+        <Text style={s.logo}>waltz</Text>
 
         <Pressable style={s.avatar} onPress={onOpenDogs}>
           {dog.avatar_url ? (
@@ -170,19 +159,9 @@ const s = StyleSheet.create({
   },
   logo: {
     fontFamily: "Schoolbell_400Regular",
-    fontSize: 52,
-    lineHeight: 56,
+    fontSize: 42,
+    lineHeight: 46,
     color: "#1D1A17",
-  },
-  streakRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  streak: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#E87859",
   },
   avatar: {
     width: 62,
