@@ -46,7 +46,7 @@ function eventText(event: ActivityEvent, dogName: string) {
 
   switch (event.event_type) {
     case "boop_received":
-      return `${dogName} received a boop.`;
+      return `${event.actor_name ?? "A friend"} booped ${dogName}.`;
     case "badge_earned":
       return `${dogName} earned the ${(event.badge_id ?? "new").replaceAll("-", " ")} badge.`;
     case "shared_walk": {

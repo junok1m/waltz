@@ -11,6 +11,7 @@ export type ActivityEvent = {
   dog_id: string;
   event_type: ActivityEventType;
   actor_dog_id: string | null;
+  actor_name: string | null;
   walk_id: number | null;
   badge_id: string | null;
   metadata: Record<string, unknown>;
