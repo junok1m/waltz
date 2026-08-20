@@ -1,6 +1,10 @@
 import { useRef, useState } from "react";
 import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
-import { Flame, MapPin, PawPrint } from "@sketchyicons/react-native";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Flame,
+} from "@sketchyicons/react-native";
 import { Walk } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 import { formatTime } from "../utils/time";
@@ -33,6 +37,8 @@ export function WaltzCalendar({ walks }: Props) {
     setSelectedDay(null);
   };
 
+  const canMoveNext = displayedMonth.getTime() < currentMonth.getTime();
+
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gesture) =>
@@ -54,11 +60,6 @@ export function WaltzCalendar({ walks }: Props) {
       date.getFullYear() === displayedMonth.getFullYear()
     );
   });
-
-  const distance = monthWalks.reduce(
-    (sum, walk) => sum + walk.distance_km,
-    0,
-  );
 
   const activeDays = new Set(
     monthWalks.map((walk) => new Date(walk.ended_at).getDate()),
@@ -105,7 +106,28 @@ export function WaltzCalendar({ walks }: Props) {
   return (
     <View style={s.container} {...panResponder.panHandlers}>
       <View style={s.monthRow}>
-        <Text style={s.month}>{monthName}</Text>
+        <View style={s.monthControls}>
+          <Pressable
+            accessibilityLabel="Previous month"
+            hitSlop={10}
+            onPress={() => moveMonth(-1)}
+          >
+            <ArrowLeft size={18} strokeWidth={2} color="#756B60" />
+          </Pressable>
+
+          <Text style={s.month}>{monthName}</Text>
+
+          <Pressable
+            accessibilityLabel="Next month"
+            disabled={!canMoveNext}
+            hitSlop={10}
+            onPress={() => moveMonth(1)}
+            style={!canMoveNext ? s.disabledArrow : undefined}
+          >
+            <ArrowRight size={18} strokeWidth={2} color="#756B60" />
+          </Pressable>
+        </View>
+
         <Text style={s.year}>{year}</Text>
       </View>
 
@@ -157,24 +179,6 @@ export function WaltzCalendar({ walks }: Props) {
           {streak} day{streak === 1 ? "" : "s"} streak
         </Text>
       </View>
-
-      <View style={s.stats}>
-        <View style={s.statItem}>
-          <PawPrint size={18} strokeWidth={2} color="#78845C" />
-          <View>
-            <Text style={s.muted}>Total walks</Text>
-            <Text style={s.value}>{monthWalks.length}</Text>
-          </View>
-        </View>
-
-        <View style={s.statItem}>
-          <MapPin size={18} strokeWidth={2} color="#78845C" />
-          <View>
-            <Text style={s.muted}>Total distance</Text>
-            <Text style={s.value}>{distance.toFixed(1)} km</Text>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
@@ -186,18 +190,25 @@ const s = StyleSheet.create({
   },
   monthRow: {
     flexDirection: "row",
-    alignItems: "baseline",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
   },
+  monthControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+  },
   month: {
-    fontSize: 22,
-    fontWeight: "700",
+    fontSize: 21,
     color: "#2B251F",
   },
   year: {
-    fontSize: 18,
-    color: "#756B60",
+    fontSize: 14,
+    color: "#8C837A",
+  },
+  disabledArrow: {
+    opacity: 0.25,
   },
   week: {
     flexDirection: "row",
@@ -258,26 +269,5 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: "#655D54",
-  },
-  stats: {
-    marginTop: 18,
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    minWidth: 120,
-  },
-  muted: {
-    fontSize: 10,
-    color: "#756B60",
-  },
-  value: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#1D1A17",
-    marginTop: 2,
   },
 });
