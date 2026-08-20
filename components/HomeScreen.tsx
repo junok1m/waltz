@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   ChartBar,
   Dog,
   House,
+  Megaphone,
   PawPrint,
   Rss,
 } from "@sketchyicons/react-native";
@@ -19,6 +19,7 @@ import { AppTab } from "./HubScreen";
 import { WaltzCalendar } from "./WaltzCalendar";
 import { Walk } from "../types/walk";
 import { Dog as DogType } from "../types/dog";
+import { calculateWalkStreak } from "../utils/streak";
 
 type Props = {
   walks: Walk[];
@@ -28,28 +29,50 @@ type Props = {
   onOpenDogs: () => void;
 };
 
+function getHighlight(walks: Walk[], dogName: string) {
+  const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
+  const streak = calculateWalkStreak(walks);
+
+  const milestones = [1000, 500, 100];
+  const unlocked = milestones.find((milestone) => totalDistance >= milestone);
+
+  if (unlocked) {
+    return `${dogName} unlocked the ${unlocked.toLocaleString()} km milestone.`;
+  }
+
+  if (streak >= 2) {
+    return `${dogName} is on a ${streak}-day streak.`;
+  }
+
+  if (walks.length > 0) {
+    return `${dogName}'s latest waltz is in the books.`;
+  }
+
+  return `${dogName}'s highlights will appear here.`;
+}
+
 export function HomeScreen({
   walks,
   dog,
   onStartWalk,
   onNavigate,
-  onOpenDogs,
 }: Props) {
   const [startOpen, setStartOpen] = useState(false);
   const [shareRoute, setShareRoute] = useState(false);
+  const highlight = getHighlight(walks, dog.name);
 
   return (
     <View style={s.screen}>
       <View style={s.header}>
         <Text style={s.logo}>waltz</Text>
+      </View>
 
-        <Pressable style={s.avatar} onPress={onOpenDogs}>
-          {dog.avatar_url ? (
-            <Image source={{ uri: dog.avatar_url }} style={s.avatarImage} />
-          ) : (
-            <Dog size={30} strokeWidth={2} color="#332E29" />
-          )}
-        </Pressable>
+      <View style={s.highlightRow}>
+        <Megaphone size={18} strokeWidth={2} color="#78845C" />
+        <View style={s.highlightCopy}>
+          <Text style={s.highlightLabel}>HIGHLIGHTS</Text>
+          <Text style={s.highlightText}>{highlight}</Text>
+        </View>
       </View>
 
       <WaltzCalendar walks={walks} />
@@ -154,30 +177,33 @@ const s = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
-    position: "relative",
-    minHeight: 62,
+    marginBottom: 10,
   },
   logo: {
     fontFamily: "Schoolbell_400Regular",
     fontSize: 34,
     color: "#1D1A17",
   },
-  avatar: {
-    position: "absolute",
-    right: 0,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#F1E7D7",
+  highlightRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
+  highlightCopy: {
+    flex: 1,
+  },
+  highlightLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    color: "#78845C",
+  },
+  highlightText: {
+    fontSize: 12,
+    color: "#655D54",
+    marginTop: 2,
   },
   start: {
     backgroundColor: "#8C9670",
