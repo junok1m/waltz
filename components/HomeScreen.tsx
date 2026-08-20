@@ -105,24 +105,15 @@ export function HomeScreen({
         contentContainerStyle={s.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View>
-          {activities.length ? (
-            activities.map((event) => (
-              <HighlightRow
-                key={event.id}
-                icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
-                label="HIGHLIGHT"
-                text={eventText(event, dog.name)}
-              />
-            ))
-          ) : (
-            <HighlightRow
-              icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
-              label="HIGHLIGHTS"
-              text={`${dog.name}'s latest events will appear here.`}
-            />
-          )}
-        </View>
+        <HighlightRow
+          icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
+          label="HIGHLIGHTS"
+          text={
+            activities.length
+              ? activities.map((event) => eventText(event, dog.name))
+              : `${dog.name}'s latest events will appear here.`
+          }
+        />
 
         <WaltzCalendar walks={walks} />
 

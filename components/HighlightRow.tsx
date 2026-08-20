@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 type Props = {
   icon: ReactNode;
   label: string;
-  text: string;
+  text: string | string[];
   onPress?: () => void;
 };
 
@@ -14,7 +14,11 @@ export function HighlightRow({ icon, label, text, onPress }: Props) {
       <View style={s.icon}>{icon}</View>
       <View style={s.copy}>
         <Text style={s.label}>{label}</Text>
-        <Text style={s.text}>{text}</Text>
+        {(Array.isArray(text) ? text : [text]).map((line, index) => (
+          <Text key={`${line}-${index}`} style={s.text}>
+            {line}
+          </Text>
+        ))}
       </View>
       {onPress ? <Text style={s.arrow}>›</Text> : null}
     </Pressable>
