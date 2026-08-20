@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
 import { DogBadge } from "../types/badge";
-import { Walk } from "../types/walk";
+import { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 
 export const BADGE_IDS = ["keep-flame","tiny-adventures","trail","gone-fishing","coffee-stop","early-bird","night-shift","mileage-10","mileage-100","mileage-500","mileage-1000"] as const;
@@ -8,7 +8,7 @@ export const BADGE_IDS = ["keep-flame","tiny-adventures","trail","gone-fishing",
 export function earnedBadgeIds(walks: Walk[]) {
   const distance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
   const streak = calculateWalkStreak(walks);
-  const countTag = (tag: string) => walks.filter((walk) => walk.tags?.includes(tag)).length;
+  const countTag = (tag: WalkTag) => walks.filter((walk) => walk.tags?.includes(tag)).length;
   const early = walks.filter((walk) => new Date(walk.ended_at).getHours() < 8).length;
   const night = walks.filter((walk) => new Date(walk.ended_at).getHours() >= 20).length;
   const ids: string[] = [];

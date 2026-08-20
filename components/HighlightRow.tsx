@@ -1,16 +1,21 @@
+import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  icon: string;
+  icon: ReactNode;
+  label: string;
   text: string;
   onPress?: () => void;
 };
 
-export function HighlightRow({ icon, text, onPress }: Props) {
+export function HighlightRow({ icon, label, text, onPress }: Props) {
   return (
     <Pressable style={s.row} onPress={onPress}>
-      <Text style={s.icon}>{icon}</Text>
-      <Text style={s.text}>{text}</Text>
+      <View style={s.icon}>{icon}</View>
+      <View style={s.copy}>
+        <Text style={s.label}>{label}</Text>
+        <Text style={s.text}>{text}</Text>
+      </View>
       {onPress ? <Text style={s.arrow}>›</Text> : null}
     </Pressable>
   );
@@ -21,16 +26,29 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingVertical: 7,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E6DED1",
   },
   icon: {
-    fontSize: 16,
     width: 22,
+    alignItems: "center",
+  },
+  copy: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    color: "#78845C",
   },
   text: {
-    flex: 1,
     fontSize: 12,
     color: "#655D54",
+    marginTop: 2,
   },
   arrow: {
     fontSize: 18,

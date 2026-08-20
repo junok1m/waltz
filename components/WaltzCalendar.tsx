@@ -1,12 +1,7 @@
 import { useRef, useState } from "react";
 import { PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Flame,
-} from "@sketchyicons/react-native";
+import { ArrowLeft, ArrowRight } from "@sketchyicons/react-native";
 import { Walk } from "../types/walk";
-import { calculateWalkStreak } from "../utils/streak";
 import { formatTime } from "../utils/time";
 
 type Props = {
@@ -18,7 +13,6 @@ export function WaltzCalendar({ walks }: Props) {
   const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [displayedMonth, setDisplayedMonth] = useState(currentMonth);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const streak = calculateWalkStreak(walks);
 
   const moveMonth = (delta: number) => {
     setDisplayedMonth((previous) => {
@@ -173,12 +167,6 @@ export function WaltzCalendar({ walks }: Props) {
         </View>
       ) : null}
 
-      <View style={s.streakLine}>
-        <Flame size={17} strokeWidth={2} color="#E87859" />
-        <Text style={s.streakText}>
-          {streak} day{streak === 1 ? "" : "s"} streak
-        </Text>
-      </View>
     </View>
   );
 }
@@ -257,17 +245,5 @@ const s = StyleSheet.create({
     fontSize: 12,
     color: "#655D54",
     marginTop: 2,
-  },
-  streakLine: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 18,
-  },
-  streakText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#655D54",
   },
 });

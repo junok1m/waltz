@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -10,13 +11,20 @@ import {
 import {
   ChartBar,
   Dog,
+  Flame,
   House,
+  Medal,
   Megaphone,
   PawPrint,
   Rss,
+  Trophy,
 } from "@sketchyicons/react-native";
+import { HighlightRow } from "./HighlightRow";
 import { AppTab } from "./HubScreen";
 import { WaltzCalendar } from "./WaltzCalendar";
+import { fetchLatestActivityEvents } from "../services/activity";
+import { earnedBadgeIds } from "../services/badges";
+import { ActivityEvent } from "../types/activity";
 import { Walk } from "../types/walk";
 import { Dog as DogType } from "../types/dog";
 import { calculateWalkStreak } from "../utils/streak";
@@ -29,26 +37,32 @@ type Props = {
   onOpenDogs: () => void;
 };
 
-function getHighlight(walks: Walk[], dogName: string) {
-  const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
-  const streak = calculateWalkStreak(walks);
+function eventText(event: ActivityEvent, dogName: string) {
+  const metadata = event.metadata ?? {};
+  const stringValue = (key: string) =>
+    typeof metadata[key] === "string" ? metadata[key] : null;
+  const numberValue = (key: string) =>
+    typeof metadata[key] === "number" ? metadata[key] : null;
 
-  const milestones = [1000, 500, 100];
-  const unlocked = milestones.find((milestone) => totalDistance >= milestone);
-
-  if (unlocked) {
-    return `${dogName} unlocked the ${unlocked.toLocaleString()} km milestone.`;
+  switch (event.event_type) {
+    case "boop_received":
+      return `${dogName} received a boop.`;
+    case "badge_earned":
+      return `${dogName} earned the ${(event.badge_id ?? "new").replaceAll("-", " ")} badge.`;
+    case "shared_walk": {
+      const title = stringValue("title") ?? "A waltz";
+      const distance = numberValue("distance_km");
+      return distance === null
+        ? `${dogName} shared “${title}”.`
+        : `${dogName} shared “${title}” · ${distance.toFixed(2)} km.`;
+    }
+    case "area_unlocked":
+      return `${dogName} unlocked ${stringValue("area_name") ?? "a new area"}.`;
+    case "local_legend":
+      return `${dogName} became Local Legend of ${stringValue("segment_name") ?? "a new segment"}.`;
+    case "challenge_complete":
+      return `${dogName} completed ${stringValue("challenge_name") ?? "a challenge"}.`;
   }
-
-  if (streak >= 2) {
-    return `${dogName} is on a ${streak}-day streak.`;
-  }
-
-  if (walks.length > 0) {
-    return `${dogName}'s latest waltz is in the books.`;
-  }
-
-  return `${dogName}'s highlights will appear here.`;
 }
 
 export function HomeScreen({
@@ -59,7 +73,26 @@ export function HomeScreen({
 }: Props) {
   const [startOpen, setStartOpen] = useState(false);
   const [shareRoute, setShareRoute] = useState(false);
-  const highlight = getHighlight(walks, dog.name);
+  const [activities, setActivities] = useState<ActivityEvent[]>([]);
+  const streak = calculateWalkStreak(walks);
+  const completedChallenges = earnedBadgeIds(walks).length;
+
+  useEffect(() => {
+    let active = true;
+
+    fetchLatestActivityEvents(dog.id, 3)
+      .then((events) => {
+        if (active) setActivities(events);
+      })
+      .catch((error) => {
+        console.error("Load home highlights error:", error);
+        if (active) setActivities([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dog.id]);
 
   return (
     <View style={s.screen}>
@@ -67,15 +100,52 @@ export function HomeScreen({
         <Text style={s.logo}>waltz</Text>
       </View>
 
-      <View style={s.highlightRow}>
-        <Megaphone size={18} strokeWidth={2} color="#78845C" />
-        <View style={s.highlightCopy}>
-          <Text style={s.highlightLabel}>HIGHLIGHTS</Text>
-          <Text style={s.highlightText}>{highlight}</Text>
+      <ScrollView
+        style={s.content}
+        contentContainerStyle={s.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View>
+          {activities.length ? (
+            activities.map((event) => (
+              <HighlightRow
+                key={event.id}
+                icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
+                label="HIGHLIGHT"
+                text={eventText(event, dog.name)}
+              />
+            ))
+          ) : (
+            <HighlightRow
+              icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
+              label="HIGHLIGHTS"
+              text={`${dog.name}'s latest events will appear here.`}
+            />
+          )}
         </View>
-      </View>
 
-      <WaltzCalendar walks={walks} />
+        <WaltzCalendar walks={walks} />
+
+        <View style={s.summaryRows}>
+          <HighlightRow
+            icon={<Flame size={18} strokeWidth={2} color="#E87859" />}
+            label="STREAK"
+            text={`${streak} day${streak === 1 ? "" : "s"} in a row`}
+          />
+          <HighlightRow
+            icon={<Medal size={18} strokeWidth={2} color="#78845C" />}
+            label="CHALLENGES"
+            text={`${completedChallenges} completed · See all challenges`}
+            onPress={() => onNavigate("challenges")}
+          />
+          <HighlightRow
+            icon={<Trophy size={18} strokeWidth={2} color="#78845C" />}
+            label="LEADERBOARD"
+            text={`See where ${dog.name} ranks`}
+            onPress={() => onNavigate("leaderboard")}
+          />
+        </View>
+      </ScrollView>
 
       <View style={s.nav}>
         <Nav
@@ -184,25 +254,13 @@ const s = StyleSheet.create({
     fontSize: 34,
     color: "#1D1A17",
   },
-  highlightRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  highlightCopy: {
+  content: {
     flex: 1,
   },
-  highlightLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-    color: "#78845C",
+  contentContainer: {
+    paddingBottom: 12,
   },
-  highlightText: {
-    fontSize: 12,
-    color: "#655D54",
+  summaryRows: {
     marginTop: 2,
   },
   start: {

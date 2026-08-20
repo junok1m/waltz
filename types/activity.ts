@@ -1,0 +1,18 @@
+export type ActivityEventType =
+  | "boop_received"
+  | "badge_earned"
+  | "shared_walk"
+  | "area_unlocked"
+  | "local_legend"
+  | "challenge_complete";
+
+export type ActivityEvent = {
+  id: number;
+  dog_id: string;
+  event_type: ActivityEventType;
+  actor_dog_id: string | null;
+  walk_id: number | null;
+  badge_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};

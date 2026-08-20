@@ -4,7 +4,7 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import { Balloon, Bird, ChartBar, Coffee, Dog as DogIcon, Fish, Flag, Flame, Footprints, House, Medal, MoonStar, Mountain, PawPrint, Route, Rss, Ruler, Timer, Trophy, Umbrella } from "@sketchyicons/react-native";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
-import { Walk } from "../types/walk";
+import { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 
 export type AppTab = "home" | "map" | "community" | "me" | "leaderboard" | "stats" | "challenges";
@@ -21,7 +21,7 @@ export function HubScreen({tab,walks,badges,dog,onNavigate,onStartWalk,onSignOut
   const [startOpen,setStartOpen]=useState(false);
   const [shareRoute,setShareRoute]=useState(false);
   const totalDistance=walks.reduce((sum,w)=>sum+w.distance_km,0), totalSeconds=walks.reduce((sum,w)=>sum+w.duration_seconds,0), streak=calculateWalkStreak(walks), longest=walks.reduce((best,w)=>Math.max(best,w.distance_km),0);
-  const earlyBirdWalks=walks.filter(w=>new Date(w.ended_at).getHours()<8).length, nightShiftWalks=walks.filter(w=>new Date(w.ended_at).getHours()>=20).length, tags=(tag:string)=>walks.filter(w=>w.tags?.includes(tag)).length;
+  const earlyBirdWalks=walks.filter(w=>new Date(w.ended_at).getHours()<8).length, nightShiftWalks=walks.filter(w=>new Date(w.ended_at).getHours()>=20).length, tags=(tag:WalkTag)=>walks.filter(w=>w.tags?.includes(tag)).length;
   const title={map:"Report",community:"Feed",me:dog.name,leaderboard:"Leaderboard",stats:"Stats",challenges:"Challenges"}[tab];
   const badgeChallenges:ChallengeInfo[]=[
     {id:"keep-flame",title:"Keep the flame",progress:`${Math.min(streak,7)}/7`,description:"Complete a walk on 7 consecutive days.",done:streak>=7,icon:<Flame size={31} strokeWidth={2} color="#E87859"/>,color:"#F7DDD4"},
