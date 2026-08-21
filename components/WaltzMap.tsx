@@ -21,7 +21,7 @@ function cameraFor(points: Point[]) {
 export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=false}:Props){
   const line=useMemo(()=>({type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:points.map(p=>[p.longitude,p.latitude])}}),[points]);
   const {center,zoom}=cameraFor(points),first=points[0],last=points[points.length-1];
-  return <View style={styles.wrap}><Mapbox.MapView style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
+  return <View style={styles.wrap}><Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
     <Mapbox.Camera centerCoordinate={center} zoomLevel={zoom} animationDuration={0}/>
     {showLocation?<Mapbox.LocationPuck puckBearingEnabled puckBearing="heading"/>:null}
     {points.length>1?<Mapbox.ShapeSource id="waltz-route-source" shape={line}><Mapbox.LineLayer id="waltz-route-line" style={{lineColor:"#78845C",lineWidth:5,lineCap:"round",lineJoin:"round"}}/></Mapbox.ShapeSource>:null}

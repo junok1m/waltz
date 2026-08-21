@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Bone, ChartBar, Dog as DogIcon, House, PawPrint, Rss } from "@sketchyicons/react-native";
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Bone, ChartBar, Dog as DogIcon, House, Maximize2, PawPrint, Rss, Ruler, Timer, X } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
 import { fetchFeedItems, setWalkBoop } from "../services/boops";
@@ -19,6 +19,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyWalkIds, setBusyWalkIds] = useState<Set<number>>(new Set());
+  const [expandedWalk, setExpandedWalk] = useState<FeedWalk | null>(null);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -113,17 +114,21 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
 
               <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
               {walk.route_points.length ? (
-                <View style={s.map}>
+                <Pressable style={s.map} onPress={() => setExpandedWalk(walk)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s route map`}>
                   <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} />
-                </View>
+                  <View style={s.expandIcon}><Maximize2 size={16} strokeWidth={2} color="#655D54" /></View>
+                </Pressable>
               ) : null}
-              <View style={s.metrics}>
-                <Text style={s.metric}>{walk.distance_km.toFixed(2)} km</Text>
-                <Text style={s.dot}>·</Text>
-                <Text style={s.metric}>{formatTime(walk.duration_seconds)}</Text>
-              </View>
 
               <View style={s.actions}>
+                <View style={s.metricItem}>
+                  <Ruler size={17} strokeWidth={2} color="#78845C" />
+                  <Text style={s.metric}>{walk.distance_km.toFixed(2)} km</Text>
+                </View>
+                <View style={s.metricItem}>
+                  <Timer size={17} strokeWidth={2} color="#78845C" />
+                  <Text style={s.metric}>{formatTime(walk.duration_seconds)}</Text>
+                </View>
                 <Pressable
                   style={[
                     s.boopButton,
@@ -135,15 +140,31 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
                 >
                   <Bone size={18} strokeWidth={2} color="#78845C" />
                   <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>
-                    {walk.booped_by_me ? "Booped" : "Boop"}
+                    {walk.booped_by_me ? "Booped" : "Boop"} · {walk.boop_count}
                   </Text>
                 </Pressable>
-                <Text style={s.boopCount}>{walk.boop_count} boop{walk.boop_count === 1 ? "" : "s"}</Text>
               </View>
             </View>
           );
         })}
       </ScrollView>
+
+      <Modal visible={expandedWalk !== null} animationType="slide" onRequestClose={() => setExpandedWalk(null)}>
+        <View style={s.mapModal}>
+          <View style={s.mapModalHeader}>
+            <View>
+              <Text style={s.mapModalTitle}>{expandedWalk?.dog_name}'s waltz</Text>
+              <Text style={s.mapModalMeta}>{expandedWalk ? `${expandedWalk.distance_km.toFixed(2)} km · ${formatTime(expandedWalk.duration_seconds)}` : ""}</Text>
+            </View>
+            <Pressable style={s.closeMap} onPress={() => setExpandedWalk(null)} accessibilityLabel="Close route map">
+              <X size={25} strokeWidth={2} color="#332E29" />
+            </Pressable>
+          </View>
+          <View style={s.fullMap}>
+            {expandedWalk ? <WaltzMap points={expandedWalk.route_points} dogName={expandedWalk.dog_name} interactive /> : null}
+          </View>
+        </View>
+      </Modal>
 
       <View style={s.nav}>
         <Nav icon={<House size={22} strokeWidth={2} color="#332E29" />} label="Home" onPress={() => onNavigate("home")} />
@@ -196,17 +217,22 @@ const s = StyleSheet.create({
   dogName: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
   walkTitle: { fontSize: 17, fontWeight: "700", color: "#332E29", marginTop: 16 },
-  map: { height: 170, borderRadius: 4, overflow: "hidden", marginTop: 12 },
-  metrics: { flexDirection: "row", alignItems: "center", marginTop: 9 },
+  map: { height: 138, borderRadius: 4, overflow: "hidden", marginTop: 12 },
+  expandIcon: { position: "absolute", top: 8, right: 8, width: 29, height: 29, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,253,248,.88)", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 4 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
-  dot: { color: "#A99F93", marginHorizontal: 7 },
-  actions: { flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 10 },
-  boopButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4, paddingRight: 8 },
+  actions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 11 },
+  metricItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  boopButton: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 4 },
   boopButtonActive: { opacity: 1 },
   boopButtonDisabled: { opacity: 0.5 },
   boopText: { fontSize: 11, fontWeight: "800", color: "#596442" },
   boopTextActive: { color: "#596442" },
-  boopCount: { fontSize: 11, color: "#756B60", marginLeft: 9 },
+  mapModal: { flex: 1, backgroundColor: "#F8F3E9", paddingTop: 62, paddingHorizontal: 18, paddingBottom: 24 },
+  mapModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
+  mapModalTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 29, color: "#1D1A17" },
+  mapModalMeta: { fontSize: 11, fontWeight: "700", color: "#756B60", marginTop: 2 },
+  closeMap: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
+  fullMap: { flex: 1, borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, overflow: "hidden" },
   nav: { height: 68, borderRadius: 25, backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
   navItem: { width: 58, alignItems: "center" },
   navLabel: { fontSize: 9, color: "#443D37", marginTop: 2 },
