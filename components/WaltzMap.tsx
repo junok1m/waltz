@@ -6,7 +6,7 @@ import { Point } from "../types/walk";
 const MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 if (MAPBOX_PUBLIC_TOKEN) Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN);
 
-type Props = { points: Point[]; dogName?: string; interactive?: boolean; showLocation?: boolean };
+type Props = { points: Point[]; dogName?: string; interactive?: boolean; showLocation?: boolean; overview?: boolean };
 
 function cameraFor(points: Point[]) {
   if (!points.length) return { center: [151.2093, -33.8688] as [number, number], zoom: 10 };
@@ -18,11 +18,11 @@ function cameraFor(points: Point[]) {
   return {center,zoom};
 }
 
-export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=false}:Props){
+export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=false,overview=false}:Props){
   const line=useMemo(()=>({type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:points.map(p=>[p.longitude,p.latitude])}}),[points]);
-  const {center,zoom}=cameraFor(points),first=points[0],last=points[points.length-1];
+  const {center,zoom}=cameraFor(points),cameraZoom=overview?Math.min(zoom,12.5):zoom,first=points[0],last=points[points.length-1];
   return <View style={styles.wrap}><Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
-    <Mapbox.Camera centerCoordinate={center} zoomLevel={zoom} animationDuration={0}/>
+    <Mapbox.Camera centerCoordinate={center} zoomLevel={cameraZoom} animationDuration={0}/>
     {showLocation?<Mapbox.LocationPuck puckBearingEnabled puckBearing="heading"/>:null}
     {points.length>1?<Mapbox.ShapeSource id="waltz-route-source" shape={line}><Mapbox.LineLayer id="waltz-route-line" style={{lineColor:"#78845C",lineWidth:5,lineCap:"round",lineJoin:"round"}}/></Mapbox.ShapeSource>:null}
     {first?<Mapbox.PointAnnotation id="waltz-start" coordinate={[first.longitude,first.latitude]}><View style={styles.startDot}/></Mapbox.PointAnnotation>:null}

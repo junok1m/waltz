@@ -115,7 +115,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
               <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
               {walk.route_points.length ? (
                 <Pressable style={s.map} onPress={() => setExpandedWalk(walk)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s route map`}>
-                  <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} />
+                  <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} overview />
                   <View style={s.expandIcon}><Maximize2 size={16} strokeWidth={2} color="#655D54" /></View>
                 </Pressable>
               ) : null}
@@ -139,9 +139,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
                   onPress={() => toggleBoop(walk)}
                 >
                   <Bone size={18} strokeWidth={2} color="#78845C" />
-                  <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>
-                    {walk.booped_by_me ? "Booped" : "Boop"} · {walk.boop_count}
-                  </Text>
+                  <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>{walk.boop_count}</Text>
                 </Pressable>
               </View>
             </View>
@@ -220,10 +218,10 @@ const s = StyleSheet.create({
   map: { height: 138, borderRadius: 4, overflow: "hidden", marginTop: 12 },
   expandIcon: { position: "absolute", top: 8, right: 8, width: 29, height: 29, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,253,248,.88)", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 4 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
-  actions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 11 },
+  actions: { flexDirection: "row", alignItems: "center", gap: 22, borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 11 },
   metricItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   boopButton: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 4 },
-  boopButtonActive: { opacity: 1 },
+  boopButtonActive: { opacity: 0.65 },
   boopButtonDisabled: { opacity: 0.5 },
   boopText: { fontSize: 11, fontWeight: "800", color: "#596442" },
   boopTextActive: { color: "#596442" },
