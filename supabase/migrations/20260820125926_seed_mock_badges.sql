@@ -20,6 +20,12 @@ with badge_seed(dog_id, badge_id, earned_at) as (
     ('10000000-0000-4000-8000-000000000009'::uuid, 'trail', now() - interval '10 days 3 hours'),
     ('10000000-0000-4000-8000-000000000009'::uuid, 'mileage-100', now() - interval '28 days')
 )
-insert into public.dog_badges (dog_id, badge_id, earned_at)
-select dog_id, badge_id, earned_at from badge_seed
-on conflict (dog_id, badge_id) do nothing;
+insert into public.dog_badges (dog_id, badge_id, badge_type, period_key, earned_at)
+select
+  dog_id,
+  badge_id,
+  case when badge_id like 'mileage-%' then 'mileage' else 'monthly' end,
+  case when badge_id like 'mileage-%' then 'permanent' else to_char(earned_at at time zone 'Australia/Sydney', 'YYYY-MM') end,
+  earned_at
+from badge_seed
+on conflict (dog_id, badge_id, period_key) do nothing;

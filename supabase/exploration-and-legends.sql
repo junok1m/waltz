@@ -132,9 +132,9 @@ begin
   where dog_id = new.dog_id;
 
   if unlock_count >= 10 then
-    insert into public.dog_badges (dog_id, badge_id)
-    values (new.dog_id, 'urban-explorer')
-    on conflict (dog_id, badge_id) do nothing;
+    insert into public.dog_badges (dog_id, badge_id, badge_type, period_key, earned_at)
+    values (new.dog_id, 'urban-explorer', 'monthly', to_char(new.unlocked_at at time zone 'Australia/Sydney', 'YYYY-MM'), new.unlocked_at)
+    on conflict (dog_id, badge_id, period_key) do nothing;
   end if;
 
   return new;
@@ -192,9 +192,9 @@ begin
   where dog_id = new.dog_id;
 
   if crown_count >= 10 then
-    insert into public.dog_badges (dog_id, badge_id)
-    values (new.dog_id, 'local-royalty')
-    on conflict (dog_id, badge_id) do nothing;
+    insert into public.dog_badges (dog_id, badge_id, badge_type, period_key, earned_at)
+    values (new.dog_id, 'local-royalty', 'monthly', to_char(new.awarded_at at time zone 'Australia/Sydney', 'YYYY-MM'), new.awarded_at)
+    on conflict (dog_id, badge_id, period_key) do nothing;
   end if;
 
   return new;
