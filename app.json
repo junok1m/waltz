@@ -11,7 +11,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Waltz uses your photo library so you can choose a profile picture for your dog.",
-        "NSLocationWhenInUseUsageDescription": "Waltz uses your location to draw your walk and show your current position on the map."
+        "NSLocationWhenInUseUsageDescription": "Waltz uses your location to draw your walk and show your current position on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Waltz uses your location during an active walk so your route keeps recording when your screen is locked or you use another app."
       }
     },
     "android": {
@@ -45,7 +46,11 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Waltz uses your location to draw your walk and show your current position on the map."
+          "locationWhenInUsePermission": "Waltz uses your location to draw your walk and show your current position on the map.",
+          "locationAlwaysAndWhenInUsePermission": "Waltz uses your location during an active walk so your route keeps recording when your screen is locked or you use another app.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       [

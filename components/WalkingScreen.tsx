@@ -3,7 +3,7 @@ import { Point } from "../types/walk";
 import { formatTime } from "../utils/time";
 import { WaltzMap } from "./WaltzMap";
 
-type Props = { seconds: number; distance: number; points: Point[]; dogName: string; onStopWalk: () => void };
+type Props = { seconds: number; distance: number; points: Point[]; dogName: string; onStopWalk: () => void | Promise<void> };
 
 export function WalkingScreen({ seconds, distance, points, dogName, onStopWalk }: Props) {
   const latest = points[points.length - 1];

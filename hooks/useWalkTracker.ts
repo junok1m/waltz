@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 import * as Location from "expo-location";
+import { startBackgroundWalkUpdates, stopBackgroundWalkUpdates, WALK_LOCATION_TASK } from "../services/backgroundWalk";
 import { clearWalkDraft, loadWalkDraft, saveWalkDraft, WalkDraft } from "../services/walkDraft";
 import { Point, WalkTag } from "../types/walk";
 import { evaluateLocationSample, LocationSample } from "../utils/locationFilter";
@@ -21,6 +22,8 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
   const [trackerReady, setTrackerReady] = useState(false);
 
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const recorderMode = useRef<"background" | "foreground" | null>(null);
+  const stoppingWalk = useRef(false);
   const previousPoint = useRef<LocationSample | null>(null);
   const startingWalk = useRef(false);
   const startedAt = useRef<number | null>(null);
@@ -44,6 +47,19 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
   }, [isWalking]);
 
   useEffect(() => () => locationSubscription.current?.remove(), []);
+
+  useEffect(() => {
+    if (!isWalking || recorderMode.current !== "background") return;
+    let cancelled = false;
+    const refresh = async () => {
+      const draft = await loadWalkDraft();
+      if (cancelled || !draft || draft.status !== "walking" || draft.userId !== userId) return;
+      hydrateLiveDraft(draft);
+    };
+    refresh().catch((error) => console.warn("Couldn't refresh active walk:", error));
+    const timer = setInterval(() => refresh().catch((error) => console.warn("Couldn't refresh active walk:", error)), 1000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [isWalking, userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -92,11 +108,10 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       draftStatus.current = "walking";
       metadataRef.current = { title: "", shareRoute: input.shareRoute, tags: [] };
       await queueDraftSave(buildDraft("walking"));
-      await subscribeToLocations();
+      await startRecorder();
       setIsWalking(true);
     } catch (error) {
-      locationSubscription.current?.remove();
-      locationSubscription.current = null;
+      await stopRecorder();
       resetTrackerState();
       queueClearDraft();
       Alert.alert("Couldn't start tracking", error instanceof Error ? error.message : "Please check your location settings and try again.");
@@ -113,7 +128,8 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     previousPoint.current = null;
     try {
       if (!await ensurePreciseLocation()) throw new Error("Precise location is required to resume this walk.");
-      await subscribeToLocations();
+      await queueDraftSave({ ...draft, lastSample: null });
+      await startRecorder();
       setIsWalking(true);
     } catch (error) {
       const now = Date.now();
@@ -157,6 +173,36 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     );
   }
 
+  async function startRecorder() {
+    if (await requestBackgroundTracking()) {
+      await startBackgroundWalkUpdates();
+      recorderMode.current = "background";
+      return;
+    }
+    await subscribeToLocations();
+    recorderMode.current = "foreground";
+    Alert.alert("Background tracking is off", "This walk will still record while Waltz stays open. Enable Always Location in Settings before locking your screen.");
+  }
+
+  async function requestBackgroundTracking() {
+    if (!await Location.isBackgroundLocationAvailableAsync()) return false;
+    const current = await Location.getBackgroundPermissionsAsync();
+    if (current.status === "granted") return true;
+    const wantsBackground = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "Keep recording your walk?",
+        "Choose Allow Always so Waltz can keep drawing the route when your screen is locked or you use another app. Location is recorded only during an active walk.",
+        [
+          { text: "Not now", style: "cancel", onPress: () => resolve(false) },
+          { text: "Continue", onPress: () => resolve(true) },
+        ],
+        { cancelable: false },
+      );
+    });
+    if (!wantsBackground) return false;
+    return (await Location.requestBackgroundPermissionsAsync()).status === "granted";
+  }
+
   async function ensurePreciseLocation() {
     const permission = await Location.requestForegroundPermissionsAsync();
     if (permission.status !== "granted") {
@@ -170,24 +216,44 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     return true;
   }
 
-  function stopWalk() {
-    locationSubscription.current?.remove();
-    locationSubscription.current = null;
-    const now = Date.now();
-    endedAt.current = now;
-    draftStatus.current = "finished";
-    setSeconds(elapsedSeconds(now));
-    setIsWalking(false);
-    setWalkFinished(true);
-    queueDraftSave(buildDraft("finished"));
+  async function stopWalk() {
+    if (stoppingWalk.current) return;
+    stoppingWalk.current = true;
+    try {
+      await stopRecorder();
+      await draftWriteQueue.current.catch(() => undefined);
+      const latest = await loadWalkDraft();
+      if (latest?.status === "walking" && latest.userId === userId) hydrateLiveDraft(latest);
+      const now = Date.now();
+      endedAt.current = now;
+      draftStatus.current = "finished";
+      setSeconds(elapsedSeconds(now));
+      setIsWalking(false);
+      setWalkFinished(true);
+      await queueDraftSave(buildDraft("finished"));
+    } catch (error) {
+      Alert.alert("Couldn't stop tracking", "Please try STOP WALK again. Your recorded route is still safe.");
+      console.warn("Couldn't stop walk:", error);
+    } finally {
+      stoppingWalk.current = false;
+    }
   }
 
   async function resetWalk() {
-    locationSubscription.current?.remove();
-    locationSubscription.current = null;
+    await stopRecorder();
     startingWalk.current = false;
+    stoppingWalk.current = false;
     resetTrackerState();
     await queueClearDraft();
+  }
+
+  async function stopRecorder() {
+    locationSubscription.current?.remove();
+    locationSubscription.current = null;
+    if (recorderMode.current === "background" || await Location.hasStartedLocationUpdatesAsync(WALK_LOCATION_TASK)) {
+      await stopBackgroundWalkUpdates();
+    }
+    recorderMode.current = null;
   }
 
   function updateWalkDraftMetadata(update: Partial<DraftMetadata>) {
@@ -209,6 +275,14 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     setSeconds(elapsedSeconds(finished ? draft.endedAt ?? Date.now() : Date.now()));
     setIsWalking(false);
     setWalkFinished(finished);
+  }
+
+  function hydrateLiveDraft(draft: WalkDraft) {
+    distanceRef.current = draft.distanceKm;
+    pointsRef.current = draft.points;
+    previousPoint.current = draft.lastSample;
+    setDistance(draft.distanceKm);
+    setPoints(draft.points);
   }
 
   function buildDraft(status: WalkDraft["status"]): WalkDraft {
@@ -256,6 +330,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     draftOwner.current = null;
     draftStatus.current = null;
     metadataRef.current = { title: "", shareRoute: false, tags: [] };
+    recorderMode.current = null;
     setIsWalking(false);
     setWalkFinished(false);
     setSeconds(0);
