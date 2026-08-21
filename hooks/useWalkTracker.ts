@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 import * as Location from "expo-location";
-import { getDistanceInKm } from "../utils/distance";
 import { Point } from "../types/walk";
+import { evaluateLocationSample, LocationSample } from "../utils/locationFilter";
 
 export function useWalkTracker() {
   const [isWalking, setIsWalking] = useState(false);
@@ -12,7 +12,8 @@ export function useWalkTracker() {
   const [points, setPoints] = useState<Point[]>([]);
 
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
-  const previousPoint = useRef<Point | null>(null);
+  const previousPoint = useRef<LocationSample | null>(null);
+  const startingWalk = useRef(false);
 
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -23,43 +24,60 @@ export function useWalkTracker() {
   useEffect(() => () => locationSubscription.current?.remove(), []);
 
   async function startWalk() {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Location needed", "Waltz needs your location to record walks.");
-      return;
-    }
+    if (startingWalk.current || isWalking) return;
+    startingWalk.current = true;
 
-    setSeconds(0);
-    setDistance(0);
-    setPoints([]);
-    setWalkFinished(false);
-    previousPoint.current = null;
-    setIsWalking(true);
-
-    locationSubscription.current = await Location.watchPositionAsync(
-      { accuracy: Location.Accuracy.High, timeInterval: 2000, distanceInterval: 3 },
-      (location) => {
-        const currentPoint: Point = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-        const priorPoint = previousPoint.current;
-
-        if (priorPoint) {
-          const segmentKm = getDistanceInKm(priorPoint, currentPoint);
-          setDistance((current) => current + segmentKm);
-        }
-
-        previousPoint.current = currentPoint;
-        setPoints((current) => [...current, currentPoint]);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== "granted") {
+        Alert.alert("Location needed", "Waltz needs your location to record walks.");
+        return;
       }
-    );
+
+      if (permission.ios?.accuracy === "reduced" || permission.android?.accuracy === "coarse") {
+        Alert.alert("Precise location needed", "Turn on Precise Location for Waltz in your phone settings so short walks can be measured accurately.");
+        return;
+      }
+
+      setSeconds(0);
+      setDistance(0);
+      setPoints([]);
+      setWalkFinished(false);
+      previousPoint.current = null;
+      locationSubscription.current = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 2 },
+        (location) => {
+          const currentPoint: LocationSample = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            accuracy: location.coords.accuracy,
+            speed: location.coords.speed,
+            timestamp: location.timestamp,
+          };
+          const decision = evaluateLocationSample(previousPoint.current, currentPoint);
+          if (!decision.accepted) return;
+
+          previousPoint.current = currentPoint;
+          if (decision.distanceKm > 0) setDistance((current) => current + decision.distanceKm);
+          setPoints((current) => [...current, currentPoint]);
+        },
+        (reason) => console.warn("Location tracking error:", reason),
+      );
+      setIsWalking(true);
+    } catch (error) {
+      locationSubscription.current?.remove();
+      locationSubscription.current = null;
+      Alert.alert("Couldn't start tracking", error instanceof Error ? error.message : "Please check your location settings and try again.");
+    } finally {
+      startingWalk.current = false;
+    }
   }
 
   function stopWalk() {
     locationSubscription.current?.remove();
     locationSubscription.current = null;
     previousPoint.current = null;
+    startingWalk.current = false;
     setIsWalking(false);
     setWalkFinished(true);
   }
@@ -68,6 +86,7 @@ export function useWalkTracker() {
     locationSubscription.current?.remove();
     locationSubscription.current = null;
     previousPoint.current = null;
+    startingWalk.current = false;
     setIsWalking(false);
     setWalkFinished(false);
     setSeconds(0);
