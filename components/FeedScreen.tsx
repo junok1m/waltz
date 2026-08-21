@@ -98,7 +98,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
           return (
             <View key={walk.id} style={s.card}>
               <View style={s.cardHeader}>
-                <View style={s.avatar}><Text style={s.avatarText}>🐕</Text></View>
+                <View style={s.avatar}><DogIcon size={25} strokeWidth={1.8} color="#78845C" /></View>
                 <View style={s.cardHeaderCopy}>
                   <Text style={s.dogName}>{walk.dog_name}</Text>
                   <Text style={s.date}>
@@ -133,7 +133,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
                   disabled={busy}
                   onPress={() => toggleBoop(walk)}
                 >
-                  <Bone size={18} strokeWidth={2} color={walk.booped_by_me ? "#FFFDF8" : "#78845C"} />
+                  <Bone size={18} strokeWidth={2} color="#78845C" />
                   <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>
                     {walk.booped_by_me ? "Booped" : "Boop"}
                   </Text>
@@ -181,32 +181,31 @@ const s = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   refresh: { fontSize: 11, fontWeight: "800", color: "#78845C" },
-  feed: { gap: 12, paddingBottom: 20 },
-  empty: { alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 26, padding: 28 },
+  feed: { gap: 14, paddingBottom: 20 },
+  empty: { alignItems: "center", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 28 },
   emptyDogs: { fontSize: 34 },
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1D1A17", marginTop: 10 },
   emptyText: { fontSize: 12, color: "#756B60", marginTop: 5 },
-  card: { backgroundColor: "#FFFDF8", borderRadius: 24, padding: 15 },
-  badgeCard: { backgroundColor: "#FFFDF8", borderRadius: 24, padding: 15, flexDirection: "row", alignItems: "center", gap: 12 },
+  card: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16 },
+  badgeCard: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   badgeCopy: { flex: 1 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   cardHeader: { flexDirection: "row", alignItems: "center" },
-  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
-  avatarText: { fontSize: 21 },
-  cardHeaderCopy: { flex: 1, marginLeft: 10 },
+  avatar: { width: 34, height: 34, alignItems: "center", justifyContent: "center" },
+  cardHeaderCopy: { flex: 1, marginLeft: 8 },
   dogName: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
-  walkTitle: { fontSize: 18, fontWeight: "800", color: "#332E29", marginTop: 14 },
-  map: { height: 170, borderRadius: 18, overflow: "hidden", marginTop: 12 },
-  metrics: { flexDirection: "row", alignItems: "center", marginTop: 5 },
+  walkTitle: { fontSize: 17, fontWeight: "700", color: "#332E29", marginTop: 16 },
+  map: { height: 170, borderRadius: 4, overflow: "hidden", marginTop: 12 },
+  metrics: { flexDirection: "row", alignItems: "center", marginTop: 9 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
   dot: { color: "#A99F93", marginHorizontal: 7 },
-  actions: { flexDirection: "row", alignItems: "center", marginTop: 14 },
-  boopButton: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: "#B9C1A5", borderRadius: 999, paddingHorizontal: 13, paddingVertical: 8 },
-  boopButtonActive: { backgroundColor: "#89936B", borderColor: "#89936B" },
+  actions: { flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 10 },
+  boopButton: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4, paddingRight: 8 },
+  boopButtonActive: { opacity: 1 },
   boopButtonDisabled: { opacity: 0.5 },
   boopText: { fontSize: 11, fontWeight: "800", color: "#596442" },
-  boopTextActive: { color: "#FFFDF8" },
+  boopTextActive: { color: "#596442" },
   boopCount: { fontSize: 11, color: "#756B60", marginLeft: 9 },
   nav: { height: 68, borderRadius: 25, backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
   navItem: { width: 58, alignItems: "center" },
