@@ -29,9 +29,7 @@ export async function fetchWalks(): Promise<Walk[]> {
 }
 
 export async function createWalk(input: {
-  userId: string;
   dogId: string;
-  dogName: string;
   title: string;
   distanceKm: number;
   durationSeconds: number;
@@ -39,26 +37,18 @@ export async function createWalk(input: {
   shareRoute: boolean;
   tags: WalkTag[];
 }) {
-  const { data: walk, error: walkError } = await supabase
-    .from("walks")
-    .insert({
-      user_id: input.userId,
-      dog_name: input.dogName,
-      title: input.title.trim(),
-      distance_km: input.distanceKm,
-      duration_seconds: input.durationSeconds,
-      route_points: input.routePoints,
-      share_route: input.shareRoute,
-      tags: input.tags,
-      ended_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+  const { data: walkId, error } = await supabase.rpc("create_walk_with_dog", {
+    p_dog_id: input.dogId,
+    p_title: input.title.trim(),
+    p_distance_km: input.distanceKm,
+    p_duration_seconds: input.durationSeconds,
+    p_route_points: input.routePoints,
+    p_share_route: input.shareRoute,
+    p_tags: input.tags,
+  });
 
-  if (walkError) throw walkError;
-  const { error: dogLinkError } = await supabase.from("walk_dogs").insert({ walk_id: walk.id, dog_id: input.dogId });
-  if (dogLinkError) { await supabase.from("walks").delete().eq("id", walk.id); throw dogLinkError; }
-  return walk;
+  if (error) throw error;
+  return { id: Number(walkId) };
 }
 
 export async function setWalkHiddenFromProfile(walkId:number, hidden:boolean){
