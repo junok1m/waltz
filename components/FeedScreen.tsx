@@ -3,7 +3,7 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "rea
 import { Bone, ChartBar, Dog as DogIcon, House, Maximize2, PawPrint, Rss, Ruler, Timer, X } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
-import { fetchFeedItems, setWalkBoop } from "../services/boops";
+import { fetchFeedPage, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
 import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
 import { formatTime } from "../utils/time";
@@ -18,13 +18,19 @@ type Props = {
 export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [busyWalkIds, setBusyWalkIds] = useState<Set<number>>(new Set());
   const [expandedWalk, setExpandedWalk] = useState<FeedWalk | null>(null);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
     try {
-      setItems(await fetchFeedItems(dog.id, dog.owner_id));
+      const page = await fetchFeedPage(dog.id, dog.owner_id);
+      setItems(page.items);
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not load the feed";
       console.error("Load feed error:", error);
@@ -33,6 +39,25 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
       setLoading(false);
     }
   }, [dog.id, dog.owner_id]);
+
+  async function loadMore() {
+    if (!nextCursor || loading || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await fetchFeedPage(dog.id, dog.owner_id, nextCursor);
+      setItems((current) => {
+        const existing = new Set(current.map((item) => `${item.kind}-${item.id}`));
+        return [...current, ...page.items.filter((item) => !existing.has(`${item.kind}-${item.id}`))];
+      });
+      setNextCursor(page.nextCursor);
+      setHasMore(page.hasMore);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not load more activity";
+      Alert.alert("Feed unavailable", message);
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     loadFeed();
@@ -64,7 +89,13 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not save this Boop";
       Alert.alert("Boop failed", message);
-      await loadFeed();
+      setItems((current) =>
+        current.map((item) =>
+          item.kind === "walk" && item.id === walk.id
+            ? { ...item, booped_by_me: walk.booped_by_me, boop_count: walk.boop_count }
+            : item,
+        ),
+      );
     } finally {
       setBusyWalkIds((current) => {
         const next = new Set(current);
@@ -145,6 +176,12 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
             </View>
           );
         })}
+
+        {hasMore ? (
+          <Pressable style={[s.moreButton, (loading || loadingMore) && s.moreButtonDisabled]} onPress={loadMore} disabled={loading || loadingMore}>
+            <Text style={s.moreButtonText}>{loadingMore ? "Loading…" : "More waltzes"}</Text>
+          </Pressable>
+        ) : items.length > 0 ? <Text style={s.endText}>You're all caught up.</Text> : null}
       </ScrollView>
 
       <Modal visible={expandedWalk !== null} animationType="slide" onRequestClose={() => setExpandedWalk(null)}>
@@ -225,6 +262,10 @@ const s = StyleSheet.create({
   boopButtonDisabled: { opacity: 0.5 },
   boopText: { fontSize: 11, fontWeight: "800", color: "#596442" },
   boopTextActive: { color: "#596442" },
+  moreButton: { alignSelf: "center", borderWidth: 1, borderColor: "#CFC8BD", borderRadius: 999, paddingHorizontal: 22, paddingVertical: 11, marginTop: 4 },
+  moreButtonDisabled: { opacity: 0.5 },
+  moreButtonText: { fontSize: 12, fontWeight: "800", color: "#596442" },
+  endText: { textAlign: "center", fontSize: 11, color: "#82786E", paddingVertical: 8 },
   mapModal: { flex: 1, backgroundColor: "#F8F3E9", paddingTop: 62, paddingHorizontal: 18, paddingBottom: 24 },
   mapModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   mapModalTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 29, color: "#1D1A17" },

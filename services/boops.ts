@@ -31,8 +31,28 @@ type RawBoop = {
   from_dog_id: string;
 };
 
-export async function fetchFeedItems(activeDogId: string, activeOwnerId: string): Promise<FeedItem[]> {
-  const { data, error } = await supabase
+export const FEED_PAGE_SIZE = 20;
+
+export type FeedPage = {
+  items: FeedItem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+function itemDate(item: FeedItem) {
+  return item.kind === "walk" ? item.ended_at : item.created_at;
+}
+
+function itemKey(item: FeedItem) {
+  return `${item.kind}-${item.id}`;
+}
+
+export async function fetchFeedPage(
+  activeDogId: string,
+  activeOwnerId: string,
+  before?: string,
+): Promise<FeedPage> {
+  let walksQuery = supabase
     .from("walks")
     .select(
       "id,user_id,dog_name,title,distance_km,duration_seconds,ended_at,route_points,tags,walk_dogs!inner(dog_id,dogs!inner(id,owner_id,name,avatar_url,breed))",
@@ -41,7 +61,12 @@ export async function fetchFeedItems(activeDogId: string, activeOwnerId: string)
     .eq("hidden_from_profile", false)
     .neq("user_id", activeOwnerId)
     .order("ended_at", { ascending: false })
-    .limit(30);
+    .order("id", { ascending: false })
+    .limit(FEED_PAGE_SIZE + 1);
+
+  if (before) walksQuery = walksQuery.lt("ended_at", before);
+
+  const { data, error } = await walksQuery;
 
   if (error) throw error;
 
@@ -86,14 +111,19 @@ export async function fetchFeedItems(activeDogId: string, activeOwnerId: string)
     }];
   });
 
-  const { data: badgeData, error: badgeError } = await supabase
+  let badgesQuery = supabase
     .from("activity_events")
     .select("id,dog_id,badge_id,created_at,dog:dogs!activity_events_dog_id_fkey(name,owner_id)")
     .eq("event_type", "badge_earned")
     .neq("dog.owner_id", activeOwnerId)
     .not("badge_id", "is", null)
     .order("created_at", { ascending: false })
-    .limit(30);
+    .order("id", { ascending: false })
+    .limit(FEED_PAGE_SIZE + 1);
+
+  if (before) badgesQuery = badgesQuery.lt("created_at", before);
+
+  const { data: badgeData, error: badgeError } = await badgesQuery;
 
   if (badgeError) throw badgeError;
   const badgeEvents = (badgeData ?? []).flatMap<FeedBadgeEvent>((event) => {
@@ -111,9 +141,17 @@ export async function fetchFeedItems(activeDogId: string, activeOwnerId: string)
     }];
   });
 
-  return [...feedWalks, ...badgeEvents]
-    .sort((a, b) => new Date(b.kind === "walk" ? b.ended_at : b.created_at).getTime() - new Date(a.kind === "walk" ? a.ended_at : a.created_at).getTime())
-    .slice(0, 30);
+  const candidates = [...feedWalks, ...badgeEvents].sort((a, b) => {
+    const byDate = new Date(itemDate(b)).getTime() - new Date(itemDate(a)).getTime();
+    return byDate || itemKey(b).localeCompare(itemKey(a));
+  });
+  const items = candidates.slice(0, FEED_PAGE_SIZE);
+
+  return {
+    items,
+    nextCursor: items.length ? itemDate(items[items.length - 1]) : null,
+    hasMore: candidates.length > FEED_PAGE_SIZE,
+  };
 }
 
 export async function setWalkBoop(input: {
