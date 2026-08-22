@@ -182,8 +182,8 @@ export function HomeScreen({
               <View style={{ flex: 1 }}>
                 <Text style={s.shareTitle}>Share this route</Text>
                 <Text style={s.shareCopy}>
-                  Friends can see the route after you save the walk. Your live
-                  location is never shared.
+                  Waltz hides the start and finish by default. You can change
+                  the privacy option after the walk.
                 </Text>
               </View>
               <Switch value={shareRoute} onValueChange={setShareRoute} />
