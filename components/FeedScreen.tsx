@@ -6,16 +6,19 @@ import { WaltzMap } from "./WaltzMap";
 import { fetchFeedPage, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
 import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
+import { Walk } from "../types/walk";
+import { hasFeedLocationAnchor, rankFeedItemsForViewer } from "../utils/feedRanking";
 import { formatTime } from "../utils/time";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 
 type Props = {
   dog: Dog;
+  viewerWalks: Walk[];
   onNavigate: (tab: AppTab) => void;
   onStartWalk: (shareRoute: boolean) => void;
 };
 
-export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
+export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -28,7 +31,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
     setLoading(true);
     try {
       const page = await fetchFeedPage(dog.id, dog.owner_id);
-      setItems(page.items);
+      setItems(rankFeedItemsForViewer(page.items, viewerWalks));
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
     } catch (error) {
@@ -38,7 +41,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [dog.id, dog.owner_id]);
+  }, [dog.id, dog.owner_id, viewerWalks]);
 
   async function loadMore() {
     if (!nextCursor || loading || loadingMore || !hasMore) return;
@@ -47,7 +50,7 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
       const page = await fetchFeedPage(dog.id, dog.owner_id, nextCursor);
       setItems((current) => {
         const existing = new Set(current.map((item) => `${item.kind}-${item.id}`));
-        return [...current, ...page.items.filter((item) => !existing.has(`${item.kind}-${item.id}`))];
+        return [...current, ...rankFeedItemsForViewer(page.items, viewerWalks).filter((item) => !existing.has(`${item.kind}-${item.id}`))];
       });
       setNextCursor(page.nextCursor);
       setHasMore(page.hasMore);
@@ -108,7 +111,10 @@ export function FeedScreen({ dog, onNavigate, onStartWalk }: Props) {
   return (
     <View style={s.screen}>
       <View style={s.header}>
-        <Text style={s.title}>Feed</Text>
+        <View>
+          <Text style={s.title}>Feed</Text>
+          {hasFeedLocationAnchor(viewerWalks) ? <Text style={s.feedMode}>Nearby first · from your recent waltzes</Text> : null}
+        </View>
         <Pressable onPress={loadFeed} disabled={loading}>
           <Text style={s.refresh}>{loading ? "Loading…" : "Refresh"}</Text>
         </Pressable>
@@ -237,6 +243,7 @@ const s = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   refresh: { fontSize: 11, fontWeight: "800", color: "#78845C" },
+  feedMode: { fontSize: 9, color: "#82786E", marginTop: -2 },
   feed: { gap: 14, paddingBottom: 20 },
   empty: { alignItems: "center", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 28 },
   emptyDogs: { fontSize: 34 },

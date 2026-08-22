@@ -153,7 +153,7 @@ export default function App() {
   else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} onStopWalk={stopWalk} />;
   else if (tab === "me") content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} onEditDog={() => openDogManager(activeDog.id)} onHideWalk={hideWalkFromProfile} onDeleteWalk={removeWalk} onSignOut={signOut} />;
   else if (tab === "map") content = <HistoryScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} />;
-  else if (tab === "community") content = <FeedScreen dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} />;
+  else if (tab === "community") content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={setTab} onStartWalk={beginWalk} />;
   else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} badges={badges} dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} onSignOut={signOut} />;
   else content = <HomeScreen walks={walks} dog={activeDog} onStartWalk={beginWalk} onNavigate={setTab} onOpenDogs={() => openDogManager(null)} />;
 
