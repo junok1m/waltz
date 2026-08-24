@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Bone, ChartBar, Dog as DogIcon, House, Maximize2, PawPrint, Rss, Ruler, Timer, X } from "@sketchyicons/react-native";
+import { Bone, Dog as DogIcon, Maximize2, Ruler, Timer, X } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
+import { BottomNav } from "./BottomNav";
 import { fetchFeedPage, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
 import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
@@ -207,13 +208,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
         </View>
       </Modal>
 
-      <View style={s.nav}>
-        <Nav icon={<House size={22} strokeWidth={2} color="#332E29" />} label="Home" onPress={() => onNavigate("home")} />
-        <Nav icon={<ChartBar size={22} strokeWidth={2} color="#332E29" />} label="Report" onPress={() => onNavigate("map")} />
-        <Pressable style={s.pawButton} onPress={() => onStartWalk(false)}><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /></Pressable>
-        <Nav icon={<Rss size={22} strokeWidth={2} color="#78845C" />} label="Feed" active onPress={() => onNavigate("community")} />
-        <Nav icon={<DogIcon size={22} strokeWidth={2} color="#332E29" />} label="Me" onPress={() => onNavigate("me")} />
-      </View>
+      <BottomNav active="community" onNavigate={onNavigate} onStartPress={() => onStartWalk(false)} />
     </View>
   );
 }
@@ -232,10 +227,6 @@ function BadgeEventCard({ event }: { event: FeedBadgeEvent }) {
       <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
     </View>
   </View>;
-}
-
-function Nav({ icon, label, active, onPress }: { icon: React.ReactNode; label: string; active?: boolean; onPress: () => void }) {
-  return <Pressable style={s.navItem} onPress={onPress}>{icon}<Text style={[s.navLabel, active && s.active]}>{label}</Text></Pressable>;
 }
 
 const s = StyleSheet.create({
@@ -279,9 +270,4 @@ const s = StyleSheet.create({
   mapModalMeta: { fontSize: 11, fontWeight: "700", color: "#756B60", marginTop: 2 },
   closeMap: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   fullMap: { flex: 1, borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, overflow: "hidden" },
-  nav: { height: 68, borderRadius: 25, backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
-  navItem: { width: 58, alignItems: "center" },
-  navLabel: { fontSize: 9, color: "#443D37", marginTop: 2 },
-  active: { color: "#78845C", fontWeight: "800" },
-  pawButton: { width: 60, height: 60, borderRadius: 30, backgroundColor: "#89936B", alignItems: "center", justifyContent: "center", marginTop: -20 },
 });

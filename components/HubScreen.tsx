@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { Balloon, Bird, ChartBar, Coffee, Dog as DogIcon, Fish, Flag, Flame, Footprints, House, MoonStar, Mountain, PawPrint, Route, Rss, Ruler, Timer, Umbrella } from "@sketchyicons/react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Balloon, Bird, Coffee, Fish, Flag, Flame, Footprints, MoonStar, Mountain, Route, Ruler, Timer, Umbrella } from "@sketchyicons/react-native";
+import { BottomNav } from "./BottomNav";
+import { StartWalkSheet } from "./StartWalkSheet";
 import { Dog } from "../types/dog";
 import { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
@@ -18,7 +20,6 @@ function formatDuration(seconds: number) {
 export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeInfo | null>(null);
   const [startOpen, setStartOpen] = useState(false);
-  const [shareRoute, setShareRoute] = useState(false);
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
   const totalSeconds = walks.reduce((sum, walk) => sum + walk.duration_seconds, 0);
   const streak = calculateWalkStreak(walks);
@@ -80,13 +81,7 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
           </>
         ) : null}
       </ScrollView>
-      <View style={styles.nav}>
-        <Nav icon={<House size={22} strokeWidth={2} color="#332E29" />} label="Home" onPress={() => onNavigate("home")} />
-        <Nav icon={<ChartBar size={22} strokeWidth={2} color="#332E29" />} label="Report" onPress={() => onNavigate("map")} />
-        <Pressable style={styles.pawButton} onPress={() => setStartOpen(true)}><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /></Pressable>
-        <Nav icon={<Rss size={22} strokeWidth={2} color="#332E29" />} label="Feed" onPress={() => onNavigate("community")} />
-        <Nav icon={<DogIcon size={22} strokeWidth={2} color="#332E29" />} label="Me" onPress={() => onNavigate("me")} />
-      </View>
+      <BottomNav onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
       <Modal visible={!!selectedChallenge} transparent animationType="fade" onRequestClose={() => setSelectedChallenge(null)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedChallenge(null)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
@@ -101,19 +96,7 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
-      <Modal visible={startOpen} transparent animationType="fade" onRequestClose={() => setStartOpen(false)}>
-        <View style={styles.startOverlay}>
-          <View style={styles.startSheet}>
-            <View style={styles.startTitleRow}><PawPrint size={27} strokeWidth={2} color="#1D1A17" /><Text style={styles.startTitle}>Ready for a waltz?</Text></View>
-            <View style={styles.shareRow}>
-              <View style={{ flex: 1 }}><Text style={styles.shareTitle}>Share this route</Text><Text style={styles.shareCopy}>Friends can see the route after you save the walk. Your live location is never shared.</Text></View>
-              <Switch value={shareRoute} onValueChange={setShareRoute} />
-            </View>
-            <Pressable style={styles.startButton} onPress={() => { setStartOpen(false); onStartWalk(shareRoute); }}><View style={styles.startButtonContent}><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /><Text style={styles.startButtonText}>START WALK</Text></View></Pressable>
-            <Pressable onPress={() => setStartOpen(false)}><Text style={styles.cancel}>Cancel</Text></Pressable>
-          </View>
-        </View>
-      </Modal>
+      <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
     </View>
   );
 }
@@ -130,10 +113,6 @@ function Stat({ label, value, icon }: { label: string; value: string; icon: Reac
 function Empty({ text }: { text: string }) {
   return <View style={styles.empty}><Text style={styles.emptyText}>{text}</Text></View>;
 }
-function Nav({ icon, label, onPress }: { icon: React.ReactNode; label: string; onPress: () => void }) {
-  return <Pressable style={styles.navItem} onPress={onPress}>{icon}<Text style={styles.navLabel}>{label}</Text></Pressable>;
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { alignItems: "center", marginBottom: 18 },
@@ -171,19 +150,4 @@ const styles = StyleSheet.create({
   earned: { fontSize: 12, fontWeight: "800", color: "#596442", marginTop: 12 },
   closeButton: { backgroundColor: "#8C9670", paddingHorizontal: 28, paddingVertical: 12, borderRadius: 999, marginTop: 20 },
   closeText: { color: "#FFFDF8", fontWeight: "800" },
-  nav: { height: 68, borderRadius: 25, backgroundColor: "#FFFDF8", flexDirection: "row", alignItems: "center", justifyContent: "space-around" },
-  navItem: { width: 58, alignItems: "center" },
-  navLabel: { fontSize: 9, color: "#443D37", marginTop: 2 },
-  pawButton: { width: 60, height: 60, borderRadius: 30, backgroundColor: "#89936B", alignItems: "center", justifyContent: "center", marginTop: -20 },
-  startOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,.28)", justifyContent: "flex-end" },
-  startSheet: { backgroundColor: "#FFFDF8", borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 22, paddingTop: 24, paddingBottom: 34, gap: 18 },
-  startTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  startTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 29, color: "#1D1A17" },
-  shareRow: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#F8F3E9", borderRadius: 20, padding: 14 },
-  shareTitle: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
-  shareCopy: { fontSize: 11, lineHeight: 15, color: "#756B60", marginTop: 3 },
-  startButton: { backgroundColor: "#8C9670", borderRadius: 999, paddingVertical: 15 },
-  startButtonContent: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 },
-  startButtonText: { fontFamily: "Schoolbell_400Regular", fontSize: 23, color: "#FFFDF8", letterSpacing: 1 },
-  cancel: { textAlign: "center", fontSize: 13, color: "#756B60", textDecorationLine: "underline" },
 });
