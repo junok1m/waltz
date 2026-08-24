@@ -254,7 +254,11 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
   }
 
   async function resetWalk() {
-    await stopRecorder();
+    try {
+      await stopRecorder();
+    } catch (error) {
+      console.warn("Couldn't finish stopping the location recorder:", error);
+    }
     startingWalk.current = false;
     stoppingWalk.current = false;
     resetTrackerState();

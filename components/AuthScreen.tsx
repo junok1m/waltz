@@ -55,8 +55,8 @@ export function AuthScreen() {
       </View>
 
       <View style={styles.card}>
-        <Pressable style={[styles.socialButton, styles.appleButton]} disabled={busy}>
-          <Text style={styles.appleText}>  Continue with Apple</Text>
+        <Pressable style={[styles.socialButton, styles.appleButton]} disabled accessibilityState={{ disabled: true }}>
+          <Text style={styles.appleText}>  Apple sign-in · coming soon</Text>
         </Pressable>
 
         <Pressable
@@ -64,7 +64,7 @@ export function AuthScreen() {
           onPress={submitGoogleAuth}
           disabled={busy}
         >
-          <Text style={styles.googleText}>{busy ? "Opening Google…" : "G  Continue with Google"}</Text>
+          <Text style={styles.googleText}>{busy ? "Please wait…" : "G  Continue with Google"}</Text>
         </Pressable>
 
         <View style={styles.orRow}>
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
   },
   socialButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   buttonDisabled: { opacity: 0.6 },
-  appleButton: { backgroundColor: "#171513" },
-  appleText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+  appleButton: { backgroundColor: "#EEE8DF" },
+  appleText: { color: "#8A8077", fontSize: 14, fontWeight: "700" },
   googleButton: { borderWidth: 1, borderColor: "#DED6CB", backgroundColor: "#FFF" },
   googleText: { color: "#2B2723", fontSize: 16, fontWeight: "700" },
   orRow: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 2 },
