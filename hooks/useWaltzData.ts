@@ -9,6 +9,7 @@ import { Walk } from "../types/walk";
 export function useWaltzData(userId: string | null) {
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [dogsLoading, setDogsLoading] = useState(false);
+  const [dogsError, setDogsError] = useState(false);
   const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [allWalks, setAllWalks] = useState<Walk[]>([]);
   const [badges, setBadges] = useState<DogBadge[]>([]);
@@ -16,6 +17,7 @@ export function useWaltzData(userId: string | null) {
   const refreshDogs = useCallback(async () => {
     if (!userId) return;
     setDogsLoading(true);
+    setDogsError(false);
     try {
       const next = await fetchDogsForUser(userId);
       setDogs(next);
@@ -26,6 +28,7 @@ export function useWaltzData(userId: string | null) {
       );
     } catch (error) {
       console.error("Load dogs error:", error);
+      setDogsError(true);
     } finally {
       setDogsLoading(false);
     }
@@ -59,6 +62,7 @@ export function useWaltzData(userId: string | null) {
       setAllWalks([]);
       setBadges([]);
       setActiveDogId(null);
+      setDogsError(false);
       return;
     }
     void refreshDogs();
@@ -78,6 +82,7 @@ export function useWaltzData(userId: string | null) {
   return {
     dogs,
     dogsLoading,
+    dogsError,
     activeDogId,
     activeDog,
     walks,

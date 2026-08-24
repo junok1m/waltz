@@ -6,6 +6,7 @@ import { AppRouter } from "./components/AppRouter";
 import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { AppTab } from "./components/HubScreen";
+import { WaltzErrorScreen } from "./components/WaltzErrorScreen";
 import { WaltzLoadingScreen } from "./components/WaltzLoadingScreen";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useWaltzData } from "./hooks/useWaltzData";
@@ -22,6 +23,7 @@ export default function App() {
   const {
     dogs,
     dogsLoading,
+    dogsError,
     activeDog,
     walks,
     badges,
@@ -85,6 +87,7 @@ export default function App() {
   if (!fontsLoaded || !authReady || (session && !trackerReady)) return <WaltzLoadingScreen showWordmark={fontsLoaded} />;
   if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
   if (dogsLoading) return <WaltzLoadingScreen />;
+  if (dogsError && dogs.length === 0) return <WaltzErrorScreen onRetry={() => { void refreshDogs(); }} />;
   if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={refreshDogs} /><StatusBar style="dark" /></View>;
 
   return (
