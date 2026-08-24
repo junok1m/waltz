@@ -1,42 +1,34 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { useEffect } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Coffee, Fish, Mountain, PartyPopper } from "@sketchyicons/react-native";
+import { Point, RoutePrivacy, WalkTag } from "../types/walk";
+import { hiddenEndsWillShowMap } from "../utils/routePrivacy";
 import { formatTime } from "../utils/time";
+import { WaltzMap } from "./WaltzMap";
 
-type Props = {
-  seconds: number;
-  distance: number;
-  onSave: () => void;
-  onDiscard: () => void;
-};
+export function defaultWalkTitle(date:Date){const h=date.getHours();if(h<12)return"Morning waltz";if(h<18)return"Afternoon waltz";return"Night waltz";}
+type Props = { seconds:number; distance:number; points:Point[]; dogName:string; title:string; routePrivacy:RoutePrivacy; tags:WalkTag[]; isSaving:boolean; onTitleChange:(title:string)=>void; onTagsChange:(tags:WalkTag[])=>void; onRoutePrivacyChange:(privacy:RoutePrivacy)=>void; onSave:()=>void; onDiscard:()=>void };
 
-export function WalkCompleteScreen({ seconds, distance, onSave, onDiscard }: Props) {
-  return (
-    <>
-      <Text style={styles.complete}>Walk complete! 🎉</Text>
-      <Text style={styles.resultDistance}>{distance.toFixed(2)} km</Text>
-      <Text style={styles.resultTime}>{formatTime(seconds)}</Text>
-      <Text style={styles.message}>Janggo did a waltz 🐕</Text>
+export function WalkCompleteScreen({ seconds,distance,points,dogName,title,routePrivacy,tags,isSaving,onTitleChange,onTagsChange,onRoutePrivacyChange,onSave,onDiscard }: Props) {
+  useEffect(()=>{if(!title)onTitleChange(defaultWalkTitle(new Date()));},[title,onTitleChange]);
+  const toggleTag=(tag:WalkTag)=>onTagsChange(tags.includes(tag)?tags.filter((x)=>x!==tag):[...tags,tag]);
 
-      <Pressable style={styles.button} onPress={onSave}>
-        <Text style={styles.buttonText}>SAVE WALK</Text>
-      </Pressable>
-      <Pressable onPress={onDiscard}>
-        <Text style={styles.discard}>Discard</Text>
-      </Pressable>
-    </>
-  );
+  return <View style={styles.screen}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <View style={styles.titleRow}><Text style={styles.complete}>Walk complete!</Text><PartyPopper size={28} strokeWidth={2} color="#E87859" /></View>
+    <View style={styles.metricsRow}><View><Text style={styles.metricLabel}>DISTANCE</Text><Text style={styles.resultDistance}>{distance.toFixed(2)} km</Text></View><View><Text style={styles.metricLabel}>TIME</Text><Text style={styles.resultTime}>{formatTime(seconds)}</Text></View></View>
+    <Text style={styles.dogLine}>{dogName} did a waltz</Text>
+    <View><Text style={styles.fieldLabel}>Activity title</Text><TextInput value={title} onChangeText={onTitleChange} maxLength={60} editable={!isSaving} placeholder={defaultWalkTitle(new Date())} style={styles.titleInput}/></View>
+    <View style={styles.mapWrap}>{points.length?<WaltzMap points={points} dogName={dogName} interactive/>:<View style={styles.noRoute}><Text style={styles.noRouteText}>No route points recorded for this walk.</Text></View>}</View>
+    <View style={styles.tagsCard}><Text style={styles.shareTitle}>Add some tags</Text><Text style={styles.tagHint}>Optional. Pick anything that happened on this waltz.</Text><View style={styles.tagsRow}><Tag selected={tags.includes("trail")} disabled={isSaving} onPress={()=>toggleTag("trail")} icon={<Mountain size={20} strokeWidth={2}/>} label="Trail"/><Tag selected={tags.includes("swim")} disabled={isSaving} onPress={()=>toggleTag("swim")} icon={<Fish size={20} strokeWidth={2}/>} label="Gone fishing"/><Tag selected={tags.includes("coffee")} disabled={isSaving} onPress={()=>toggleTag("coffee")} icon={<Coffee size={20} strokeWidth={2}/>} label="Coffee stop"/></View></View>
+    <View style={styles.shareCard}><View style={styles.shareCopyWrap}><Text style={styles.shareTitle}>Who can see this?</Text><Text style={styles.shareCopy}>Your original route always stays available to you. Choose what appears in Feed.</Text></View>
+      <PrivacyChoice value="private" selected={routePrivacy==="private"} disabled={isSaving} title="Only me" copy="Keep this waltz off Feed." onSelect={onRoutePrivacyChange}/>
+      <PrivacyChoice value="hidden_ends" selected={routePrivacy==="hidden_ends"} disabled={isSaving} title="Hide start & finish · Recommended" copy={hiddenEndsWillShowMap(points)?"Share the middle while hiding about 200 m at each end.":"This route is short, so Waltz will safely share stats without a map."} onSelect={onRoutePrivacyChange}/>
+      <PrivacyChoice value="stats_only" selected={routePrivacy==="stats_only"} disabled={isSaving} title="Stats only" copy="Share distance, time and Boops without a map." onSelect={onRoutePrivacyChange}/>
+      <PrivacyChoice value="full" selected={routePrivacy==="full"} disabled={isSaving} title="Full route" copy="Share every recorded route point, including the start and finish." onSelect={onRoutePrivacyChange}/>
+    </View>
+    <Pressable style={[styles.button,isSaving&&styles.buttonDisabled]} disabled={isSaving} onPress={onSave}>{isSaving?<View style={styles.savingRow}><ActivityIndicator color="#FFFDF8"/><Text style={styles.buttonText}>SAVING...</Text></View>:<Text style={styles.buttonText}>SAVE WALK</Text>}</Pressable><Pressable disabled={isSaving} onPress={onDiscard}><Text style={[styles.discard,isSaving&&styles.discardDisabled]}>Discard</Text></Pressable>
+  </ScrollView></View>;
 }
-
-const styles = StyleSheet.create({
-  complete: { fontSize: 24, fontWeight: "600", marginBottom: 20 },
-  resultDistance: { fontSize: 52, fontWeight: "700" },
-  resultTime: { fontSize: 24, marginTop: 4, marginBottom: 24 },
-  message: { fontSize: 18, marginBottom: 36 },
-  button: {
-    backgroundColor: "#111",
-    paddingHorizontal: 36,
-    paddingVertical: 18,
-    borderRadius: 999,
-  },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
-  discard: { fontSize: 16, marginTop: 20, textDecorationLine: "underline" },
-});
+function Tag({selected,disabled,onPress,icon,label}:{selected:boolean;disabled:boolean;onPress:()=>void;icon:React.ReactNode;label:string}) { return <Pressable disabled={disabled} onPress={onPress} style={[styles.tag,selected&&styles.tagSelected]}><View style={styles.tagIcon}>{icon}</View><Text style={[styles.tagText,selected&&styles.tagTextSelected]}>{label}</Text></Pressable>; }
+function PrivacyChoice({value,selected,disabled,title,copy,onSelect}:{value:RoutePrivacy;selected:boolean;disabled:boolean;title:string;copy:string;onSelect:(value:RoutePrivacy)=>void}) { return <Pressable disabled={disabled} onPress={()=>onSelect(value)} style={[styles.privacyChoice,selected&&styles.privacyChoiceSelected]}><View style={[styles.radio,selected&&styles.radioSelected]}>{selected?<View style={styles.radioDot}/>:null}</View><View style={styles.privacyCopy}><Text style={styles.privacyTitle}>{title}</Text><Text style={styles.privacyHint}>{copy}</Text></View></Pressable>; }
+const styles=StyleSheet.create({screen:{flex:1},content:{gap:10,paddingBottom:18},titleRow:{flexDirection:"row",alignItems:"center",gap:8},complete:{fontFamily:"Schoolbell_400Regular",fontSize:32,color:"#25211D"},metricsRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"flex-end"},metricLabel:{fontSize:10,color:"#756B60",fontWeight:"800",marginBottom:3},resultDistance:{fontSize:36,fontWeight:"800",color:"#1D1A17"},resultTime:{fontSize:28,fontWeight:"800",color:"#1D1A17"},dogLine:{fontSize:13,color:"#756B60"},fieldLabel:{fontSize:10,fontWeight:"800",color:"#756B60",marginBottom:4},titleInput:{height:44,borderRadius:14,backgroundColor:"#FFFDF8",paddingHorizontal:13,fontSize:17,fontWeight:"800",color:"#1D1A17"},mapWrap:{height:210,borderRadius:24,overflow:"hidden",backgroundColor:"#EFE8DC"},noRoute:{flex:1,alignItems:"center",justifyContent:"center",padding:24},noRouteText:{color:"#756B60",textAlign:"center"},tagsCard:{backgroundColor:"#FFFDF8",borderRadius:20,padding:14,gap:8},tagHint:{fontSize:11,color:"#756B60"},tagsRow:{flexDirection:"row",flexWrap:"wrap",gap:8},tag:{flexDirection:"row",alignItems:"center",gap:5,paddingVertical:8,paddingHorizontal:10,borderRadius:999,backgroundColor:"#F1E7D7",borderWidth:1,borderColor:"transparent"},tagSelected:{backgroundColor:"#E6EAD9",borderColor:"#8C9670"},tagIcon:{width:21,alignItems:"center"},tagText:{fontSize:12,fontWeight:"700",color:"#655D54"},tagTextSelected:{color:"#596442"},shareCard:{backgroundColor:"#FFFDF8",borderRadius:20,padding:14,gap:8},shareCopyWrap:{gap:3,marginBottom:2},shareTitle:{fontSize:15,fontWeight:"800",color:"#1D1A17"},shareCopy:{fontSize:11,lineHeight:15,color:"#756B60"},privacyChoice:{flexDirection:"row",alignItems:"center",gap:10,borderWidth:1,borderColor:"#E5E0D8",borderRadius:12,padding:11},privacyChoiceSelected:{borderColor:"#8C9670",backgroundColor:"#F6F7F0"},radio:{width:18,height:18,borderRadius:9,borderWidth:1.5,borderColor:"#AAA197",alignItems:"center",justifyContent:"center"},radioSelected:{borderColor:"#78845C"},radioDot:{width:9,height:9,borderRadius:5,backgroundColor:"#78845C"},privacyCopy:{flex:1},privacyTitle:{fontSize:12,fontWeight:"800",color:"#332E29"},privacyHint:{fontSize:10,lineHeight:14,color:"#756B60",marginTop:2},button:{backgroundColor:"#8C9670",paddingVertical:15,borderRadius:999,alignItems:"center"},buttonDisabled:{opacity:.72},savingRow:{flexDirection:"row",alignItems:"center",gap:9},buttonText:{color:"#FFFDF8",fontFamily:"Schoolbell_400Regular",fontSize:23,letterSpacing:1.2},discard:{fontSize:14,textAlign:"center",color:"#756B60",textDecorationLine:"underline",paddingVertical:2},discardDisabled:{opacity:.45}});

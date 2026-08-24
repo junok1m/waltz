@@ -1,389 +1,346 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
 import {
-  ChartColumn,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
+import {
+  ChartBar,
   Dog,
   Flame,
   House,
-  MapPin,
   Medal,
+  Megaphone,
   PawPrint,
+  Rss,
   Trophy,
 } from "@sketchyicons/react-native";
+import { HighlightRow } from "./HighlightRow";
+import { AppTab } from "./HubScreen";
+import { WaltzCalendar } from "./WaltzCalendar";
+import { fetchLatestActivityEvents } from "../services/activity";
+import { earnedBadgeIds } from "../services/badges";
+import { ActivityEvent } from "../types/activity";
 import { Walk } from "../types/walk";
+import { Dog as DogType } from "../types/dog";
 import { calculateWalkStreak } from "../utils/streak";
 
 type Props = {
   walks: Walk[];
-  onStartWalk: () => void;
+  dog: DogType;
+  onStartWalk: (shareRoute: boolean) => void;
+  onNavigate: (tab: AppTab) => void;
+  onOpenDogs: () => void;
 };
 
-const monthFormatter = new Intl.DateTimeFormat("en-AU", {
-  month: "long",
-  year: "numeric",
-});
+function eventText(event: ActivityEvent, dogName: string) {
+  const metadata = event.metadata ?? {};
+  const stringValue = (key: string) =>
+    typeof metadata[key] === "string" ? metadata[key] : null;
+  const numberValue = (key: string) =>
+    typeof metadata[key] === "number" ? metadata[key] : null;
 
-function getMonthWalks(walks: Walk[], now: Date) {
-  return walks.filter((walk) => {
-    const date = new Date(walk.ended_at);
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-  });
+  switch (event.event_type) {
+    case "boop_received":
+      return `${event.actor_name ?? "A friend"} booped ${dogName}.`;
+    case "badge_earned":
+      return `${dogName} earned the ${(event.badge_id ?? "new").replaceAll("-", " ")} badge.`;
+    case "shared_walk": {
+      const title = stringValue("title") ?? "A waltz";
+      const distance = numberValue("distance_km");
+      return distance === null
+        ? `${dogName} shared “${title}”.`
+        : `${dogName} shared “${title}” · ${distance.toFixed(2)} km.`;
+    }
+    case "area_unlocked":
+      return `${dogName} unlocked ${stringValue("area_name") ?? "a new area"}.`;
+    case "local_legend":
+      return `${dogName} became Local Legend of ${stringValue("segment_name") ?? "a new segment"}.`;
+    case "challenge_complete":
+      return `${dogName} completed ${stringValue("challenge_name") ?? "a challenge"}.`;
+  }
 }
 
-function buildMonthCalendar(now: Date, activeDates: Set<number>) {
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const firstWeekday = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const cells: Array<number | null> = [];
-
-  for (let i = 0; i < firstWeekday; i += 1) cells.push(null);
-  for (let day = 1; day <= daysInMonth; day += 1) cells.push(day);
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  return cells.map((day) => ({ day, active: day !== null && activeDates.has(day) }));
-}
-
-export function HomeScreen({ walks, onStartWalk }: Props) {
-  const now = new Date();
+export function HomeScreen({
+  walks,
+  dog,
+  onStartWalk,
+  onNavigate,
+}: Props) {
+  const [startOpen, setStartOpen] = useState(false);
+  const [shareRoute, setShareRoute] = useState(false);
+  const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const streak = calculateWalkStreak(walks);
-  const monthWalks = getMonthWalks(walks, now);
-  const monthDistance = monthWalks.reduce((sum, walk) => sum + walk.distance_km, 0);
-  const activeDates = new Set(monthWalks.map((walk) => new Date(walk.ended_at).getDate()));
-  const calendar = buildMonthCalendar(now, activeDates);
+  const completedChallenges = earnedBadgeIds(walks).length;
+
+  useEffect(() => {
+    let active = true;
+
+    fetchLatestActivityEvents(dog.id, 3)
+      .then((events) => {
+        if (active) setActivities(events);
+      })
+      .catch((error) => {
+        console.error("Load home highlights error:", error);
+        if (active) setActivities([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dog.id]);
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.logo}>waltz</Text>
-          <View style={styles.streakRow}>
-            <Flame size={22} strokeWidth={2} color="#E87859" />
-            <Text style={styles.streak}>{streak} day{streak === 1 ? "" : "s"} streak</Text>
-          </View>
-        </View>
-        <View style={styles.profileBubble}>
-          <Text style={styles.profileDog}>🐕</Text>
-        </View>
+    <View style={s.screen}>
+      <View style={s.header}>
+        <Text style={s.logo}>waltz</Text>
       </View>
 
-      <View style={styles.dashboard}>
-        <View style={styles.calendarCard}>
-          <View style={styles.monthHeader}>
-            <Text style={styles.monthArrow}>‹</Text>
-            <Text style={styles.monthTitle}>{monthFormatter.format(now)}</Text>
-            <Text style={styles.monthArrow}>›</Text>
-          </View>
+      <ScrollView
+        style={s.content}
+        contentContainerStyle={s.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <HighlightRow
+          icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
+          label="HIGHLIGHTS"
+          text={
+            activities.length
+              ? activities.map((event) => eventText(event, dog.name))
+              : `${dog.name}'s latest events will appear here.`
+          }
+        />
 
-          <View style={styles.weekRow}>
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <Text key={day} style={styles.weekLabel}>{day}</Text>
-            ))}
-          </View>
+        <WaltzCalendar walks={walks} />
 
-          <View style={styles.calendarGrid}>
-            {calendar.map((cell, index) => (
-              <View key={`${cell.day ?? "blank"}-${index}`} style={styles.dayCell}>
-                {cell.day !== null && (
-                  <>
-                    <Text style={styles.dayNumber}>{cell.day}</Text>
-                    <Text style={[styles.paw, !cell.active && styles.pawHidden]}>🐾</Text>
-                  </>
-                )}
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.monthStats}>
-            <View style={styles.monthStatItem}>
-              <Text style={styles.monthStatIcon}>🐾</Text>
-              <View>
-                <Text style={styles.monthStatLabel}>Total walks</Text>
-                <Text style={styles.monthStatValue}>{monthWalks.length}</Text>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.monthStatItem}>
-              <Text style={styles.monthStatIcon}>⛰️</Text>
-              <View>
-                <Text style={styles.monthStatLabel}>Total distance</Text>
-                <Text style={styles.monthStatValue}>{monthDistance.toFixed(1)} km</Text>
-              </View>
-            </View>
-          </View>
+        <View style={s.summaryRows}>
+          <HighlightRow
+            icon={<Flame size={18} strokeWidth={2} color="#E87859" />}
+            label="STREAK"
+            text={`${streak} day${streak === 1 ? "" : "s"} in a row`}
+          />
+          <HighlightRow
+            icon={<Medal size={18} strokeWidth={2} color="#78845C" />}
+            label="CHALLENGES"
+            text={`${completedChallenges} completed · See all challenges`}
+            onPress={() => onNavigate("challenges")}
+          />
+          <HighlightRow
+            icon={<Trophy size={18} strokeWidth={2} color="#78845C" />}
+            label="LEADERBOARD"
+            text={`See where ${dog.name} ranks`}
+            onPress={() => onNavigate("leaderboard")}
+          />
         </View>
+      </ScrollView>
 
-        <Pressable style={styles.startButton} onPress={onStartWalk}>
-          <View style={styles.startButtonContent}>
-            <PawPrint size={28} strokeWidth={2} color="#FFFDF8" />
-            <Text style={styles.startButtonText}>START WALK</Text>
-          </View>
+      <View style={s.nav}>
+        <Nav
+          icon={<House size={22} strokeWidth={2} color="#78845C" />}
+          label="Home"
+          active
+          onPress={() => onNavigate("home")}
+        />
+        <Nav
+          icon={<ChartBar size={22} strokeWidth={2} color="#332E29" />}
+          label="Report"
+          onPress={() => onNavigate("map")}
+        />
+        <Pressable style={s.pawButton} onPress={() => setStartOpen(true)}>
+          <PawPrint size={27} strokeWidth={2} color="#FFFDF8" />
         </Pressable>
-
-        <View style={styles.quickRow}>
-          <Pressable style={styles.quickCard}>
-            <View style={[styles.quickIconBubble, styles.trophyBubble]}>
-              <Trophy size={24} strokeWidth={2} color="#1D1A17" />
-            </View>
-            <Text style={styles.quickTitle}>Leaderboard</Text>
-            <Text style={styles.quickText}>See how you rank</Text>
-            <Text style={styles.quickArrow}>›</Text>
-          </Pressable>
-
-          <Pressable style={styles.quickCard}>
-            <View style={[styles.quickIconBubble, styles.statsBubble]}>
-              <ChartColumn size={24} strokeWidth={2} color="#1D1A17" />
-            </View>
-            <Text style={styles.quickTitle}>Stats</Text>
-            <Text style={styles.quickText}>Your data playground</Text>
-            <Text style={styles.quickArrow}>›</Text>
-          </Pressable>
-
-          <Pressable style={styles.quickCard}>
-            <View style={[styles.quickIconBubble, styles.challengeBubble]}>
-              <Medal size={24} strokeWidth={2} color="#1D1A17" />
-            </View>
-            <Text style={styles.quickTitle}>Challenges</Text>
-            <Text style={styles.quickText}>Earn weird little badges</Text>
-            <Text style={styles.quickArrow}>›</Text>
-          </Pressable>
-        </View>
+        <Nav
+          icon={<Rss size={22} strokeWidth={2} color="#332E29" />}
+          label="Feed"
+          onPress={() => onNavigate("community")}
+        />
+        <Nav
+          icon={<Dog size={22} strokeWidth={2} color="#332E29" />}
+          label="Me"
+          onPress={() => onNavigate("me")}
+        />
       </View>
 
-      <View style={styles.bottomNav}>
-        <View style={styles.navItem}>
-          <House size={23} strokeWidth={2} color="#78845C" />
-          <Text style={styles.navLabelActive}>Home</Text>
-        </View>
-        <View style={styles.navItem}>
-          <MapPin size={23} strokeWidth={2} color="#332E29" />
-          <Text style={styles.navLabel}>Map</Text>
-        </View>
+      <Modal
+        visible={startOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStartOpen(false)}
+      >
+        <View style={s.overlay}>
+          <View style={s.sheet}>
+            <View style={s.sheetTitleRow}>
+              <PawPrint size={27} strokeWidth={2} color="#1D1A17" />
+              <Text style={s.sheetTitle}>Ready for a waltz?</Text>
+            </View>
 
-        <Pressable style={styles.pawNavButton} onPress={onStartWalk}>
-          <PawPrint size={28} strokeWidth={2} color="#FFFDF8" />
-        </Pressable>
+            <View style={s.shareRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.shareTitle}>Share this route</Text>
+                <Text style={s.shareCopy}>
+                  Waltz hides the start and finish by default. You can change
+                  the privacy option after the walk.
+                </Text>
+              </View>
+              <Switch value={shareRoute} onValueChange={setShareRoute} />
+            </View>
 
-        <View style={styles.navItem}>
-          <Text style={styles.navIcon}>♡</Text>
-          <Text style={styles.navLabel}>Community</Text>
+            <Pressable
+              style={s.start}
+              onPress={() => {
+                setStartOpen(false);
+                onStartWalk(shareRoute);
+              }}
+            >
+              <View style={s.startContent}>
+                <PawPrint size={27} strokeWidth={2} color="#FFFDF8" />
+                <Text style={s.startText}>START WALK</Text>
+              </View>
+            </Pressable>
+
+            <Pressable onPress={() => setStartOpen(false)}>
+              <Text style={s.cancel}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.navItem}>
-          <Dog size={23} strokeWidth={2} color="#332E29" />
-          <Text style={styles.navLabel}>Me</Text>
-        </View>
-      </View>
+      </Modal>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  headerRow: {
-    flexDirection: "row",
+function Nav({
+  icon,
+  label,
+  active,
+  onPress,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={s.navItem} onPress={onPress}>
+      {icon}
+      <Text style={[s.navLabel, active && s.active]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+const s = StyleSheet.create({
+  screen: {
+    flex: 1,
     justifyContent: "space-between",
+  },
+  header: {
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   logo: {
     fontFamily: "Schoolbell_400Regular",
-    fontSize: 52,
-    letterSpacing: 1,
+    fontSize: 34,
     color: "#1D1A17",
-    lineHeight: 56,
   },
-  streakRow: {
-    marginTop: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  streak: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#E87859",
-  },
-  profileBubble: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: "#F1E7D7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileDog: { fontSize: 30 },
-
-  dashboard: {
+  content: {
     flex: 1,
-    justifyContent: "space-between",
-    paddingBottom: 10,
   },
-  calendarCard: {
-    backgroundColor: "#FFFDF8",
-    borderRadius: 28,
-    paddingHorizontal: 18,
-    paddingTop: 12,
+  contentContainer: {
     paddingBottom: 12,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 2,
   },
-  monthHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
+  summaryRows: {
+    marginTop: 2,
   },
-  monthArrow: { fontSize: 28, color: "#2B251F", paddingHorizontal: 4 },
-  monthTitle: {
-    textAlign: "center",
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#2B251F",
-  },
-  weekRow: { flexDirection: "row", marginBottom: 1 },
-  weekLabel: {
-    width: "14.2857%",
-    textAlign: "center",
-    fontSize: 11,
-    color: "#756B60",
-  },
-  calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
-  dayCell: {
-    width: "14.2857%",
-    height: 35,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  dayNumber: { fontSize: 14, color: "#2D2823", lineHeight: 17 },
-  paw: { fontSize: 9, marginTop: -1, lineHeight: 10 },
-  pawHidden: { opacity: 0 },
-  monthStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#EEE5D7",
-    marginTop: 8,
-    paddingTop: 10,
-  },
-  monthStatItem: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 9,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  monthStatIcon: { fontSize: 21 },
-  monthStatLabel: { fontSize: 12, color: "#756B60" },
-  monthStatValue: {
-    marginTop: 1,
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#1D1A17",
-  },
-  divider: {
-    width: 1,
-    height: 38,
-    backgroundColor: "#EEE5D7",
-    marginHorizontal: 10,
-  },
-
-  startButton: {
+  start: {
     backgroundColor: "#8C9670",
     borderRadius: 22,
-    paddingVertical: 16,
+    paddingVertical: 15,
     alignItems: "center",
   },
-  startButtonContent: {
+  startContent: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  startButtonText: {
+  startText: {
     fontFamily: "Schoolbell_400Regular",
     color: "#FFFDF8",
-    fontSize: 26,
-    letterSpacing: 1.5,
+    fontSize: 25,
+    letterSpacing: 1.3,
   },
-
-  quickRow: { flexDirection: "row", gap: 8 },
-  quickCard: {
-    flex: 1,
-    height: 122,
-    backgroundColor: "#FFFDF8",
-    borderRadius: 20,
-    padding: 11,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.05,
-    shadowRadius: 9,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 1,
-  },
-  quickIconBubble: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 7,
-  },
-  trophyBubble: { backgroundColor: "#F6EBC4" },
-  statsBubble: { backgroundColor: "#E5EBDD" },
-  challengeBubble: { backgroundColor: "#F7DDD4" },
-  quickTitle: { fontSize: 14, fontWeight: "700", color: "#1D1A17" },
-  quickText: {
-    marginTop: 3,
-    fontSize: 10,
-    lineHeight: 13,
-    color: "#6A625A",
-    paddingRight: 8,
-  },
-  quickArrow: {
-    position: "absolute",
-    right: 9,
-    bottom: 8,
-    fontSize: 22,
-    color: "#423C36",
-  },
-
-  bottomNav: {
+  nav: {
     height: 68,
     borderRadius: 25,
     backgroundColor: "#FFFDF8",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingHorizontal: 4,
-    shadowColor: "#6A5B47",
-    shadowOpacity: 0.07,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 2,
   },
-  navItem: { width: 60, alignItems: "center", justifyContent: "center" },
-  navIcon: { fontSize: 23, color: "#332E29" },
-  navLabel: { marginTop: 2, fontSize: 10, color: "#443D37" },
-  navLabelActive: {
+  navItem: {
+    width: 58,
+    alignItems: "center",
+  },
+  navLabel: {
+    fontSize: 9,
+    color: "#443D37",
     marginTop: 2,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#78845C",
   },
-  pawNavButton: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+  active: {
+    color: "#78845C",
+    fontWeight: "800",
+  },
+  pawButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: "#89936B",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -22,
-    shadowColor: "#53603E",
-    shadowOpacity: 0.22,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    marginTop: -20,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.28)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: "#FFFDF8",
+    padding: 24,
+    paddingBottom: 38,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    gap: 18,
+  },
+  sheetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sheetTitle: {
+    fontFamily: "Schoolbell_400Regular",
+    fontSize: 30,
+  },
+  shareRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  shareTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  shareCopy: {
+    fontSize: 12,
+    color: "#756B60",
+    marginTop: 4,
+    lineHeight: 17,
+  },
+  cancel: {
+    textAlign: "center",
+    fontWeight: "700",
+    color: "#756B60",
   },
 });

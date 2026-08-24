@@ -1,39 +1,61 @@
+import { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  icon: React.ReactNode;
-  title: string;
+  icon: ReactNode;
+  label: string;
+  text: string | string[];
   onPress?: () => void;
 };
 
-export function HighlightRow({ icon, title, onPress }: Props) {
+export function HighlightRow({ icon, label, text, onPress }: Props) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <View style={styles.icon}>{icon}</View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.arrow}>›</Text>
+    <Pressable style={s.row} onPress={onPress}>
+      <View style={s.icon}>{icon}</View>
+      <View style={s.copy}>
+        <Text style={s.label}>{label}</Text>
+        {(Array.isArray(text) ? text : [text]).map((line, index) => (
+          <Text key={`${line}-${index}`} style={s.text}>
+            {line}
+          </Text>
+        ))}
+      </View>
+      {onPress ? <Text style={s.arrow}>›</Text> : null}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    gap: 10,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E6DED1",
   },
   icon: {
-    width: 32,
+    width: 22,
     alignItems: "center",
   },
-  title: {
+  copy: {
     flex: 1,
-    fontSize: 15,
-    color: "#1D1A17",
-    fontWeight: "600",
+  },
+  label: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    color: "#78845C",
+  },
+  text: {
+    fontSize: 12,
+    color: "#655D54",
+    marginTop: 2,
   },
   arrow: {
-    fontSize: 22,
+    fontSize: 18,
     color: "#756B60",
   },
 });

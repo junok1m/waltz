@@ -1,5 +1,7 @@
 import { registerRootComponent } from 'expo';
 
+// Background tasks must be defined at module scope before the app mounts.
+import './services/backgroundWalk';
 import App from './App';
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
