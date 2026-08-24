@@ -37,6 +37,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F8F3E9",
+          "image": "./assets/waltz-loading.png",
+          "imageWidth": 220,
+          "resizeMode": "contain"
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-sqlite",
