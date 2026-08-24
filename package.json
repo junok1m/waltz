@@ -7,12 +7,12 @@
     "@rnmapbox/maps": "^10.3.1",
     "@sketchyicons/react-native": "^0.5.0",
     "@supabase/supabase-js": "^2.112.3",
-    "expo": "~57.0.13",
-    "expo-auth-session": "~57.0.7",
-    "expo-dev-client": "~57.0.13",
+    "expo": "~57.0.15",
+    "expo-auth-session": "~57.0.8",
+    "expo-dev-client": "~57.0.14",
     "expo-font": "~57.0.1",
-    "expo-image-picker": "~57.0.11",
-    "expo-location": "~57.0.10",
+    "expo-image-picker": "~57.0.12",
+    "expo-location": "~57.0.12",
     "expo-sqlite": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "expo-task-manager": "~57.0.12",
@@ -22,7 +22,7 @@
     "react-native-maps": "1.27.2",
     "react-native-svg": "15.15.4",
     "react-native-url-polyfill": "^4.0.0",
-    "unimodules-app-loader": "56.0.1"
+    "unimodules-app-loader": "~57.0.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
