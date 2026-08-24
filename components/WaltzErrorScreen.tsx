@@ -3,14 +3,20 @@ import { StatusBar } from "expo-status-bar";
 
 type Props = {
   onRetry: () => void;
+  title?: string;
+  copy?: string;
 };
 
-export function WaltzErrorScreen({ onRetry }: Props) {
+export function WaltzErrorScreen({
+  onRetry,
+  title = "Lost the scent",
+  copy = "Waltz couldn't fetch your walking buddy. Check your connection and let's sniff again.",
+}: Props) {
   return (
     <View style={styles.container} accessibilityRole="alert">
       <Image source={require("../assets/waltz-loading.png")} style={styles.artwork} resizeMode="contain" />
-      <Text style={styles.title}>Lost the scent</Text>
-      <Text style={styles.copy}>Waltz couldn't fetch your walking buddy. Check your connection and let's sniff again.</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.copy}>{copy}</Text>
       <Pressable style={styles.button} onPress={onRetry} accessibilityRole="button">
         <Text style={styles.buttonText}>Try again</Text>
       </Pressable>

@@ -16,7 +16,7 @@ import { deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
-  const { authReady, session, signOut } = useAuthSession();
+  const { authReady, authError, session, retryAuth, signOut } = useAuthSession();
   const [dogManagerOpen, setDogManagerOpen] = useState(false);
   const [dogManagerEditId, setDogManagerEditId] = useState<string | null>(null);
   const [tab, setTab] = useState<AppTab>("home");
@@ -86,6 +86,13 @@ export default function App() {
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 
   if (!fontsLoaded || !authReady || (session && !trackerReady)) return <WaltzLoadingScreen showWordmark={fontsLoaded} />;
+  if (authError) return (
+    <WaltzErrorScreen
+      title="Lost the trail"
+      copy="Waltz couldn't check your session. Check your connection and let's try that trail again."
+      onRetry={() => { void retryAuth(); }}
+    />
+  );
   if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
   if (dogsLoading) return <WaltzLoadingScreen />;
   if (dogsError && dogs.length === 0) return <WaltzErrorScreen onRetry={() => { void refreshDogs(); }} />;
