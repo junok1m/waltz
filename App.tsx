@@ -31,6 +31,8 @@ export default function App() {
     refreshDogs,
     refreshWalks,
     refreshBadges,
+    hideWalkLocally,
+    removeWalkLocally,
   } = useWaltzData(session?.user.id ?? null);
   const {
     routePrivacy,
@@ -80,8 +82,17 @@ export default function App() {
     return saveCompletedWalk({ distance, seconds, points, resetWalk });
   }
 
-  async function hideWalkFromProfile(walkId: number) { await setWalkHiddenFromProfile(walkId, true); await refreshWalks(); }
-  async function removeWalk(walkId: number) { await deleteWalk(walkId); await refreshWalks(); if (activeDog?.id) await refreshBadges(activeDog.id); }
+  async function hideWalkFromProfile(walkId: number) {
+    await setWalkHiddenFromProfile(walkId, true);
+    hideWalkLocally(walkId);
+    void refreshWalks();
+  }
+  async function removeWalk(walkId: number) {
+    await deleteWalk(walkId);
+    removeWalkLocally(walkId);
+    void refreshWalks();
+    if (activeDog?.id) void refreshBadges(activeDog.id);
+  }
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 

@@ -56,6 +56,16 @@ export function useWaltzData(userId: string | null) {
     }
   }, []);
 
+  const hideWalkLocally = useCallback((walkId: number) => {
+    setAllWalks((current) => current.map((walk) =>
+      walk.id === walkId ? { ...walk, hidden_from_profile: true } : walk
+    ));
+  }, []);
+
+  const removeWalkLocally = useCallback((walkId: number) => {
+    setAllWalks((current) => current.filter((walk) => walk.id !== walkId));
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       setDogs([]);
@@ -91,5 +101,7 @@ export function useWaltzData(userId: string | null) {
     refreshDogs,
     refreshWalks,
     refreshBadges,
+    hideWalkLocally,
+    removeWalkLocally,
   };
 }
