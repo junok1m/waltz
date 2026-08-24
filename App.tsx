@@ -3,16 +3,11 @@ import { Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Schoolbell_400Regular, useFonts } from "@expo-google-fonts/schoolbell";
 import type { Session } from "@supabase/supabase-js";
+import { AppRouter } from "./components/AppRouter";
 import { AuthScreen } from "./components/AuthScreen";
-import { DogManagerModal } from "./components/DogManagerModal";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
-import { FeedScreen } from "./components/FeedScreen";
-import { HomeScreen } from "./components/HomeScreen";
-import { AppTab, HubScreen } from "./components/HubScreen";
-import { HistoryScreen } from "./components/HistoryScreen";
-import { MeScreen } from "./components/MeScreen";
-import { defaultWalkTitle, WalkCompleteScreen } from "./components/WalkCompleteScreen";
-import { WalkingScreen } from "./components/WalkingScreen";
+import { AppTab } from "./components/HubScreen";
+import { defaultWalkTitle } from "./components/WalkCompleteScreen";
 import { useWalkTracker } from "./hooks/useWalkTracker";
 import { supabase } from "./lib/supabase";
 import { fetchDogBadges, syncDogBadges } from "./services/badges";
@@ -148,16 +143,54 @@ export default function App() {
   if (dogsLoading) return <View style={styles.container} />;
   if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={() => loadDogs(session.user.id)} /><StatusBar style="dark" /></View>;
 
-  let content;
-  if (walkFinished) content = <WalkCompleteScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} title={walkTitle} routePrivacy={routePrivacy} tags={walkTags} isSaving={isSaving} onTitleChange={(value) => { setWalkTitle(value); updateWalkDraftMetadata({ title: value }); }} onTagsChange={(value) => { setWalkTags(value); updateWalkDraftMetadata({ tags: value }); }} onRoutePrivacyChange={(value) => { setRoutePrivacy(value); updateWalkDraftMetadata({ shareRoute: value !== "private" }); }} onSave={saveWalk} onDiscard={discardWalk} />;
-  else if (isWalking) content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} onStopWalk={stopWalk} />;
-  else if (tab === "me") content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} onEditDog={() => openDogManager(activeDog.id)} onHideWalk={hideWalkFromProfile} onDeleteWalk={removeWalk} onSignOut={signOut} />;
-  else if (tab === "map") content = <HistoryScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} />;
-  else if (tab === "community") content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={setTab} onStartWalk={beginWalk} />;
-  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} />;
-  else content = <HomeScreen walks={walks} dog={activeDog} onStartWalk={beginWalk} onNavigate={setTab} onOpenDogs={() => openDogManager(null)} />;
-
-  return <View style={styles.container}>{content}<DogManagerModal visible={dogManagerOpen} userId={session.user.id} dogs={dogs} activeDogId={activeDog.id} initialEditDogId={dogManagerEditId} onClose={closeDogManager} onChanged={() => loadDogs(session.user.id)} onSelect={setActiveDogId} /><StatusBar style="dark" /></View>;
+  return (
+    <View style={styles.container}>
+      <AppRouter
+        tab={tab}
+        userId={session.user.id}
+        dogs={dogs}
+        activeDog={activeDog}
+        walks={walks}
+        badges={badges}
+        isWalking={isWalking}
+        walkFinished={walkFinished}
+        seconds={seconds}
+        distance={distance}
+        points={points}
+        walkTitle={walkTitle}
+        routePrivacy={routePrivacy}
+        walkTags={walkTags}
+        isSaving={isSaving}
+        dogManagerOpen={dogManagerOpen}
+        dogManagerEditId={dogManagerEditId}
+        onNavigate={setTab}
+        onStartWalk={beginWalk}
+        onStopWalk={stopWalk}
+        onSaveWalk={saveWalk}
+        onDiscardWalk={discardWalk}
+        onTitleChange={(value) => {
+          setWalkTitle(value);
+          updateWalkDraftMetadata({ title: value });
+        }}
+        onTagsChange={(value) => {
+          setWalkTags(value);
+          updateWalkDraftMetadata({ tags: value });
+        }}
+        onRoutePrivacyChange={(value) => {
+          setRoutePrivacy(value);
+          updateWalkDraftMetadata({ shareRoute: value !== "private" });
+        }}
+        onOpenDogs={openDogManager}
+        onCloseDogs={closeDogManager}
+        onDogsChanged={() => loadDogs(session.user.id)}
+        onSelectDog={setActiveDogId}
+        onHideWalk={hideWalkFromProfile}
+        onDeleteWalk={removeWalk}
+        onSignOut={signOut}
+      />
+      <StatusBar style="dark" />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: "#F8F3E9", paddingHorizontal: 18, paddingTop: 68, paddingBottom: 8 } });
