@@ -37,6 +37,7 @@ export default function App() {
     walkTags,
     walkTitle,
     isSaving,
+    saveFailed,
     setRoutePrivacy,
     setWalkTags,
     setWalkTitle,
@@ -108,6 +109,7 @@ export default function App() {
         routePrivacy={routePrivacy}
         walkTags={walkTags}
         isSaving={isSaving}
+        saveFailed={saveFailed}
         dogManagerOpen={dogManagerOpen}
         dogManagerEditId={dogManagerEditId}
         onNavigate={setTab}

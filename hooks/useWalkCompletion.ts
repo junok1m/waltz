@@ -31,6 +31,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
   const [walkTags, setWalkTags] = useState<WalkTag[]>([]);
   const [walkTitle, setWalkTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const saveInFlight = useRef(false);
 
   function recoverMetadata(metadata: RecoveredMetadata) {
@@ -40,6 +41,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
   }
 
   function prepareWalk(shouldShare: boolean) {
+    setSaveFailed(false);
     setRoutePrivacy(shouldShare ? "hidden_ends" : "private");
     setWalkTags([]);
     setWalkTitle("");
@@ -52,6 +54,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
   }
 
   async function discardCompletedWalk(resetWalk: CompletedWalk["resetWalk"]) {
+    setSaveFailed(false);
     clearMetadata();
     await resetWalk();
   }
@@ -69,6 +72,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
 
     saveInFlight.current = true;
     setIsSaving(true);
+    setSaveFailed(false);
     let saved = false;
     try {
       await createWalk({
@@ -94,7 +98,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     } catch (error) {
       console.error(saved ? "Post-save refresh error:" : "Save walk error:", error);
       if (!saved) {
-        Alert.alert("Save failed", error instanceof Error ? error.message : "Unknown error");
+        setSaveFailed(true);
       }
     } finally {
       saveInFlight.current = false;
@@ -107,6 +111,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     walkTags,
     walkTitle,
     isSaving,
+    saveFailed,
     setRoutePrivacy,
     setWalkTags,
     setWalkTitle,

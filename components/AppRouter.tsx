@@ -26,6 +26,7 @@ type Props = {
   routePrivacy: RoutePrivacy;
   walkTags: WalkTag[];
   isSaving: boolean;
+  saveFailed: boolean;
   dogManagerOpen: boolean;
   dogManagerEditId: string | null;
   onNavigate: (tab: AppTab) => void;
@@ -62,6 +63,7 @@ export function AppRouter(props: Props) {
     routePrivacy,
     walkTags,
     isSaving,
+    saveFailed,
     dogManagerOpen,
     dogManagerEditId,
     onNavigate,
@@ -80,6 +82,7 @@ export function AppRouter(props: Props) {
         routePrivacy={routePrivacy}
         tags={walkTags}
         isSaving={isSaving}
+        saveFailed={saveFailed}
         onTitleChange={props.onTitleChange}
         onTagsChange={props.onTagsChange}
         onRoutePrivacyChange={props.onRoutePrivacyChange}
