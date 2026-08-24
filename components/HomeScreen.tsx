@@ -70,7 +70,7 @@ export function HomeScreen({
   useEffect(() => {
     let active = true;
 
-    fetchLatestActivityEvents(dog.id, 3)
+    fetchLatestActivityEvents(dog.id, 1)
       .then((events) => {
         if (active) setActivities(events);
       })
@@ -110,7 +110,7 @@ export function HomeScreen({
           label="HIGHLIGHTS"
           text={
             activities.length
-              ? activities.map((event) => eventText(event, dog.name))
+              ? eventText(activities[0], dog.name)
               : `${dog.name}'s latest events will appear here.`
           }
         />
@@ -143,7 +143,6 @@ export function HomeScreen({
         visible={startOpen}
         onClose={() => setStartOpen(false)}
         onStart={onStartWalk}
-        description="Waltz hides the start and finish by default. You can change the privacy option after the walk."
       />
     </View>
   );

@@ -42,6 +42,13 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
   const [boopCount, setBoopCount] = useState(0);
   const [mapOpen, setMapOpen] = useState(false);
   const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
+  const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
+  const visibilityLabel = {
+    private: "Only me",
+    stats_only: "Stats only",
+    hidden_ends: "Start & finish hidden",
+    full: "Full route",
+  }[visibility];
 
   useEffect(() => {
     let active = true;
@@ -54,7 +61,13 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
   return (
     <View style={styles.walkCard}>
       <View style={styles.header}>
-        <View style={styles.flex}><Text style={styles.title}>{title}</Text><Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text></View>
+        <View style={styles.flex}>
+          <Text style={styles.title}>{title}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
+            <Text style={styles.visibility}>{visibilityLabel}</Text>
+          </View>
+        </View>
         <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
       </View>
       {points.length ? (
@@ -93,6 +106,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
   title: { fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 7 },
+  visibility: { fontSize: 9, fontWeight: "700", color: "#78845C", marginTop: 2 },
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
   moreText: { fontSize: 15, fontWeight: "800", color: "#82786E", letterSpacing: 1 },
   map: { height: 128, borderRadius: 4, overflow: "hidden", backgroundColor: "#EFE8DC" },

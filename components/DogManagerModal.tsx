@@ -41,6 +41,7 @@ export function DogManagerModal({visible,userId,dogs,activeDogId,initialEditDogI
    await onChanged();
    setEditing(null);
    setAdding(false);
+   closeModal();
    if(photoError)Alert.alert("Profile saved","Your changes are safe, but the photo couldn’t upload. You can try the photo again from Edit profile.");
   }catch(e){Alert.alert("Couldn’t save",e instanceof Error?e.message:"Unknown error")}
   finally{setBusy(false)}

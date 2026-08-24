@@ -48,11 +48,11 @@ export function MeScreen({
   const monthlyBadges = badges.filter((badge) => badge.badge_type === "monthly" && badge.period_key === activePeriod);
   const mileageBadges = badges.filter((badge) => badge.badge_type === "mileage");
   const limitedBadges = badges.filter((badge) => badge.badge_type === "limited");
-  const sharedWalks = walks
-    .filter((walk) => walk.share_route && !walk.is_mock && !walk.hidden_from_profile)
+  const profileWalks = walks
+    .filter((walk) => !walk.is_mock && !walk.hidden_from_profile)
     .sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime());
   const timeline: TimelineItem[] = [
-    ...sharedWalks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
+    ...profileWalks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
     ...badges.map((badge) => ({ kind: "badge" as const, date: badge.earned_at, badge })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const recentActivity = timeline.slice(0, 8);
