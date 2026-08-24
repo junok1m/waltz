@@ -6,6 +6,7 @@ import { AppRouter } from "./components/AppRouter";
 import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { AppTab } from "./components/HubScreen";
+import { WaltzLoadingScreen } from "./components/WaltzLoadingScreen";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useWaltzData } from "./hooks/useWaltzData";
 import { useWalkCompletion } from "./hooks/useWalkCompletion";
@@ -81,9 +82,9 @@ export default function App() {
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 
-  if (!fontsLoaded || !authReady || (session && !trackerReady)) return <View style={styles.container} />;
+  if (!fontsLoaded || !authReady || (session && !trackerReady)) return <WaltzLoadingScreen showWordmark={fontsLoaded} />;
   if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
-  if (dogsLoading) return <View style={styles.container} />;
+  if (dogsLoading) return <WaltzLoadingScreen />;
   if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={refreshDogs} /><StatusBar style="dark" /></View>;
 
   return (
