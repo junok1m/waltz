@@ -107,7 +107,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       draftOwner.current = { userId, dogId: input.dogId };
       draftStatus.current = "walking";
       metadataRef.current = { title: "", shareRoute: input.shareRoute, tags: [] };
-      await queueDraftSave(buildDraft("walking"));
+      await persistRequiredDraft(buildDraft("walking"));
       await startRecorder();
       setIsWalking(true);
     } catch (error) {
@@ -128,7 +128,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     previousPoint.current = null;
     try {
       if (!await ensurePreciseLocation()) throw new Error("Precise location is required to resume this walk.");
-      await queueDraftSave({ ...draft, lastSample: null });
+      await persistRequiredDraft({ ...draft, lastSample: null });
       await startRecorder();
       setIsWalking(true);
     } catch (error) {
@@ -325,6 +325,15 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       .then(() => saveWalkDraft(draft))
       .catch((error) => console.warn("Couldn't preserve walk:", error));
     return draftWriteQueue.current;
+  }
+
+  async function persistRequiredDraft(draft: WalkDraft) {
+    await draftWriteQueue.current.catch(() => undefined);
+    const write = saveWalkDraft(draft);
+    draftWriteQueue.current = write.catch((error) => {
+      console.warn("Couldn't preserve walk:", error);
+    });
+    await write;
   }
 
   function queueClearDraft() {
