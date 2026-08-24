@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Mapbox from "@rnmapbox/maps";
 import { Point } from "../types/walk";
@@ -19,15 +19,18 @@ function cameraFor(points: Point[]) {
 }
 
 export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=false,overview=false}:Props){
+  const [hasLayout, setHasLayout] = useState(false);
   const line=useMemo(()=>({type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:points.map(p=>[p.longitude,p.latitude])}}),[points]);
   const {center,zoom}=cameraFor(points),cameraZoom=overview?Math.min(zoom,12.5):zoom,first=points[0],last=points[points.length-1];
-  return <View style={styles.wrap}><Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
+  return <View style={styles.wrap} onLayout={({nativeEvent:{layout}})=>{if(layout.width>1&&layout.height>1)setHasLayout(true)}}>
+    {hasLayout?<Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
     <Mapbox.Camera centerCoordinate={center} zoomLevel={cameraZoom} animationDuration={0}/>
     {showLocation?<Mapbox.LocationPuck puckBearingEnabled puckBearing="heading"/>:null}
     {points.length>1?<Mapbox.ShapeSource id="waltz-route-source" shape={line}><Mapbox.LineLayer id="waltz-route-line" style={{lineColor:"#78845C",lineWidth:5,lineCap:"round",lineJoin:"round"}}/></Mapbox.ShapeSource>:null}
     {first?<Mapbox.PointAnnotation id="waltz-start" coordinate={[first.longitude,first.latitude]}><View style={styles.startDot}/></Mapbox.PointAnnotation>:null}
     {last?<Mapbox.PointAnnotation id="waltz-finish" coordinate={[last.longitude,last.latitude]}><View style={styles.finishDot} accessibilityLabel={`${dogName} current location`}/></Mapbox.PointAnnotation>:null}
-  </Mapbox.MapView></View>;
+  </Mapbox.MapView>:null}
+  </View>;
 }
 
 const styles=StyleSheet.create({wrap:{flex:1,backgroundColor:"#EFE8DC"},startDot:{width:12,height:12,borderRadius:6,backgroundColor:"#FFFDF8",borderWidth:3,borderColor:"#78845C"},finishDot:{width:16,height:16,borderRadius:8,backgroundColor:"#78845C",borderWidth:3,borderColor:"#FFFDF8"}});
