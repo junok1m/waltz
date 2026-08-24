@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as Location from "expo-location";
 import { startBackgroundWalkUpdates, stopBackgroundWalkUpdates, WALK_LOCATION_TASK } from "../services/backgroundWalk";
 import { clearWalkDraft, loadWalkDraft, saveWalkDraft, WalkDraft } from "../services/walkDraft";
@@ -189,9 +189,10 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     const current = await Location.getBackgroundPermissionsAsync();
     if (current.status === "granted") return true;
     const wantsBackground = await new Promise<boolean>((resolve) => {
+      const permissionName = Platform.OS === "android" ? "Allow all the time" : "Allow Always";
       Alert.alert(
         "Keep recording your walk?",
-        "Choose Allow Always so Waltz can keep drawing the route when your screen is locked or you use another app. Location is recorded only during an active walk.",
+        `Choose ${permissionName} so Waltz can keep drawing the route when your screen is locked or you use another app. Location is recorded only during an active walk.`,
         [
           { text: "Not now", style: "cancel", onPress: () => resolve(false) },
           { text: "Continue", onPress: () => resolve(true) },
@@ -212,6 +213,19 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     if (permission.ios?.accuracy === "reduced" || permission.android?.accuracy === "coarse") {
       Alert.alert("Precise location needed", "Turn on Precise Location for Waltz in your phone settings so short walks can be measured accurately.");
       return false;
+    }
+    if (!await Location.hasServicesEnabledAsync()) {
+      if (Platform.OS === "android") {
+        try {
+          await Location.enableNetworkProviderAsync();
+        } catch {
+          Alert.alert("Turn on location", "Enable Location and Google Location Accuracy, then try starting the walk again.");
+          return false;
+        }
+      } else {
+        Alert.alert("Turn on location", "Enable Location Services in Settings, then try starting the walk again.");
+        return false;
+      }
     }
     return true;
   }
