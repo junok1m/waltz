@@ -1,7 +1,179 @@
 import { useState } from "react";
-import { Alert,Image,Pressable,ScrollView,StyleSheet,Text,View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Dog as DogIcon } from "@sketchyicons/react-native";
-import { monthKey } from "../services/badges";import { DogBadge } from "../types/badge";import { Dog } from "../types/dog";import { Walk } from "../types/walk";import { calculateWalkStreak } from "../utils/streak";import { BadgeIcon } from "./BadgeIcon";import { BottomNav } from "./BottomNav";import { AppTab } from "./HubScreen";import { fallbackWalkTitle,MeBadgeActivityCard,MeWalkActivityCard } from "./MeActivityCards";import { StartWalkSheet } from "./StartWalkSheet";
-type Props={dog:Dog;walks:Walk[];badges:DogBadge[];onNavigate:(tab:AppTab)=>void;onStartWalk:(shareRoute:boolean)=>void;onEditDog:()=>void;onHideWalk:(id:number)=>Promise<void>;onDeleteWalk:(id:number)=>Promise<void>;onSignOut:()=>void};
-export function MeScreen({dog,walks,badges,onNavigate,onStartWalk,onEditDog,onHideWalk,onDeleteWalk,onSignOut}:Props){const[startOpen,setStartOpen]=useState(false);const totalDistance=walks.reduce((s,w)=>s+w.distance_km,0),streak=calculateWalkStreak(walks),sharedWalks=walks.filter(w=>w.share_route&&!w.is_mock&&!w.hidden_from_profile).sort((a,b)=>new Date(b.ended_at).getTime()-new Date(a.ended_at).getTime()),activePeriod=monthKey(),monthlyBadges=badges.filter(b=>b.badge_type==="monthly"&&b.period_key===activePeriod),mileageBadges=badges.filter(b=>b.badge_type==="mileage"),limitedBadges=badges.filter(b=>b.badge_type==="limited"),timeline=[...sharedWalks.map(w=>({kind:"walk" as const,date:w.ended_at,walk:w})),...badges.map(b=>({kind:"badge" as const,date:b.earned_at,badge:b}))].sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()),recentActivity=timeline.slice(0,8),monthTitle=new Date().toLocaleDateString("en-AU",{month:"long",timeZone:"Australia/Sydney"});function openWalkMenu(w:Walk){Alert.alert(w.title?.trim()||fallbackWalkTitle(w.ended_at),"What would you like to do?",[{text:"Hide from profile",onPress:()=>onHideWalk(w.id).catch(e=>Alert.alert("Couldn't hide waltz",e instanceof Error?e.message:"Unknown error"))},{text:"Delete waltz",style:"destructive",onPress:()=>Alert.alert("Delete this waltz?","This removes it from Report and your stats too.",[{text:"Cancel",style:"cancel"},{text:"Delete",style:"destructive",onPress:()=>onDeleteWalk(w.id).catch(e=>Alert.alert("Couldn't delete waltz",e instanceof Error?e.message:"Unknown error"))}])},{text:"Cancel",style:"cancel"}])}return <View style={s.screen}><View style={s.header}><Text style={s.title}>{dog.name}</Text></View><ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}><View style={s.profile}>{dog.avatar_url?<Image source={{uri:dog.avatar_url}} style={s.avatarImage}/>:<View style={s.avatarFallback}><DogIcon size={42} strokeWidth={2} color="#665D54"/></View>}<Text style={s.profileLine}>{dog.profile_line||"Very good dog"}</Text><Text style={s.summary}>{walks.length} waltzes · {totalDistance.toFixed(1)} km · {streak} day streak</Text><Pressable style={s.editButton} onPress={onEditDog}><Text style={s.editButtonText}>Edit profile</Text></Pressable></View>{monthlyBadges.length>0?<><Text style={s.sectionTitle}>{monthTitle} Badges</Text><Text style={s.sectionCopy}>{monthlyBadges.length} collected this month</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.badgeRow}>{monthlyBadges.map(b=><BadgeIcon key={b.id} badgeId={b.badge_id}/>)}</ScrollView></>:<><Text style={s.sectionTitle}>{monthTitle} Badges</Text><Text style={s.sectionCopy}>A fresh sticker book for a new month.</Text></>}{mileageBadges.length>0?<><Text style={s.sectionTitle}>Mileage Clubs</Text><Text style={s.sectionCopy}>Permanent milestones from all your waltzes.</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.badgeRow}>{mileageBadges.map(b=><BadgeIcon key={b.id} badgeId={b.badge_id}/>)}</ScrollView></>:null}{limitedBadges.length>0?<><Text style={s.sectionTitle}>Limited Keepsakes</Text><Text style={s.sectionCopy}>Little pieces of Waltz history.</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.badgeRow}>{limitedBadges.map(b=><BadgeIcon key={b.id} badgeId={b.badge_id}/>)}</ScrollView></>:null}<Text style={s.sectionTitle}>Recent activity</Text><Text style={s.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>{recentActivity.length===0?<View style={s.empty}><Text style={s.emptyText}>No activity yet. Your first waltz or badge will appear here.</Text></View>:recentActivity.map(item=>item.kind==="walk"?<MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={()=>openWalkMenu(item.walk)}/>:<MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge}/>)}{timeline.length>8?<Pressable style={s.historyButton} onPress={()=>onNavigate("map")}><Text style={s.historyButtonText}>See full report ›</Text></Pressable>:null}<Pressable style={s.signOut} onPress={onSignOut}><Text style={s.signOutText}>Sign out</Text></Pressable></ScrollView><BottomNav active="me" onNavigate={onNavigate} onStartPress={()=>setStartOpen(true)}/><StartWalkSheet visible={startOpen} onClose={()=>setStartOpen(false)} onStart={onStartWalk}/></View>}
-const s=StyleSheet.create({screen:{flex:1,justifyContent:"space-between"},header:{alignItems:"center",marginBottom:10},title:{fontFamily:"Schoolbell_400Regular",fontSize:34,color:"#1D1A17"},content:{paddingBottom:24,gap:14},profile:{alignItems:"center",paddingVertical:10},avatarImage:{width:92,height:92,borderRadius:46},avatarFallback:{width:92,height:92,borderRadius:46,backgroundColor:"#F1E7D7",alignItems:"center",justifyContent:"center"},profileLine:{fontSize:14,color:"#655D54",marginTop:10},summary:{fontSize:12,fontWeight:"700",color:"#78845C",marginTop:9},editButton:{marginTop:12,borderRadius:999,backgroundColor:"#F1E7D7",paddingHorizontal:16,paddingVertical:8},editButtonText:{fontSize:11,fontWeight:"800",color:"#655D54"},sectionTitle:{fontFamily:"Schoolbell_400Regular",fontSize:27,color:"#1D1A17",marginTop:8},sectionCopy:{fontSize:11,color:"#756B60",marginTop:-8,lineHeight:16},badgeRow:{gap:10,paddingVertical:3,paddingRight:10},empty:{padding:22,borderRadius:8,borderWidth:1,borderColor:"#DDD8CF"},emptyText:{color:"#655D54",lineHeight:19},activityCard:{borderWidth:1,borderColor:"#DDD8CF",borderRadius:8,padding:16,gap:11},badgeActivityCard:{borderWidth:1,borderColor:"#DDD8CF",borderRadius:8,padding:16,flexDirection:"row",alignItems:"center",gap:12},badgeActivityMessage:{fontSize:15,fontWeight:"800",color:"#332E29",lineHeight:21},activityHeader:{flexDirection:"row",justifyContent:"space-between",gap:10},activityTitle:{fontSize:16,fontWeight:"700",color:"#1D1A17"},activityDate:{fontSize:10,color:"#82786E",marginTop:2},cardActions:{alignItems:"flex-end",gap:2},sharedPill:{fontSize:9,fontWeight:"800",letterSpacing:.8,textTransform:"uppercase",color:"#78845C",paddingHorizontal:4,paddingVertical:2},moreButton:{paddingHorizontal:5,paddingVertical:2},moreText:{fontSize:15,fontWeight:"800",color:"#82786E",letterSpacing:1},activityMap:{height:128,borderRadius:4,overflow:"hidden",backgroundColor:"#EFE8DC"},expandIcon:{position:"absolute",top:8,right:8,width:29,height:29,alignItems:"center",justifyContent:"center",backgroundColor:"rgba(255,253,248,.88)",borderWidth:1,borderColor:"#DDD8CF",borderRadius:4},metrics:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",borderTopWidth:1,borderTopColor:"#E5E0D8",paddingTop:11},metricItem:{flexDirection:"row",alignItems:"center",gap:5},metricValue:{fontSize:12,fontWeight:"700",color:"#655D54"},mapModal:{flex:1,backgroundColor:"#F8F3E9",paddingTop:62,paddingHorizontal:18,paddingBottom:24},mapModalHeader:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:14},mapModalTitle:{fontFamily:"Schoolbell_400Regular",fontSize:29,color:"#1D1A17"},mapModalMeta:{fontSize:11,fontWeight:"700",color:"#756B60",marginTop:2},closeMap:{width:42,height:42,alignItems:"center",justifyContent:"center"},fullMap:{flex:1,borderWidth:1,borderColor:"#DDD8CF",borderRadius:8,overflow:"hidden"},historyButton:{alignItems:"center",paddingVertical:12},historyButtonText:{fontSize:12,fontWeight:"800",color:"#78845C"},signOut:{padding:16,alignItems:"center"},signOutText:{color:"#B85F4A",fontWeight:"700"},cancel:{textAlign:"center",fontWeight:"700",color:"#756B60"}});
+import { monthKey } from "../services/badges";
+import { DogBadge } from "../types/badge";
+import { Dog } from "../types/dog";
+import { Walk } from "../types/walk";
+import { calculateWalkStreak } from "../utils/streak";
+import { BadgeIcon } from "./BadgeIcon";
+import { BottomNav } from "./BottomNav";
+import { AppTab } from "./HubScreen";
+import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard } from "./MeActivityCards";
+import { StartWalkSheet } from "./StartWalkSheet";
+
+type Props = {
+  dog: Dog;
+  walks: Walk[];
+  badges: DogBadge[];
+  onNavigate: (tab: AppTab) => void;
+  onStartWalk: (shareRoute: boolean) => void;
+  onEditDog: () => void;
+  onHideWalk: (id: number) => Promise<void>;
+  onDeleteWalk: (id: number) => Promise<void>;
+  onSignOut: () => void;
+};
+
+type TimelineItem =
+  | { kind: "walk"; date: string; walk: Walk }
+  | { kind: "badge"; date: string; badge: DogBadge };
+
+export function MeScreen({
+  dog,
+  walks,
+  badges,
+  onNavigate,
+  onStartWalk,
+  onEditDog,
+  onHideWalk,
+  onDeleteWalk,
+  onSignOut,
+}: Props) {
+  const [startOpen, setStartOpen] = useState(false);
+  const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
+  const streak = calculateWalkStreak(walks);
+  const activePeriod = monthKey();
+  const monthlyBadges = badges.filter((badge) => badge.badge_type === "monthly" && badge.period_key === activePeriod);
+  const mileageBadges = badges.filter((badge) => badge.badge_type === "mileage");
+  const limitedBadges = badges.filter((badge) => badge.badge_type === "limited");
+  const sharedWalks = walks
+    .filter((walk) => walk.share_route && !walk.is_mock && !walk.hidden_from_profile)
+    .sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime());
+  const timeline: TimelineItem[] = [
+    ...sharedWalks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
+    ...badges.map((badge) => ({ kind: "badge" as const, date: badge.earned_at, badge })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const recentActivity = timeline.slice(0, 8);
+  const monthTitle = new Date().toLocaleDateString("en-AU", {
+    month: "long",
+    timeZone: "Australia/Sydney",
+  });
+
+  function openWalkMenu(walk: Walk) {
+    const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
+    Alert.alert(title, "What would you like to do?", [
+      {
+        text: "Hide from profile",
+        onPress: () => onHideWalk(walk.id).catch((error) => {
+          Alert.alert("Couldn't hide waltz", error instanceof Error ? error.message : "Unknown error");
+        }),
+      },
+      {
+        text: "Delete waltz",
+        style: "destructive",
+        onPress: () => confirmDelete(walk),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
+  function confirmDelete(walk: Walk) {
+    Alert.alert("Delete this waltz?", "This removes it from Report and your stats too.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => onDeleteWalk(walk.id).catch((error) => {
+          Alert.alert("Couldn't delete waltz", error instanceof Error ? error.message : "Unknown error");
+        }),
+      },
+    ]);
+  }
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.header}><Text style={styles.title}>{dog.name}</Text></View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.profile}>
+          {dog.avatar_url
+            ? <Image source={{ uri: dog.avatar_url }} style={styles.avatarImage} />
+            : <View style={styles.avatarFallback}><DogIcon size={42} strokeWidth={2} color="#665D54" /></View>}
+          <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
+          <Text style={styles.summary}>{walks.length} waltzes · {totalDistance.toFixed(1)} km · {streak} day streak</Text>
+          <Pressable style={styles.editButton} onPress={onEditDog}><Text style={styles.editButtonText}>Edit profile</Text></Pressable>
+        </View>
+
+        <Text style={styles.sectionTitle}>{monthTitle} Badges</Text>
+        <Text style={styles.sectionCopy}>
+          {monthlyBadges.length ? `${monthlyBadges.length} collected this month` : "A fresh sticker book for a new month."}
+        </Text>
+        {monthlyBadges.length ? <BadgeRow badges={monthlyBadges} /> : null}
+
+        {mileageBadges.length ? (
+          <>
+            <Text style={styles.sectionTitle}>Mileage Clubs</Text>
+            <Text style={styles.sectionCopy}>Permanent milestones from all your waltzes.</Text>
+            <BadgeRow badges={mileageBadges} />
+          </>
+        ) : null}
+
+        {limitedBadges.length ? (
+          <>
+            <Text style={styles.sectionTitle}>Limited Keepsakes</Text>
+            <Text style={styles.sectionCopy}>Little pieces of Waltz history.</Text>
+            <BadgeRow badges={limitedBadges} />
+          </>
+        ) : null}
+
+        <Text style={styles.sectionTitle}>Recent activity</Text>
+        <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
+        {recentActivity.length ? recentActivity.map((item) => (
+          item.kind === "walk"
+            ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} />
+            : <MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge} />
+        )) : (
+          <View style={styles.empty}><Text style={styles.emptyText}>No activity yet. Your first waltz or badge will appear here.</Text></View>
+        )}
+
+        {timeline.length > 8 ? (
+          <Pressable style={styles.historyButton} onPress={() => onNavigate("map")}><Text style={styles.historyButtonText}>See full report ›</Text></Pressable>
+        ) : null}
+        <Pressable style={styles.signOut} onPress={onSignOut}><Text style={styles.signOutText}>Sign out</Text></Pressable>
+      </ScrollView>
+      <BottomNav active="me" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
+      <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
+    </View>
+  );
+}
+
+function BadgeRow({ badges }: { badges: DogBadge[] }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgeRow}>
+      {badges.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} />)}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, justifyContent: "space-between" },
+  header: { alignItems: "center", marginBottom: 10 },
+  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  content: { paddingBottom: 24, gap: 14 },
+  profile: { alignItems: "center", paddingVertical: 10 },
+  avatarImage: { width: 92, height: 92, borderRadius: 46 },
+  avatarFallback: { width: 92, height: 92, borderRadius: 46, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
+  profileLine: { fontSize: 14, color: "#655D54", marginTop: 10 },
+  summary: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 9 },
+  editButton: { marginTop: 12, borderRadius: 999, backgroundColor: "#F1E7D7", paddingHorizontal: 16, paddingVertical: 8 },
+  editButtonText: { fontSize: 11, fontWeight: "800", color: "#655D54" },
+  sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
+  sectionCopy: { fontSize: 11, color: "#756B60", marginTop: -8, lineHeight: 16 },
+  badgeRow: { gap: 10, paddingVertical: 3, paddingRight: 10 },
+  empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
+  emptyText: { color: "#655D54", lineHeight: 19 },
+  historyButton: { alignItems: "center", paddingVertical: 12 },
+  historyButtonText: { fontSize: 12, fontWeight: "800", color: "#78845C" },
+  signOut: { padding: 16, alignItems: "center" },
+  signOutText: { color: "#B85F4A", fontWeight: "700" },
+});
+
