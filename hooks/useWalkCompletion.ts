@@ -1,0 +1,118 @@
+import { useRef, useState } from "react";
+import { Alert } from "react-native";
+import { defaultWalkTitle } from "../components/WalkCompleteScreen";
+import { syncDogBadges } from "../services/badges";
+import { createWalk } from "../services/walks";
+import { Dog } from "../types/dog";
+import { Point, RoutePrivacy, Walk, WalkTag } from "../types/walk";
+
+type Options = {
+  userId: string | null;
+  activeDog: Dog | undefined;
+  refreshWalks: () => Promise<Walk[] | null>;
+  refreshBadges: (dogId: string) => Promise<unknown>;
+};
+
+type CompletedWalk = {
+  distance: number;
+  seconds: number;
+  points: Point[];
+  resetWalk: () => void | Promise<void>;
+};
+
+type RecoveredMetadata = {
+  title: string;
+  shareRoute: boolean;
+  tags: WalkTag[];
+};
+
+export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadges }: Options) {
+  const [routePrivacy, setRoutePrivacy] = useState<RoutePrivacy>("private");
+  const [walkTags, setWalkTags] = useState<WalkTag[]>([]);
+  const [walkTitle, setWalkTitle] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const saveInFlight = useRef(false);
+
+  function recoverMetadata(metadata: RecoveredMetadata) {
+    setWalkTitle(metadata.title);
+    setRoutePrivacy(metadata.shareRoute ? "hidden_ends" : "private");
+    setWalkTags(metadata.tags);
+  }
+
+  function prepareWalk(shouldShare: boolean) {
+    setRoutePrivacy(shouldShare ? "hidden_ends" : "private");
+    setWalkTags([]);
+    setWalkTitle("");
+  }
+
+  function clearMetadata() {
+    setWalkTags([]);
+    setWalkTitle("");
+    setRoutePrivacy("private");
+  }
+
+  async function discardCompletedWalk(resetWalk: CompletedWalk["resetWalk"]) {
+    clearMetadata();
+    await resetWalk();
+  }
+
+  async function saveCompletedWalk({ distance, seconds, points, resetWalk }: CompletedWalk) {
+    if (saveInFlight.current) return;
+    if (!activeDog) {
+      Alert.alert("No dog selected", "Add a walking buddy first.");
+      return;
+    }
+    if (!userId) {
+      Alert.alert("Session expired", "Please sign in again before saving this walk.");
+      return;
+    }
+
+    saveInFlight.current = true;
+    setIsSaving(true);
+    let saved = false;
+    try {
+      await createWalk({
+        dogId: activeDog.id,
+        title: walkTitle.trim() || defaultWalkTitle(new Date()),
+        distanceKm: distance,
+        durationSeconds: seconds,
+        routePoints: points,
+        routePrivacy,
+        tags: walkTags,
+      });
+      saved = true;
+      clearMetadata();
+      await resetWalk();
+      Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
+
+      const nextWalks = await refreshWalks();
+      if (nextWalks) {
+        const dogWalks = nextWalks.filter((walk) => walk.dog_id === activeDog.id);
+        await syncDogBadges(activeDog.id, dogWalks);
+        await refreshBadges(activeDog.id);
+      }
+    } catch (error) {
+      console.error(saved ? "Post-save refresh error:" : "Save walk error:", error);
+      if (!saved) {
+        Alert.alert("Save failed", error instanceof Error ? error.message : "Unknown error");
+      }
+    } finally {
+      saveInFlight.current = false;
+      setIsSaving(false);
+    }
+  }
+
+  return {
+    routePrivacy,
+    walkTags,
+    walkTitle,
+    isSaving,
+    setRoutePrivacy,
+    setWalkTags,
+    setWalkTitle,
+    recoverMetadata,
+    prepareWalk,
+    discardCompletedWalk,
+    saveCompletedWalk,
+  };
+}
