@@ -154,7 +154,7 @@ export default function App() {
   else if (tab === "me") content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} onEditDog={() => openDogManager(activeDog.id)} onHideWalk={hideWalkFromProfile} onDeleteWalk={removeWalk} onSignOut={signOut} />;
   else if (tab === "map") content = <HistoryScreen dog={activeDog} walks={walks} badges={badges} onNavigate={setTab} onStartWalk={beginWalk} />;
   else if (tab === "community") content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={setTab} onStartWalk={beginWalk} />;
-  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} badges={badges} dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} onSignOut={signOut} />;
+  else if (tab !== "home") content = <HubScreen tab={tab} walks={walks} dog={activeDog} onNavigate={setTab} onStartWalk={beginWalk} />;
   else content = <HomeScreen walks={walks} dog={activeDog} onStartWalk={beginWalk} onNavigate={setTab} onOpenDogs={() => openDogManager(null)} />;
 
   return <View style={styles.container}>{content}<DogManagerModal visible={dogManagerOpen} userId={session.user.id} dogs={dogs} activeDogId={activeDog.id} initialEditDogId={dogManagerEditId} onClose={closeDogManager} onChanged={() => loadDogs(session.user.id)} onSelect={setActiveDogId} /><StatusBar style="dark" /></View>;
