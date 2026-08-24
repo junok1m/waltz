@@ -6,12 +6,13 @@ import { createDog,deleteDog,updateDog,uploadDogAvatar } from "../services/dogs"
 import { Dog } from "../types/dog";
 
 type Props={visible:boolean;userId:string;dogs:Dog[];activeDogId:string;initialEditDogId?:string|null;onClose:()=>void;onChanged:()=>Promise<void>|void;onSelect:(id:string)=>void};
-export function DogManagerModal({visible,userId,dogs,activeDogId,initialEditDogId=null,onClose,onChanged,onSelect}:Props){
+export function DogManagerModal({visible,userId,dogs,activeDogId,initialEditDogId=null,onClose:closeModal,onChanged,onSelect}:Props){
  const [editing,setEditing]=useState<Dog|null>(null),[adding,setAdding]=useState(false),[name,setName]=useState(""),[breed,setBreed]=useState(""),[profileLine,setProfileLine]=useState("Very good dog"),[day,setDay]=useState(""),[month,setMonth]=useState(""),[year,setYear]=useState(""),[photo,setPhoto]=useState<string|null>(null),[busy,setBusy]=useState(false);
  function edit(d:Dog){setEditing(d);setAdding(false);setName(d.name);setBreed(d.breed||"");setProfileLine(d.profile_line||"Very good dog");setDay(d.birth_day?String(d.birth_day):"");setMonth(d.birth_month?String(d.birth_month):"");setYear(String(d.birth_year));setPhoto(d.avatar_url)}
  useEffect(()=>{if(!visible){setEditing(null);setAdding(false);setPhoto(null);return}if(initialEditDogId){const target=dogs.find(d=>d.id===initialEditDogId);if(target)edit(target)}},[visible,initialEditDogId]);
  function add(){setEditing(null);setAdding(true);setName("");setBreed("");setProfileLine("Very good dog");setDay("");setMonth("");setYear("");setPhoto(null)}
- async function pick(){const p=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!p.granted){Alert.alert("Photo permission needed","Allow photo access to choose a dog profile picture.");return}const r=await ImagePicker.launchImageLibraryAsync({mediaTypes:["images"],allowsEditing:true,aspect:[1,1],quality:.8});if(!r.canceled)setPhoto(r.assets[0].uri)}
+ function onClose(){if(!busy)closeModal()}
+ async function pick(){if(busy)return;const p=await ImagePicker.requestMediaLibraryPermissionsAsync();if(!p.granted){Alert.alert("Photo permission needed","Allow photo access to choose a dog profile picture.");return}const r=await ImagePicker.launchImageLibraryAsync({mediaTypes:["images"],allowsEditing:true,aspect:[1,1],quality:.8});if(!r.canceled)setPhoto(r.assets[0].uri)}
  function birthday(){const y=Number(year),m=month.trim()?Number(month):null,d=day.trim()?Number(day):null;if(!Number.isInteger(y)||y<1980||y>new Date().getFullYear())return null;if(m!==null&&(!Number.isInteger(m)||m<1||m>12))return null;if(d!==null&&(!Number.isInteger(d)||d<1||d>31))return null;if(d!==null&&m===null)return null;if(m!==null&&d!==null){const test=new Date(y,m-1,d);if(test.getFullYear()!==y||test.getMonth()!==m-1||test.getDate()!==d)return null}return{y,m,d}}
  async function save(){
   if(!name.trim()){Alert.alert("Name needed","Every waltzing dog needs a name.");return}
