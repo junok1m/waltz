@@ -4,7 +4,7 @@ import { createDog } from "../services/dogs";
 
 type Props = {
   userId: string;
-  onCreated: () => void;
+  onCreated: () => void | Promise<void>;
 };
 
 export function DogOnboardingScreen({ userId, onCreated }: Props) {
@@ -42,6 +42,19 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
       return;
     }
 
+    if (day !== null && month === null) {
+      Alert.alert("Month check", "Add a month if you add a day.");
+      return;
+    }
+
+    if (month !== null && day !== null) {
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        Alert.alert("Birthday check", "That date doesn't exist. Give the birthday another sniff.");
+        return;
+      }
+    }
+
     setBusy(true);
     try {
       await createDog({
@@ -52,7 +65,7 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
         birthDay: day,
         breed,
       });
-      onCreated();
+      await onCreated();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Something went wrong";
       Alert.alert("Couldn’t save your dog", message);
@@ -74,7 +87,7 @@ export function DogOnboardingScreen({ userId, onCreated }: Props) {
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="Janggo"
+          placeholder="Wang Wang Smith"
           placeholderTextColor="#A0968D"
           style={styles.input}
         />
