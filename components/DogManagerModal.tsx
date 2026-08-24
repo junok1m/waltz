@@ -19,13 +19,16 @@ export function DogManagerModal({visible,userId,dogs,activeDogId,initialEditDogI
   if(!dob){Alert.alert("Birthday check","Use DD / MM / YYYY. Year is required. Day and month are optional, but add a month if you add a day.");return}
   setBusy(true);
   try{
+   let photoError:unknown=null;
    if(editing){
     let avatar=editing.avatar_url;
-    if(photo&&photo!==editing.avatar_url)avatar=await uploadDogAvatar(userId,editing.id,photo);
+    if(photo&&photo!==editing.avatar_url){
+     try{avatar=await uploadDogAvatar(userId,editing.id,photo)}
+     catch(error){photoError=error}
+    }
     await updateDog(editing.id,{name,breed,profileLine:profileLine.trim()||"Very good dog",avatarUrl:avatar,birthYear:dob.y,birthMonth:dob.m,birthDay:dob.d});
    }else{
     const dog=await createDog({ownerId:userId,name,birthYear:dob.y,birthMonth:dob.m,birthDay:dob.d,breed,profileLine:profileLine.trim()||"Very good dog"});
-    let photoError:unknown=null;
     if(photo){
      try{
       const avatar=await uploadDogAvatar(userId,dog.id,photo);
@@ -33,15 +36,11 @@ export function DogManagerModal({visible,userId,dogs,activeDogId,initialEditDogI
      }catch(error){photoError=error}
     }
     onSelect(dog.id);
-    await onChanged();
-    setEditing(null);
-    setAdding(false);
-    if(photoError)Alert.alert("Profile saved","Your dog is ready to waltz, but the photo couldn’t upload. You can try the photo again from Edit profile.");
-    return;
    }
    await onChanged();
    setEditing(null);
    setAdding(false);
+   if(photoError)Alert.alert("Profile saved","Your changes are safe, but the photo couldn’t upload. You can try the photo again from Edit profile.");
   }catch(e){Alert.alert("Couldn’t save",e instanceof Error?e.message:"Unknown error")}
   finally{setBusy(false)}
  }
