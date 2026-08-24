@@ -13,7 +13,8 @@
         "NSPhotoLibraryUsageDescription": "Waltz uses your photo library so you can choose a profile picture for your dog.",
         "NSLocationWhenInUseUsageDescription": "Waltz uses your location to draw your walk and show your current position on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Waltz uses your location during an active walk so your route keeps recording when your screen is locked or you use another app."
-      }
+      },
+      "bundleIdentifier": "com.junok1m.waltz"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +26,10 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
       "package": "com.junok1m.waltz"
     },
