@@ -70,6 +70,7 @@ export function HomeScreen({
   dog,
   onStartWalk,
   onNavigate,
+  onOpenDogs,
 }: Props) {
   const [startOpen, setStartOpen] = useState(false);
   const [shareRoute, setShareRoute] = useState(false);
@@ -98,6 +99,16 @@ export function HomeScreen({
     <View style={s.screen}>
       <View style={s.header}>
         <Text style={s.logo}>waltz</Text>
+        <Pressable
+          style={s.dogSwitcher}
+          onPress={onOpenDogs}
+          accessibilityRole="button"
+          accessibilityLabel={`Switch dog. Currently ${dog.name}`}
+        >
+          <Dog size={15} strokeWidth={2} color="#78845C" />
+          <Text style={s.dogSwitcherName}>{dog.name}</Text>
+          <Text style={s.dogSwitcherChevron}>⌄</Text>
+        </Pressable>
       </View>
 
       <ScrollView
@@ -245,6 +256,27 @@ const s = StyleSheet.create({
     fontSize: 34,
     color: "#1D1A17",
   },
+  dogSwitcher: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "#DDD8CF",
+    borderRadius: 999,
+  },
+  dogSwitcherName: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#655D54",
+  },
+  dogSwitcherChevron: {
+    fontSize: 12,
+    color: "#82786E",
+    marginTop: -2,
+  },
   content: {
     flex: 1,
   },
@@ -344,3 +376,4 @@ const s = StyleSheet.create({
     color: "#756B60",
   },
 });
+
