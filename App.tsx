@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Schoolbell_400Regular, useFonts } from "@expo-google-fonts/schoolbell";
-import type { Session } from "@supabase/supabase-js";
 import { AppRouter } from "./components/AppRouter";
 import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { AppTab } from "./components/HubScreen";
+import { useAuthSession } from "./hooks/useAuthSession";
 import { useWaltzData } from "./hooks/useWaltzData";
 import { useWalkCompletion } from "./hooks/useWalkCompletion";
 import { useWalkTracker } from "./hooks/useWalkTracker";
-import { supabase } from "./lib/supabase";
 import { deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
-  const [authReady, setAuthReady] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const { authReady, session, signOut } = useAuthSession();
   const [dogManagerOpen, setDogManagerOpen] = useState(false);
   const [dogManagerEditId, setDogManagerEditId] = useState<string | null>(null);
   const [tab, setTab] = useState<AppTab>("home");
@@ -56,14 +54,6 @@ export default function App() {
     onRecoverMetadata: recoverMetadata,
   });
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      setAuthReady(true);
-    });
-    return () => authListener.subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (!session?.user.id) {
@@ -88,7 +78,6 @@ export default function App() {
 
   async function hideWalkFromProfile(walkId: number) { await setWalkHiddenFromProfile(walkId, true); await refreshWalks(); }
   async function removeWalk(walkId: number) { await deleteWalk(walkId); await refreshWalks(); if (activeDog?.id) await refreshBadges(activeDog.id); }
-  async function signOut() { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); }
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 
