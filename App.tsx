@@ -8,32 +8,36 @@ import { AuthScreen } from "./components/AuthScreen";
 import { DogOnboardingScreen } from "./components/DogOnboardingScreen";
 import { AppTab } from "./components/HubScreen";
 import { defaultWalkTitle } from "./components/WalkCompleteScreen";
+import { useWaltzData } from "./hooks/useWaltzData";
 import { useWalkTracker } from "./hooks/useWalkTracker";
 import { supabase } from "./lib/supabase";
-import { fetchDogBadges, syncDogBadges } from "./services/badges";
-import { fetchDogsForUser } from "./services/dogs";
-import { createWalk, deleteWalk, fetchWalks, setWalkHiddenFromProfile } from "./services/walks";
-import { DogBadge } from "./types/badge";
-import { Dog } from "./types/dog";
-import { RoutePrivacy, Walk, WalkTag } from "./types/walk";
+import { syncDogBadges } from "./services/badges";
+import { createWalk, deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
+import { RoutePrivacy, WalkTag } from "./types/walk";
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  const [dogs, setDogs] = useState<Dog[]>([]);
-  const [dogsLoading, setDogsLoading] = useState(false);
-  const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [dogManagerOpen, setDogManagerOpen] = useState(false);
   const [dogManagerEditId, setDogManagerEditId] = useState<string | null>(null);
-  const [allWalks, setAllWalks] = useState<Walk[]>([]);
-  const [badges, setBadges] = useState<DogBadge[]>([]);
   const [tab, setTab] = useState<AppTab>("home");
   const [routePrivacy, setRoutePrivacy] = useState<RoutePrivacy>("private");
   const [walkTags, setWalkTags] = useState<WalkTag[]>([]);
   const [walkTitle, setWalkTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const saveInFlight = useRef(false);
+  const {
+    dogs,
+    dogsLoading,
+    activeDog,
+    walks,
+    badges,
+    setActiveDogId,
+    refreshDogs,
+    refreshWalks,
+    refreshBadges,
+  } = useWaltzData(session?.user.id ?? null);
 
   const { isWalking, walkFinished, seconds, distance, points, trackerReady, startWalk, stopWalk, resetWalk, updateWalkDraftMetadata } = useWalkTracker({
     userId: session?.user.id ?? null,
@@ -56,37 +60,9 @@ export default function App() {
 
   useEffect(() => {
     if (!session?.user.id) {
-      setDogs([]); setAllWalks([]); setBadges([]); setActiveDogId(null); setTab("home");
-      return;
+      setTab("home");
     }
-    loadDogs(session.user.id);
-    loadWalks();
   }, [session?.user.id]);
-
-  const activeDog = dogs.find((dog) => dog.id === activeDogId) || dogs[0];
-  const walks = activeDog ? allWalks.filter((walk) => walk.dog_id === activeDog.id) : [];
-
-  useEffect(() => { if (activeDog?.id) loadBadges(activeDog.id); }, [activeDog?.id]);
-
-  async function loadDogs(userId: string) {
-    setDogsLoading(true);
-    try {
-      const next = await fetchDogsForUser(userId);
-      setDogs(next);
-      setActiveDogId((current) => current && next.some((dog) => dog.id === current) ? current : next[0]?.id ?? null);
-    } catch (error) { console.error("Load dogs error:", error); }
-    finally { setDogsLoading(false); }
-  }
-
-  async function loadWalks() {
-    try { const next = await fetchWalks(); setAllWalks(next); return next; }
-    catch (error) { console.error("Load walks error:", error); return null; }
-  }
-
-  async function loadBadges(dogId: string) {
-    try { setBadges(await fetchDogBadges(dogId)); }
-    catch (error) { console.error("Load badges error:", error); }
-  }
 
   function beginWalk(shouldShare = false) {
     if (!activeDog) return;
@@ -120,11 +96,11 @@ export default function App() {
       setWalkTags([]); setWalkTitle(""); setRoutePrivacy("private");
       await resetWalk();
       Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
-      const nextAll = await loadWalks();
+      const nextAll = await refreshWalks();
       if (nextAll) {
         const dogWalks = nextAll.filter((walk) => walk.dog_id === activeDog.id);
         await syncDogBadges(activeDog.id, dogWalks);
-        await loadBadges(activeDog.id);
+        await refreshBadges(activeDog.id);
       }
     } catch (error) {
       console.error(saved ? "Post-save refresh error:" : "Save walk error:", error);
@@ -132,8 +108,8 @@ export default function App() {
     } finally { saveInFlight.current = false; setIsSaving(false); }
   }
 
-  async function hideWalkFromProfile(walkId: number) { await setWalkHiddenFromProfile(walkId, true); await loadWalks(); }
-  async function removeWalk(walkId: number) { await deleteWalk(walkId); await loadWalks(); if (activeDog?.id) await loadBadges(activeDog.id); }
+  async function hideWalkFromProfile(walkId: number) { await setWalkHiddenFromProfile(walkId, true); await refreshWalks(); }
+  async function removeWalk(walkId: number) { await deleteWalk(walkId); await refreshWalks(); if (activeDog?.id) await refreshBadges(activeDog.id); }
   async function signOut() { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); }
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
@@ -141,7 +117,7 @@ export default function App() {
   if (!fontsLoaded || !authReady || (session && !trackerReady)) return <View style={styles.container} />;
   if (!session) return <View style={styles.container}><AuthScreen /><StatusBar style="dark" /></View>;
   if (dogsLoading) return <View style={styles.container} />;
-  if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={() => loadDogs(session.user.id)} /><StatusBar style="dark" /></View>;
+  if (dogs.length === 0) return <View style={styles.container}><DogOnboardingScreen userId={session.user.id} onCreated={refreshDogs} /><StatusBar style="dark" /></View>;
 
   return (
     <View style={styles.container}>
@@ -182,7 +158,7 @@ export default function App() {
         }}
         onOpenDogs={openDogManager}
         onCloseDogs={closeDogManager}
-        onDogsChanged={() => loadDogs(session.user.id)}
+        onDogsChanged={refreshDogs}
         onSelectDog={setActiveDogId}
         onHideWalk={hideWalkFromProfile}
         onDeleteWalk={removeWalk}
