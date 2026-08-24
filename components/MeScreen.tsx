@@ -16,6 +16,7 @@ type Props = {
   dog: Dog;
   walks: Walk[];
   badges: DogBadge[];
+  isSigningOut: boolean;
   onNavigate: (tab: AppTab) => void;
   onStartWalk: (shareRoute: boolean) => void;
   onEditDog: () => void;
@@ -32,6 +33,7 @@ export function MeScreen({
   dog,
   walks,
   badges,
+  isSigningOut,
   onNavigate,
   onStartWalk,
   onEditDog,
@@ -138,7 +140,9 @@ export function MeScreen({
         {timeline.length > 8 ? (
           <Pressable style={styles.historyButton} onPress={() => onNavigate("map")}><Text style={styles.historyButtonText}>See full report ›</Text></Pressable>
         ) : null}
-        <Pressable style={styles.signOut} onPress={onSignOut}><Text style={styles.signOutText}>Sign out</Text></Pressable>
+        <Pressable style={[styles.signOut, isSigningOut && styles.disabled]} onPress={onSignOut} disabled={isSigningOut}>
+          <Text style={styles.signOutText}>{isSigningOut ? "Signing out…" : "Sign out"}</Text>
+        </Pressable>
       </ScrollView>
       <BottomNav active="me" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
       <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
@@ -174,6 +178,6 @@ const styles = StyleSheet.create({
   historyButton: { alignItems: "center", paddingVertical: 12 },
   historyButtonText: { fontSize: 12, fontWeight: "800", color: "#78845C" },
   signOut: { padding: 16, alignItems: "center" },
+  disabled: { opacity: 0.5 },
   signOutText: { color: "#B85F4A", fontWeight: "700" },
 });
-

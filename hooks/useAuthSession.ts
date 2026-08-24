@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
@@ -7,6 +7,8 @@ export function useAuthSession() {
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const signOutInFlight = useRef(false);
 
   const retryAuth = useCallback(async () => {
     setAuthReady(false);
@@ -37,9 +39,19 @@ export function useAuthSession() {
   }, [retryAuth]);
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) Alert.alert("Sign out failed", error.message);
+    if (signOutInFlight.current) return;
+    signOutInFlight.current = true;
+    setIsSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) Alert.alert("Sign out failed", error.message);
+    } catch (error) {
+      Alert.alert("Sign out failed", error instanceof Error ? error.message : "Check your connection and try again.");
+    } finally {
+      signOutInFlight.current = false;
+      setIsSigningOut(false);
+    }
   }
 
-  return { authReady, authError, session, retryAuth, signOut };
+  return { authReady, authError, session, isSigningOut, retryAuth, signOut };
 }

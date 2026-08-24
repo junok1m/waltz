@@ -27,6 +27,7 @@ type Props = {
   walkTags: WalkTag[];
   isSaving: boolean;
   saveFailed: boolean;
+  isSigningOut: boolean;
   dogManagerOpen: boolean;
   dogManagerEditId: string | null;
   onNavigate: (tab: AppTab) => void;
@@ -64,6 +65,7 @@ export function AppRouter(props: Props) {
     walkTags,
     isSaving,
     saveFailed,
+    isSigningOut,
     dogManagerOpen,
     dogManagerEditId,
     onNavigate,
@@ -93,7 +95,7 @@ export function AppRouter(props: Props) {
   } else if (isWalking) {
     content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} onStopWalk={props.onStopWalk} />;
   } else if (tab === "me") {
-    content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} onSignOut={props.onSignOut} />;
+    content = <MeScreen dog={activeDog} walks={walks} badges={badges} isSigningOut={isSigningOut} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} onSignOut={props.onSignOut} />;
   } else if (tab === "map") {
     content = <HistoryScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "community") {

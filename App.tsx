@@ -16,7 +16,7 @@ import { deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
 
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
-  const { authReady, authError, session, retryAuth, signOut } = useAuthSession();
+  const { authReady, authError, session, isSigningOut, retryAuth, signOut } = useAuthSession();
   const [dogManagerOpen, setDogManagerOpen] = useState(false);
   const [dogManagerEditId, setDogManagerEditId] = useState<string | null>(null);
   const [tab, setTab] = useState<AppTab>("home");
@@ -128,6 +128,7 @@ export default function App() {
         walkTags={walkTags}
         isSaving={isSaving}
         saveFailed={saveFailed}
+        isSigningOut={isSigningOut}
         dogManagerOpen={dogManagerOpen}
         dogManagerEditId={dogManagerEditId}
         onNavigate={setTab}
