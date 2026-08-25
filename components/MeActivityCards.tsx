@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { Bone, Maximize2, Ruler, Timer, X } from "@sketchyicons/react-native";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
+import { weatherLabel } from "../services/weather";
 import { DogBadge } from "../types/badge";
 import { Walk } from "../types/walk";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
@@ -51,6 +52,9 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
     hidden_ends: "Start & finish hidden",
     full: "Full route",
   }[visibility];
+  const walkWeather = walk.weather_temperature_c != null && walk.weather_condition
+    ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? -1 })
+    : null;
 
   useEffect(() => {
     let active = true;
@@ -68,6 +72,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
           <View style={styles.metaRow}>
             <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
             <Text style={styles.visibility}>{visibilityLabel}</Text>
+            {walkWeather ? <Text style={styles.weather}>{walkWeather}</Text> : null}
           </View>
         </View>
         <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
@@ -87,7 +92,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
       <Modal visible={mapOpen && canShowMap} animationType="slide" onRequestClose={() => setMapOpen(false)}>
         <View style={styles.mapModal}>
           <View style={styles.mapModalHeader}>
-            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}</Text></View>
+            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
             <Pressable style={styles.closeMap} onPress={() => setMapOpen(false)} accessibilityLabel="Close route map"><X size={25} strokeWidth={2} color="#332E29" /></Pressable>
           </View>
           <View style={styles.fullMap}><WaltzMap points={points} interactive /></View>
@@ -109,8 +114,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
   title: { fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 7 },
+  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7 },
   visibility: { fontSize: 9, fontWeight: "700", color: "#78845C", marginTop: 2 },
+  weather: { fontSize: 9, fontWeight: "700", color: "#5E6F80", marginTop: 2 },
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
   moreText: { fontSize: 15, fontWeight: "800", color: "#82786E", letterSpacing: 1 },
   map: { height: 128, borderRadius: 4, overflow: "hidden", backgroundColor: "#EFE8DC" },
