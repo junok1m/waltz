@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { defaultWalkTitle } from "../components/WalkCompleteScreen";
 import { syncDogBadges } from "../services/badges";
+import { fetchWalkWeather } from "../services/weather";
 import { createWalk } from "../services/walks";
 import { Dog } from "../types/dog";
 import { Point, RoutePrivacy, Walk, WalkTag } from "../types/walk";
@@ -76,6 +77,14 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     setSaveFailed(false);
     let saved = false;
     try {
+      let weather = null;
+      try {
+        const approximateStartedAt = new Date(Date.now() - seconds * 1000);
+        weather = await fetchWalkWeather(points[0], approximateStartedAt);
+      } catch (error) {
+        console.warn("Couldn't attach weather to walk:", error);
+      }
+
       await createWalk({
         dogId: activeDog.id,
         title: walkTitle.trim() || defaultWalkTitle(new Date()),
@@ -84,6 +93,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
         routePoints: points,
         routePrivacy,
         tags: walkTags,
+        weather,
       });
       saved = true;
       await resetWalk();
