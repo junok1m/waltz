@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { Bone, Maximize2, Ruler, Timer, X } from "@sketchyicons/react-native";
+import { Bone, Cloudy, Maximize2, Ruler, Sun, Timer, Umbrella, X } from "@sketchyicons/react-native";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
 import { weatherLabel } from "../services/weather";
 import { DogBadge } from "../types/badge";
@@ -25,6 +25,19 @@ function badgeActivityMessage(dogName: string, badgeId: string) {
   const distance = badgeId.match(/^mileage-(\d+)$/)?.[1];
   if (distance) return `${dogName} completed ${Number(distance).toLocaleString()} km`;
   return `${dogName} got the ${BADGE_META[badgeId]?.title ?? badgeId.replaceAll("-", " ")} badge`;
+}
+
+function WeatherMeta({ condition, temperatureC }: { condition: NonNullable<Walk["weather_condition"]>; temperatureC: number }) {
+  const iconProps = { size: 13, strokeWidth: 2, color: "#5E6F80" } as const;
+  const icon = condition === "clear"
+    ? <Sun {...iconProps} />
+    : condition === "cloudy" || condition === "fog"
+      ? <Cloudy {...iconProps} />
+      : ["drizzle", "rain", "heavy_rain", "storm"].includes(condition)
+        ? <Umbrella {...iconProps} />
+        : <Cloudy {...iconProps} />;
+
+  return <View style={styles.weatherMeta}>{icon}<Text style={styles.weather}>{Math.round(temperatureC)}°</Text></View>;
 }
 
 export function MeBadgeActivityCard({ dogName, badge }: { dogName: string; badge: DogBadge }) {
@@ -72,7 +85,9 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
           <View style={styles.metaRow}>
             <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
             <Text style={styles.visibility}>{visibilityLabel}</Text>
-            {walkWeather ? <Text style={styles.weather}>{walkWeather}</Text> : null}
+            {walk.weather_temperature_c != null && walk.weather_condition
+              ? <WeatherMeta condition={walk.weather_condition} temperatureC={walk.weather_temperature_c} />
+              : null}
           </View>
         </View>
         <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
@@ -113,10 +128,11 @@ const styles = StyleSheet.create({
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
   title: { fontSize: 16, fontWeight: "700", color: "#1D1A17" },
-  date: { fontSize: 10, color: "#82786E", marginTop: 2 },
-  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7 },
-  visibility: { fontSize: 9, fontWeight: "700", color: "#78845C", marginTop: 2 },
-  weather: { fontSize: 9, fontWeight: "700", color: "#5E6F80", marginTop: 2 },
+  date: { fontSize: 10, color: "#82786E" },
+  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7, marginTop: 6 },
+  visibility: { fontSize: 9, fontWeight: "700", color: "#78845C" },
+  weatherMeta: { flexDirection: "row", alignItems: "center", gap: 3 },
+  weather: { fontSize: 9, fontWeight: "700", color: "#5E6F80" },
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
   moreText: { fontSize: 15, fontWeight: "800", color: "#82786E", letterSpacing: 1 },
   map: { height: 128, borderRadius: 4, overflow: "hidden", backgroundColor: "#EFE8DC" },
