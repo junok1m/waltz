@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Mapbox from "@rnmapbox/maps";
 import { Point } from "../types/walk";
+import { WALTZ_MAP_STYLE } from "../styles/waltzMapStyle";
 
 const MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 if (MAPBOX_PUBLIC_TOKEN) Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN);
@@ -23,7 +24,7 @@ export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=f
   const line=useMemo(()=>({type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:points.map(p=>[p.longitude,p.latitude])}}),[points]);
   const {center,zoom}=cameraFor(points),cameraZoom=overview?Math.min(zoom,12.5):zoom,first=points[0],last=points[points.length-1];
   return <View style={styles.wrap} onLayout={({nativeEvent:{layout}})=>{if(layout.width>1&&layout.height>1)setHasLayout(true)}}>
-    {hasLayout?<Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleURL="mapbox://styles/mapbox/light-v11" logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
+    {hasLayout?<Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleJSON={WALTZ_MAP_STYLE} logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
     <Mapbox.Camera centerCoordinate={center} zoomLevel={cameraZoom} animationDuration={0}/>
     {showLocation?<Mapbox.LocationPuck puckBearingEnabled puckBearing="heading"/>:null}
     {points.length>1?<Mapbox.ShapeSource id="waltz-route-source" shape={line}><Mapbox.LineLayer id="waltz-route-line" style={{lineColor:"#78845C",lineWidth:5,lineCap:"round",lineJoin:"round"}}/></Mapbox.ShapeSource>:null}
