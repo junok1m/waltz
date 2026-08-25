@@ -27,7 +27,7 @@ type RecoveredMetadata = {
 };
 
 export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadges }: Options) {
-  const [routePrivacy, setRoutePrivacy] = useState<RoutePrivacy>("private");
+  const [routePrivacy, setRoutePrivacy] = useState<RoutePrivacy>("hidden_ends");
   const [walkTags, setWalkTags] = useState<WalkTag[]>([]);
   const [walkTitle, setWalkTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -40,9 +40,9 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     setWalkTags(metadata.tags);
   }
 
-  function prepareWalk(shouldShare: boolean) {
+  function prepareWalk(_shouldShare: boolean) {
     setSaveFailed(false);
-    setRoutePrivacy(shouldShare ? "hidden_ends" : "private");
+    setRoutePrivacy("hidden_ends");
     setWalkTags([]);
     setWalkTitle("");
   }
@@ -50,7 +50,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
   function clearMetadata() {
     setWalkTags([]);
     setWalkTitle("");
-    setRoutePrivacy("private");
+    setRoutePrivacy("hidden_ends");
   }
 
   async function discardCompletedWalk(resetWalk: CompletedWalk["resetWalk"]) {

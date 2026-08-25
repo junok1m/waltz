@@ -13,7 +13,7 @@ export function StartWalkSheet({ visible, onClose, onStart }: Props) {
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.titleRow}><PawPrint size={27} strokeWidth={2} color="#1D1A17" /><Text style={styles.title}>Ready for a waltz?</Text></View>
-          <Text style={styles.copy}>Choose who can see it after the walk. Your live location is never shared.</Text>
+          <Text style={styles.copy}>You can decide how this waltz appears in Feed when you finish. Your live location is never shared.</Text>
           <Pressable style={styles.startButton} onPress={() => { onClose(); onStart(false); }}>
             <View style={styles.startButtonContent}><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /><Text style={styles.startButtonText}>START WALK</Text></View>
           </Pressable>

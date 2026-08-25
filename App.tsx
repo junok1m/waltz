@@ -67,11 +67,11 @@ export default function App() {
     }
   }, [session?.user.id]);
 
-  function beginWalk(shouldShare = false) {
+  function beginWalk() {
     if (!activeDog) return;
-    prepareWalk(shouldShare);
+    prepareWalk(true);
     setTab("home");
-    startWalk({ dogId: activeDog.id, shareRoute: shouldShare });
+    startWalk({ dogId: activeDog.id, shareRoute: true });
   }
 
   function discardWalk() {

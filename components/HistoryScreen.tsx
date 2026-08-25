@@ -1,44 +1,47 @@
-import { useMemo,useState } from "react";
-import { Modal,Pressable,ScrollView,StyleSheet,Switch,Text,View } from "react-native";
-import { ChartBar,Dog as DogIcon,House,PawPrint,Rss } from "@sketchyicons/react-native";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
 import { Walk } from "../types/walk";
-import { BadgeIcon } from "./BadgeIcon";
-import { DistanceOverTimeChart } from "./DistanceOverTimeChart";
+import { AppTab } from "./HubScreen";
+import { BottomNav } from "./BottomNav";
+import { StartWalkSheet } from "./StartWalkSheet";
+import { ReportEssentials, ReportPeriod } from "./ReportEssentials";
+import { ReportWalkDetails } from "./ReportWalkDetails";
 import { WalkingHeatmap } from "./WalkingHeatmap";
 import { PersonalRecords } from "./PersonalRecords";
 import { MonthlyComparison } from "./MonthlyComparison";
 import { WaltzTimePattern } from "./WaltzTimePattern";
 import { RoutePrivacyPersonality } from "./RoutePrivacyPersonality";
-import { AppTab } from "./HubScreen";
-import { WaltzMap } from "./WaltzMap";
 
-type Props={dog:Dog;walks:Walk[];badges:DogBadge[];onNavigate:(tab:AppTab)=>void;onStartWalk:(shareRoute:boolean)=>void};
-function formatDuration(seconds:number){const minutes=Math.round(seconds/60);if(minutes<60)return`${minutes} min`;return`${Math.floor(minutes/60)}h ${minutes%60}m`;}
-function monthKey(date:string){const d=new Date(date);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
-function dayKey(date:string){const d=new Date(date);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
-function monthLabel(key:string){const[y,m]=key.split("-").map(Number);return new Intl.DateTimeFormat("en-AU",{month:"long",year:"numeric"}).format(new Date(y,m-1,1));}
-function dayLabel(key:string){const[y,m,d]=key.split("-").map(Number);return new Intl.DateTimeFormat("en-AU",{day:"numeric",month:"short"}).format(new Date(y,m-1,d)).toUpperCase();}
-function fullDayLabel(key:string){const[y,m,d]=key.split("-").map(Number);return new Intl.DateTimeFormat("en-AU",{weekday:"long",day:"numeric",month:"long"}).format(new Date(y,m-1,d));}
-function fallbackTitle(dateString:string){const h=new Date(dateString).getHours();if(h<12)return"Morning waltz";if(h<18)return"Afternoon waltz";return"Night waltz";}
-function bestStreak(walks:Walk[]){const days=[...new Set(walks.map(w=>dayKey(w.ended_at)))].sort();let best=0,current=0,prev:number|null=null;for(const key of days){const[y,m,d]=key.split("-").map(Number);const n=new Date(y,m-1,d).getTime()/86400000;current=prev!==null&&n-prev===1?current+1:1;best=Math.max(best,current);prev=n;}return best;}
-export function HistoryScreen({dog,walks,badges,onNavigate,onStartWalk}:Props){
- const[selectedMonth,setSelectedMonth]=useState<string|null>(null),[selectedDay,setSelectedDay]=useState<string|null>(null),[startOpen,setStartOpen]=useState(false),[shareRoute,setShareRoute]=useState(false);
- const months=useMemo(()=>[...new Set(walks.map(w=>monthKey(w.ended_at)))].sort().reverse(),[walks]);
- const monthWalks=selectedMonth?walks.filter(w=>monthKey(w.ended_at)===selectedMonth):[];
- const monthBadges=selectedMonth?badges.filter(b=>b.badge_type==="monthly"&&b.period_key===selectedMonth):[];
- const days=useMemo(()=>selectedMonth?[...new Set(monthWalks.map(w=>dayKey(w.ended_at)))].sort().reverse():[],[selectedMonth,monthWalks]);
- const dayWalks=selectedDay?walks.filter(w=>dayKey(w.ended_at)===selectedDay).sort((a,b)=>new Date(a.ended_at).getTime()-new Date(b.ended_at).getTime()):[];
- function openDayFromChart(key:string){setSelectedMonth(key.slice(0,7));setSelectedDay(key);}
- return <View style={s.screen}><View style={s.header}><Text style={s.title}>Report</Text></View><ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-  {!selectedMonth?<><DistanceOverTimeChart walks={walks} onOpenDay={openDayFromChart}/><WalkingHeatmap walks={walks} onOpenDay={openDayFromChart}/><PersonalRecords walks={walks}/><MonthlyComparison walks={walks}/><WaltzTimePattern walks={walks}/><RoutePrivacyPersonality walks={walks}/>{months.length===0?<Empty text="Your monthly waltz recaps will appear here after your first save."/>:months.map(key=>{const ws=walks.filter(w=>monthKey(w.ended_at)===key),bs=badges.filter(b=>b.badge_type==="monthly"&&b.period_key===key),km=ws.reduce((sum,w)=>sum+w.distance_km,0),secs=ws.reduce((sum,w)=>sum+w.duration_seconds,0);return <Pressable key={key} style={s.monthCard} onPress={()=>{setSelectedMonth(key);setSelectedDay(null)}}><View style={s.row}><Text style={s.monthTitle}>{monthLabel(key)}</Text><Text style={s.chevron}>›</Text></View><Text style={s.monthMeta}>{ws.length} waltzes · {km.toFixed(1)} km · {formatDuration(secs)}</Text><Text style={s.monthSub}>{bs.length} badge{bs.length===1?"":"s"} earned</Text></Pressable>})}</>:
-  !selectedDay?<><Pressable onPress={()=>setSelectedMonth(null)}><Text style={s.back}>‹ All months</Text></Pressable><Text style={s.detailMonth}>{monthLabel(selectedMonth)}</Text><View style={s.statsGrid}><MiniStat label="Waltzes" value={`${monthWalks.length}`}/><MiniStat label="Distance" value={`${monthWalks.reduce((sum,w)=>sum+w.distance_km,0).toFixed(1)} km`}/><MiniStat label="Time" value={formatDuration(monthWalks.reduce((sum,w)=>sum+w.duration_seconds,0))}/><MiniStat label="Best streak" value={`${bestStreak(monthWalks)} days`}/></View>{monthBadges.length>0?<><Text style={s.badgeSummary}>{monthBadges.length} badge{monthBadges.length===1?"":"s"} earned this month</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.badgeRow}>{monthBadges.map(b=><BadgeIcon key={b.id} badgeId={b.badge_id} size={52}/>)}</ScrollView></>:<Text style={s.badgeSummary}>No badges earned this month. Yet.</Text>}<Text style={s.sectionTitle}>Waltz days</Text>{days.map(key=>{const ws=monthWalks.filter(w=>dayKey(w.ended_at)===key),km=ws.reduce((sum,w)=>sum+w.distance_km,0),secs=ws.reduce((sum,w)=>sum+w.duration_seconds,0);return <Pressable key={key} style={s.dayRow} onPress={()=>setSelectedDay(key)}><View><Text style={s.dayTitle}>{dayLabel(key)}</Text><Text style={s.dayMeta}>{ws.length} waltz{ws.length===1?"":"es"} · {formatDuration(secs)} · {km.toFixed(2)} km</Text></View><Text style={s.chevron}>›</Text></Pressable>})}</>:
-  <><Pressable onPress={()=>setSelectedDay(null)}><Text style={s.back}>‹ {monthLabel(selectedMonth)}</Text></Pressable><Text style={s.detailMonth}>{fullDayLabel(selectedDay)}</Text>{dayWalks.map(w=><WalkCard key={w.id} walk={w}/>)}</>}
- </ScrollView><View style={s.nav}><Nav icon={<House size={22} strokeWidth={2} color="#332E29"/>} label="Home" onPress={()=>onNavigate("home")}/><Nav icon={<ChartBar size={22} strokeWidth={2} color="#78845C"/>} label="Report" active onPress={()=>{setSelectedMonth(null);setSelectedDay(null)}}/><Pressable style={s.pawButton} onPress={()=>setStartOpen(true)}><PawPrint size={27} strokeWidth={2} color="#FFFDF8"/></Pressable><Nav icon={<Rss size={22} strokeWidth={2} color="#332E29"/>} label="Feed" onPress={()=>onNavigate("community")}/><Nav icon={<DogIcon size={22} strokeWidth={2} color="#332E29"/>} label="Me" onPress={()=>onNavigate("me")}/></View><Modal visible={startOpen} transparent animationType="fade" onRequestClose={()=>setStartOpen(false)}><View style={s.overlay}><View style={s.sheet}><View style={s.sheetTitleRow}><PawPrint size={27} strokeWidth={2} color="#1D1A17"/><Text style={s.sheetTitle}>Ready for a waltz?</Text></View><View style={s.shareRow}><View style={{flex:1}}><Text style={s.shareTitle}>Share this route</Text><Text style={s.shareCopy}>Friends can see the route after you save the walk. Your live location is never shared.</Text></View><Switch value={shareRoute} onValueChange={setShareRoute}/></View><Pressable style={s.startButton} onPress={()=>{setStartOpen(false);onStartWalk(shareRoute)}}><View style={s.startButtonContent}><PawPrint size={27} strokeWidth={2} color="#FFFDF8"/><Text style={s.startButtonText}>START WALK</Text></View></Pressable><Pressable onPress={()=>setStartOpen(false)}><Text style={s.cancel}>Cancel</Text></Pressable></View></View></Modal></View>;
+type Props = { dog: Dog; walks: Walk[]; badges: DogBadge[]; onNavigate: (tab: AppTab) => void; onStartWalk: (shareRoute: boolean) => void };
+
+export function HistoryScreen({ dog, walks, onNavigate, onStartWalk }: Props) {
+  const [period, setPeriod] = useState<ReportPeriod>("week");
+  const [startOpen, setStartOpen] = useState(false);
+  return <View style={styles.screen}>
+    <View style={styles.header}><Text style={styles.title}>Report</Text></View>
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ReportEssentials walks={walks} period={period} onPeriodChange={setPeriod} />
+      <ReportWalkDetails walks={walks} period={period} />
+      <View style={styles.moreHeader}><Text style={styles.moreTitle}>More about {dog.name}</Text><Text style={styles.moreCopy}>The curious stuff. Fun, but never in the way.</Text></View>
+      <WalkingHeatmap walks={walks} />
+      <PersonalRecords walks={walks} />
+      <MonthlyComparison walks={walks} />
+      <WaltzTimePattern walks={walks} />
+      <RoutePrivacyPersonality walks={walks} />
+    </ScrollView>
+    <BottomNav active="map" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
+    <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
+  </View>;
 }
-function WalkCard({walk}:{walk:Walk}){const pts=walk.route_points??[];return <View style={s.walkCard}><View style={s.row}><View style={{flex:1}}><Text style={s.walkTitle}>{walk.title?.trim()||fallbackTitle(walk.ended_at)}</Text><Text style={s.walkTime}>{new Date(walk.ended_at).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})}</Text></View><Text style={walk.share_route?s.sharedPill:s.privatePill}>{walk.share_route?"shared":"private"}</Text></View>{walk.share_route&&pts.length?<View style={s.map}><WaltzMap points={pts} interactive={false}/></View>:null}<View style={s.walkMetrics}><Text style={s.metric}>{walk.distance_km.toFixed(2)} km</Text><Text style={s.metric}>{formatDuration(walk.duration_seconds)}</Text></View></View>}
-function MiniStat({label,value}:{label:string;value:string}){return <View style={s.miniStat}><Text style={s.miniLabel}>{label}</Text><Text style={s.miniValue}>{value}</Text></View>}
-function Empty({text}:{text:string}){return <View style={s.empty}><Text style={s.emptyText}>{text}</Text></View>}
-function Nav({icon,label,active,onPress}:{icon:React.ReactNode;label:string;active?:boolean;onPress:()=>void}){return <Pressable style={s.navItem} onPress={onPress}>{icon}<Text style={[s.navLabel,active&&s.active]}>{label}</Text></Pressable>}
-const s=StyleSheet.create({screen:{flex:1,justifyContent:"space-between"},header:{alignItems:"center",marginBottom:10},title:{fontFamily:"Schoolbell_400Regular",fontSize:34,color:"#1D1A17"},content:{paddingBottom:24,gap:12},monthCard:{backgroundColor:"#FFFDF8",borderRadius:24,padding:18},row:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",gap:12},monthTitle:{fontFamily:"Schoolbell_400Regular",fontSize:27,color:"#1D1A17"},chevron:{fontSize:28,color:"#A99F93"},monthMeta:{fontSize:13,fontWeight:"700",color:"#655D54",marginTop:4},monthSub:{fontSize:10,color:"#9A9187",marginTop:7},back:{fontSize:13,fontWeight:"800",color:"#78845C"},detailMonth:{fontFamily:"Schoolbell_400Regular",fontSize:31,color:"#1D1A17"},statsGrid:{flexDirection:"row",flexWrap:"wrap",gap:8},miniStat:{width:"48%",backgroundColor:"#FFFDF8",borderRadius:18,padding:14},miniLabel:{fontSize:10,color:"#756B60"},miniValue:{fontSize:18,fontWeight:"800",color:"#1D1A17",marginTop:3},badgeSummary:{fontSize:11,color:"#756B60"},badgeRow:{gap:10,paddingVertical:2,paddingRight:10},sectionTitle:{fontFamily:"Schoolbell_400Regular",fontSize:25,color:"#1D1A17",marginTop:6},dayRow:{backgroundColor:"#FFFDF8",borderRadius:20,padding:16,flexDirection:"row",justifyContent:"space-between",alignItems:"center"},dayTitle:{fontSize:15,fontWeight:"900",color:"#332E29"},dayMeta:{fontSize:11,color:"#756B60",marginTop:4},walkCard:{backgroundColor:"#FFFDF8",borderRadius:22,padding:14,gap:10},walkTitle:{fontSize:16,fontWeight:"800",color:"#1D1A17"},walkTime:{fontSize:10,color:"#82786E",marginTop:3},sharedPill:{fontSize:9,fontWeight:"800",color:"#596442",backgroundColor:"#E5EBDD",paddingHorizontal:8,paddingVertical:4,borderRadius:999},privatePill:{fontSize:9,fontWeight:"800",color:"#82786E",backgroundColor:"#F1E7D7",paddingHorizontal:8,paddingVertical:4,borderRadius:999},map:{height:145,borderRadius:17,overflow:"hidden",backgroundColor:"#EFE8DC"},walkMetrics:{flexDirection:"row",gap:28},metric:{fontSize:14,fontWeight:"800",color:"#332E29"},empty:{padding:22,borderRadius:22,backgroundColor:"#F1E7D7"},emptyText:{color:"#655D54"},nav:{height:68,borderRadius:25,backgroundColor:"#FFFDF8",flexDirection:"row",alignItems:"center",justifyContent:"space-around"},navItem:{width:58,alignItems:"center"},navLabel:{fontSize:9,color:"#443D37",marginTop:2},active:{color:"#78845C",fontWeight:"800"},pawButton:{width:60,height:60,borderRadius:30,backgroundColor:"#89936B",alignItems:"center",justifyContent:"center",marginTop:-20},overlay:{flex:1,backgroundColor:"rgba(0,0,0,.28)",justifyContent:"flex-end"},sheet:{backgroundColor:"#FFFDF8",borderTopLeftRadius:30,borderTopRightRadius:30,padding:24,paddingBottom:38,gap:18},sheetTitleRow:{flexDirection:"row",alignItems:"center",gap:8},sheetTitle:{fontFamily:"Schoolbell_400Regular",fontSize:30},shareRow:{flexDirection:"row",alignItems:"center",gap:14},shareTitle:{fontSize:16,fontWeight:"800"},shareCopy:{fontSize:12,color:"#756B60",marginTop:4,lineHeight:17},startButton:{backgroundColor:"#8C9670",borderRadius:999,paddingVertical:15},startButtonContent:{flexDirection:"row",justifyContent:"center",alignItems:"center",gap:8},startButtonText:{fontFamily:"Schoolbell_400Regular",fontSize:23,color:"#FFFDF8"},cancel:{textAlign:"center",fontWeight:"700",color:"#756B60"}});
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, justifyContent: "space-between" },
+  header: { alignItems: "center", marginBottom: 10 },
+  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  content: { paddingBottom: 28, gap: 13 },
+  moreHeader: { marginTop: 12 },
+  moreTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 29, color: "#1D1A17" },
+  moreCopy: { fontSize: 11, color: "#82786E", marginTop: 2 },
+});
