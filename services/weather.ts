@@ -4,6 +4,9 @@ type OpenMeteoResponse = {
   current?: {
     temperature_2m?: number;
     weather_code?: number;
+    precipitation?: number;
+    rain?: number;
+    showers?: number;
   };
 };
 
@@ -19,12 +22,28 @@ function conditionFromCode(code: number): WalkWeather["condition"] {
   return "unknown";
 }
 
+function conditionWithPrecipitation(code: number, precipitation: number, rain: number, showers: number): WalkWeather["condition"] {
+  const codedCondition = conditionFromCode(code);
+
+  // Keep severe/specific conditions from the WMO code.
+  if (["storm", "snow", "heavy_rain"].includes(codedCondition)) return codedCondition;
+
+  // Open-Meteo's point-in-time WMO code can lag light/local rain. Use the
+  // measured/modelled current precipitation fields as a second signal.
+  const liquidPrecipitation = Math.max(precipitation, rain, showers);
+  if (liquidPrecipitation > 0.5) return "rain";
+  if (liquidPrecipitation > 0) return "drizzle";
+
+  return codedCondition;
+}
+
 export async function fetchWalkWeather(point: Point | undefined, _startedAt: Date): Promise<WalkWeather | null> {
   if (!point) return null;
 
   const latitude = encodeURIComponent(String(point.latitude));
   const longitude = encodeURIComponent(String(point.longitude));
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`;
+  const current = "temperature_2m,weather_code,precipitation,rain,showers";
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=${current}`;
 
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Weather request failed with ${response.status}`);
@@ -36,9 +55,13 @@ export async function fetchWalkWeather(point: Point | undefined, _startedAt: Dat
     throw new Error("Weather response did not include current temperature/code");
   }
 
+  const precipitation = Number.isFinite(data.current?.precipitation) ? data.current!.precipitation! : 0;
+  const rain = Number.isFinite(data.current?.rain) ? data.current!.rain! : 0;
+  const showers = Number.isFinite(data.current?.showers) ? data.current!.showers! : 0;
+
   return {
     temperatureC: Math.round(temperatureC as number),
-    condition: conditionFromCode(code as number),
+    condition: conditionWithPrecipitation(code as number, precipitation, rain, showers),
     code: code as number,
   };
 }
