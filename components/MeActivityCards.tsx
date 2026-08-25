@@ -43,6 +43,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
   const [mapOpen, setMapOpen] = useState(false);
   const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
   const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
+  const canShowMap = visibility !== "stats_only" && points.length > 0;
   const visibilityLabel = {
     private: "Only me",
     stats_only: "Stats only",
@@ -70,7 +71,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
         </View>
         <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
       </View>
-      {points.length ? (
+      {canShowMap ? (
         <Pressable style={styles.map} onPress={() => setMapOpen(true)} accessibilityRole="button" accessibilityLabel="Open route map">
           <WaltzMap points={points} interactive={false} overview />
           <View style={styles.expandIcon}><Maximize2 size={16} strokeWidth={2} color="#655D54" /></View>
@@ -81,7 +82,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
         <Metric icon={<Timer size={17} strokeWidth={2} color="#78845C" />} value={formatDuration(walk.duration_seconds)} />
         <Metric icon={<Bone size={17} strokeWidth={2} color="#78845C" />} value={`${boopCount}`} />
       </View>
-      <Modal visible={mapOpen} animationType="slide" onRequestClose={() => setMapOpen(false)}>
+      <Modal visible={mapOpen && canShowMap} animationType="slide" onRequestClose={() => setMapOpen(false)}>
         <View style={styles.mapModal}>
           <View style={styles.mapModalHeader}>
             <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}</Text></View>

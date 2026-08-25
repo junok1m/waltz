@@ -50,12 +50,13 @@ export async function createWalk(input: {
   tags: WalkTag[];
 }) {
   const publicRoute = publicRouteForPrivacy(input.routePoints, input.routePrivacy);
+  const privateRoute = input.routePrivacy === "stats_only" ? [] : input.routePoints;
   const { data: walkId, error } = await supabase.rpc("create_walk_with_dog", {
     p_dog_id: input.dogId,
     p_title: input.title.trim(),
     p_distance_km: input.distanceKm,
     p_duration_seconds: input.durationSeconds,
-    p_route_points: input.routePoints,
+    p_route_points: privateRoute,
     p_public_route_points: publicRoute,
     p_route_visibility: input.routePrivacy,
     p_share_route: input.routePrivacy !== "private",
