@@ -56,8 +56,8 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
 
   async function discardCompletedWalk(resetWalk: CompletedWalk["resetWalk"]) {
     setSaveFailed(false);
-    clearMetadata();
     await resetWalk();
+    clearMetadata();
   }
 
   async function saveCompletedWalk({ distance, seconds, points, resetWalk }: CompletedWalk) {
@@ -86,8 +86,8 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
         tags: walkTags,
       });
       saved = true;
-      clearMetadata();
       await resetWalk();
+      clearMetadata();
       Alert.alert("Saved!", `${activeDog.name} walked ${distance.toFixed(2)} km 🐕`);
 
       const nextWalks = await refreshWalks();

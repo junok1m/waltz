@@ -6,6 +6,7 @@ import { DogBadge } from "../types/badge";
 import { Walk } from "../types/walk";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 import { WaltzMap } from "./WaltzMap";
+import { WalkTagIcons } from "./WalkTagIcons";
 
 function formatDuration(seconds: number) {
   const minutes = Math.round(seconds / 60);
@@ -71,6 +72,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
         </View>
         <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
       </View>
+      <WalkTagIcons tags={walk.tags} />
       {canShowMap ? (
         <Pressable style={styles.map} onPress={() => setMapOpen(true)} accessibilityRole="button" accessibilityLabel="Open route map">
           <WaltzMap points={points} interactive={false} overview />

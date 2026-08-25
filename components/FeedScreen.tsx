@@ -11,6 +11,7 @@ import { Walk } from "../types/walk";
 import { hasFeedLocationAnchor, rankFeedItemsForViewer } from "../utils/feedRanking";
 import { formatTime } from "../utils/time";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
+import { WalkTagIcons } from "./WalkTagIcons";
 
 type Props = {
   dog: Dog;
@@ -151,6 +152,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
               </View>
 
               <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
+              <WalkTagIcons tags={walk.tags} />
               {walk.route_points.length ? (
                 <Pressable style={s.map} onPress={() => setExpandedWalk(walk)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s route map`}>
                   <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} overview />
