@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Dog as DogIcon } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
@@ -10,7 +9,6 @@ import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
 import { AppTab } from "./HubScreen";
 import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard } from "./MeActivityCards";
-import { StartWalkSheet } from "./StartWalkSheet";
 
 type Props = {
   dog: Dog;
@@ -18,7 +16,7 @@ type Props = {
   badges: DogBadge[];
   isSigningOut: boolean;
   onNavigate: (tab: AppTab) => void;
-  onStartWalk: (shareRoute: boolean) => void;
+  onStartWalk: () => void;
   onEditDog: () => void;
   onHideWalk: (id: number) => Promise<void>;
   onDeleteWalk: (id: number) => Promise<void>;
@@ -41,7 +39,6 @@ export function MeScreen({
   onDeleteWalk,
   onSignOut,
 }: Props) {
-  const [startOpen, setStartOpen] = useState(false);
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
   const streak = calculateWalkStreak(walks);
   const activePeriod = monthKey();
@@ -144,8 +141,7 @@ export function MeScreen({
           <Text style={styles.signOutText}>{isSigningOut ? "Signing out…" : "Sign out"}</Text>
         </Pressable>
       </ScrollView>
-      <BottomNav active="me" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
-      <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
+      <BottomNav active="me" onNavigate={onNavigate} onStartPress={onStartWalk} />
     </View>
   );
 }

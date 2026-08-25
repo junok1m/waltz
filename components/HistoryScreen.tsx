@@ -5,7 +5,6 @@ import { Dog } from "../types/dog";
 import { Walk } from "../types/walk";
 import { AppTab } from "./HubScreen";
 import { BottomNav } from "./BottomNav";
-import { StartWalkSheet } from "./StartWalkSheet";
 import { ReportEssentials, ReportPeriod } from "./ReportEssentials";
 import { ReportWalkDetails } from "./ReportWalkDetails";
 import { WalkingHeatmap } from "./WalkingHeatmap";
@@ -14,11 +13,10 @@ import { MonthlyComparison } from "./MonthlyComparison";
 import { WaltzTimePattern } from "./WaltzTimePattern";
 import { RoutePrivacyPersonality } from "./RoutePrivacyPersonality";
 
-type Props = { dog: Dog; walks: Walk[]; badges: DogBadge[]; onNavigate: (tab: AppTab) => void; onStartWalk: (shareRoute: boolean) => void };
+type Props = { dog: Dog; walks: Walk[]; badges: DogBadge[]; onNavigate: (tab: AppTab) => void; onStartWalk: () => void };
 
 export function HistoryScreen({ dog, walks, onNavigate, onStartWalk }: Props) {
   const [period, setPeriod] = useState<ReportPeriod>("week");
-  const [startOpen, setStartOpen] = useState(false);
   return <View style={styles.screen}>
     <View style={styles.header}><Text style={styles.title}>Report</Text></View>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -31,8 +29,7 @@ export function HistoryScreen({ dog, walks, onNavigate, onStartWalk }: Props) {
       <WaltzTimePattern walks={walks} />
       <RoutePrivacyPersonality walks={walks} />
     </ScrollView>
-    <BottomNav active="map" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
-    <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
+    <BottomNav active="map" onNavigate={onNavigate} onStartPress={onStartWalk} />
   </View>;
 }
 

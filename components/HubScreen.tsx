@@ -2,16 +2,14 @@ import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BottomNav } from "./BottomNav";
 import { ChallengeInfo, HubChallenges, HubLeaderboard, HubStats } from "./HubSections";
-import { StartWalkSheet } from "./StartWalkSheet";
 import { Dog } from "../types/dog";
 import { Walk } from "../types/walk";
 
 export type AppTab = "home" | "map" | "community" | "me" | "leaderboard" | "stats" | "challenges";
 type HubTab = Extract<AppTab, "leaderboard" | "stats" | "challenges">;
-type Props = { tab: HubTab; walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: (shareRoute: boolean) => void };
+type Props = { tab: HubTab; walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: () => void };
 export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeInfo | null>(null);
-  const [startOpen, setStartOpen] = useState(false);
   const title = { leaderboard: "Leaderboard", stats: "Stats", challenges: "Challenges" }[tab];
 
   return (
@@ -22,7 +20,7 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
         {tab === "leaderboard" ? <HubLeaderboard walks={walks} dog={dog} /> : null}
         {tab === "challenges" ? <HubChallenges walks={walks} dog={dog} onSelect={setSelectedChallenge} /> : null}
       </ScrollView>
-      <BottomNav onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
+      <BottomNav onNavigate={onNavigate} onStartPress={onStartWalk} />
       <Modal visible={!!selectedChallenge} transparent animationType="fade" onRequestClose={() => setSelectedChallenge(null)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedChallenge(null)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
@@ -37,7 +35,6 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
-      <StartWalkSheet visible={startOpen} onClose={() => setStartOpen(false)} onStart={onStartWalk} />
     </View>
   );
 }

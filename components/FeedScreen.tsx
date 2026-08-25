@@ -16,7 +16,7 @@ type Props = {
   dog: Dog;
   viewerWalks: Walk[];
   onNavigate: (tab: AppTab) => void;
-  onStartWalk: (shareRoute: boolean) => void;
+  onStartWalk: () => void;
 };
 
 export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props) {
@@ -208,7 +208,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
         </View>
       </Modal>
 
-      <BottomNav active="community" onNavigate={onNavigate} onStartPress={() => onStartWalk(false)} />
+      <BottomNav active="community" onNavigate={onNavigate} onStartPress={onStartWalk} />
     </View>
   );
 }

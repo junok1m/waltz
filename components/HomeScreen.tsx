@@ -9,7 +9,6 @@ import {
 } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import { HighlightRow } from "./HighlightRow";
-import { StartWalkSheet } from "./StartWalkSheet";
 import { AppTab } from "./HubScreen";
 import { WaltzCalendar } from "./WaltzCalendar";
 import { fetchLatestActivityEvents } from "../services/activity";
@@ -22,7 +21,7 @@ import { calculateWalkStreak } from "../utils/streak";
 type Props = {
   walks: Walk[];
   dog: DogType;
-  onStartWalk: (shareRoute: boolean) => void;
+  onStartWalk: () => void;
   onNavigate: (tab: AppTab) => void;
   onOpenDogs: () => void;
 };
@@ -62,7 +61,6 @@ export function HomeScreen({
   onNavigate,
   onOpenDogs,
 }: Props) {
-  const [startOpen, setStartOpen] = useState(false);
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const streak = calculateWalkStreak(walks);
   const completedChallenges = earnedBadgeIds(walks).length;
@@ -138,12 +136,7 @@ export function HomeScreen({
         </View>
       </ScrollView>
 
-      <BottomNav active="home" onNavigate={onNavigate} onStartPress={() => setStartOpen(true)} />
-      <StartWalkSheet
-        visible={startOpen}
-        onClose={() => setStartOpen(false)}
-        onStart={onStartWalk}
-      />
+      <BottomNav active="home" onNavigate={onNavigate} onStartPress={onStartWalk} />
     </View>
   );
 }

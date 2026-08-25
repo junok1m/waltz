@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
 import * as Location from "expo-location";
+import Storage from "expo-sqlite/kv-store";
 import { startBackgroundWalkUpdates, stopBackgroundWalkUpdates, WALK_LOCATION_TASK } from "../services/backgroundWalk";
 import { clearWalkDraft, loadWalkDraft, saveWalkDraft, WalkDraft } from "../services/walkDraft";
 import { Point, WalkTag } from "../types/walk";
@@ -12,6 +13,8 @@ type Options = {
   onRecoverDogId: (dogId: string) => void;
   onRecoverMetadata: (metadata: DraftMetadata) => void;
 };
+
+const BACKGROUND_PERMISSION_ATTEMPTED_KEY = "waltz-background-location-attempted-v1";
 
 export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Options) {
   const [isWalking, setIsWalking] = useState(false);
@@ -102,6 +105,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
 
     try {
       if (!await ensurePreciseLocation()) return;
+      if (!await requestBackgroundTracking()) return;
       resetTrackerState();
       startedAt.current = Date.now();
       draftOwner.current = { userId, dogId: input.dogId };
@@ -128,6 +132,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     previousPoint.current = null;
     try {
       if (!await ensurePreciseLocation()) throw new Error("Precise location is required to resume this walk.");
+      if (!await requestBackgroundTracking()) throw new Error("Always Location is required to resume this walk.");
       await persistRequiredDraft({ ...draft, lastSample: null });
       await startRecorder();
       setIsWalking(true);
@@ -174,20 +179,25 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
   }
 
   async function startRecorder() {
-    if (await requestBackgroundTracking()) {
-      await startBackgroundWalkUpdates();
-      recorderMode.current = "background";
-      return;
-    }
-    await subscribeToLocations();
-    recorderMode.current = "foreground";
-    Alert.alert("Background tracking is off", "This walk will still record while Waltz stays open. Enable Always Location in Settings before locking your screen.");
+    await startBackgroundWalkUpdates();
+    recorderMode.current = "background";
   }
 
   async function requestBackgroundTracking() {
-    if (!await Location.isBackgroundLocationAvailableAsync()) return false;
+    if (!await Location.isBackgroundLocationAvailableAsync()) {
+      Alert.alert("Background location unavailable", "Waltz needs background location to record while your screen is locked.");
+      return false;
+    }
     const current = await Location.getBackgroundPermissionsAsync();
-    if (current.status === "granted") return true;
+    if (current.status === "granted") {
+      await Storage.setItem(BACKGROUND_PERMISSION_ATTEMPTED_KEY, "1");
+      return true;
+    }
+    const attempted = await Storage.getItem(BACKGROUND_PERMISSION_ATTEMPTED_KEY) === "1";
+    if (attempted || !current.canAskAgain) {
+      showLocationSettingsAlert("Always Location is off", "Choose Always Location in Settings so Waltz can record when your screen is locked.");
+      return false;
+    }
     const wantsBackground = await new Promise<boolean>((resolve) => {
       const permissionName = Platform.OS === "android" ? "Allow all the time" : "Allow Always";
       Alert.alert(
@@ -201,13 +211,23 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       );
     });
     if (!wantsBackground) return false;
-    return (await Location.requestBackgroundPermissionsAsync()).status === "granted";
+    await Storage.setItem(BACKGROUND_PERMISSION_ATTEMPTED_KEY, "1");
+    const result = await Location.requestBackgroundPermissionsAsync();
+    if (result.status === "granted") return true;
+    showLocationSettingsAlert("Always Location needed", "The permission request is complete, but Always Location is not enabled. Turn it on in Settings to start a waltz.");
+    return false;
   }
 
   async function ensurePreciseLocation() {
-    const permission = await Location.requestForegroundPermissionsAsync();
+    const current = await Location.getForegroundPermissionsAsync();
+    const permission = current.status === "granted"
+      ? current
+      : current.canAskAgain
+        ? await Location.requestForegroundPermissionsAsync()
+        : current;
     if (permission.status !== "granted") {
-      Alert.alert("Location needed", "Waltz needs your location to record walks.");
+      if (permission.canAskAgain) Alert.alert("Location needed", "Waltz needs your location to record walks.");
+      else showLocationSettingsAlert("Location is off", "Allow location access in Settings to record a waltz.");
       return false;
     }
     if (permission.ios?.accuracy === "reduced" || permission.android?.accuracy === "coarse") {
@@ -228,6 +248,13 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       }
     }
     return true;
+  }
+
+  function showLocationSettingsAlert(title: string, message: string) {
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Open Settings", onPress: () => Linking.openSettings().catch(() => undefined) },
+    ]);
   }
 
   async function stopWalk() {

@@ -31,7 +31,7 @@ type Props = {
   dogManagerOpen: boolean;
   dogManagerEditId: string | null;
   onNavigate: (tab: AppTab) => void;
-  onStartWalk: (shareRoute: boolean) => void;
+  onStartWalk: () => void;
   onStopWalk: () => void | Promise<void>;
   onSaveWalk: () => void | Promise<void>;
   onDiscardWalk: () => void | Promise<void>;
