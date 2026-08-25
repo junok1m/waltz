@@ -23,6 +23,7 @@ type CompletedWalk = {
 type RecoveredMetadata = {
   title: string;
   shareRoute: boolean;
+  routePrivacy: RoutePrivacy;
   tags: WalkTag[];
 };
 
@@ -36,7 +37,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
 
   function recoverMetadata(metadata: RecoveredMetadata) {
     setWalkTitle(metadata.title);
-    setRoutePrivacy(metadata.shareRoute ? "hidden_ends" : "private");
+    setRoutePrivacy(metadata.routePrivacy);
     setWalkTags(metadata.tags);
   }
 

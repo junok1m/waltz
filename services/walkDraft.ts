@@ -1,5 +1,5 @@
 import Storage from "expo-sqlite/kv-store";
-import { Point, WalkTag } from "../types/walk";
+import { Point, RoutePrivacy, WalkTag } from "../types/walk";
 import { LocationSample } from "../utils/locationFilter";
 
 const WALK_DRAFT_KEY = "waltz.active-walk.v1";
@@ -16,6 +16,7 @@ export type WalkDraft = {
   lastSample: LocationSample | null;
   title: string;
   shareRoute: boolean;
+  routePrivacy?: RoutePrivacy;
   tags: WalkTag[];
 };
 
@@ -57,6 +58,7 @@ function isWalkDraft(value: unknown): value is WalkDraft {
     && (draft.lastSample === null || isLocationSample(draft.lastSample))
     && typeof draft.title === "string"
     && typeof draft.shareRoute === "boolean"
+    && (draft.routePrivacy === undefined || draft.routePrivacy === "private" || draft.routePrivacy === "hidden_ends" || draft.routePrivacy === "full" || draft.routePrivacy === "stats_only")
     && Array.isArray(draft.tags)
     && draft.tags.every((tag) => tag === "trail" || tag === "swim" || tag === "coffee");
 }

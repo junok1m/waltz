@@ -146,7 +146,7 @@ export default function App() {
         }}
         onRoutePrivacyChange={(value) => {
           setRoutePrivacy(value);
-          updateWalkDraftMetadata({ shareRoute: value !== "private" });
+          updateWalkDraftMetadata({ shareRoute: value !== "private", routePrivacy: value });
         }}
         onOpenDogs={openDogManager}
         onCloseDogs={closeDogManager}

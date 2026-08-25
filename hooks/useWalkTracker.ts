@@ -4,10 +4,10 @@ import * as Location from "expo-location";
 import Storage from "expo-sqlite/kv-store";
 import { startBackgroundWalkUpdates, stopBackgroundWalkUpdates, WALK_LOCATION_TASK } from "../services/backgroundWalk";
 import { clearWalkDraft, loadWalkDraft, saveWalkDraft, WalkDraft } from "../services/walkDraft";
-import { Point, WalkTag } from "../types/walk";
+import { Point, RoutePrivacy, WalkTag } from "../types/walk";
 import { evaluateLocationSample, LocationSample } from "../utils/locationFilter";
 
-type DraftMetadata = { title: string; shareRoute: boolean; tags: WalkTag[] };
+type DraftMetadata = { title: string; shareRoute: boolean; routePrivacy: RoutePrivacy; tags: WalkTag[] };
 type Options = {
   userId: string | null;
   onRecoverDogId: (dogId: string) => void;
@@ -35,7 +35,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
   const pointsRef = useRef<Point[]>([]);
   const draftOwner = useRef<{ userId: string; dogId: string } | null>(null);
   const draftStatus = useRef<WalkDraft["status"] | null>(null);
-  const metadataRef = useRef<DraftMetadata>({ title: "", shareRoute: false, tags: [] });
+  const metadataRef = useRef<DraftMetadata>({ title: "", shareRoute: true, routePrivacy: "hidden_ends", tags: [] });
   const draftWriteQueue = useRef<Promise<void>>(Promise.resolve());
   const recoveryUser = useRef<string | null>(null);
 
@@ -79,7 +79,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       .then((draft) => {
         if (cancelled || !draft || draft.userId !== userId) return;
         onRecoverDogId(draft.dogId);
-        onRecoverMetadata({ title: draft.title, shareRoute: draft.shareRoute, tags: draft.tags });
+        onRecoverMetadata({ title: draft.title, shareRoute: draft.shareRoute, routePrivacy: draft.routePrivacy ?? (draft.shareRoute ? "hidden_ends" : "private"), tags: draft.tags });
         if (draft.status === "finished") {
           hydrateDraft(draft, true);
           return;
@@ -110,7 +110,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
       startedAt.current = Date.now();
       draftOwner.current = { userId, dogId: input.dogId };
       draftStatus.current = "walking";
-      metadataRef.current = { title: "", shareRoute: input.shareRoute, tags: [] };
+      metadataRef.current = { title: "", shareRoute: input.shareRoute, routePrivacy: input.shareRoute ? "hidden_ends" : "private", tags: [] };
       await persistRequiredDraft(buildDraft("walking"));
       await startRecorder();
       setIsWalking(true);
@@ -314,7 +314,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     previousPoint.current = draft.lastSample;
     draftOwner.current = { userId: draft.userId, dogId: draft.dogId };
     draftStatus.current = finished ? "finished" : "walking";
-    metadataRef.current = { title: draft.title, shareRoute: draft.shareRoute, tags: draft.tags };
+    metadataRef.current = { title: draft.title, shareRoute: draft.shareRoute, routePrivacy: draft.routePrivacy ?? (draft.shareRoute ? "hidden_ends" : "private"), tags: draft.tags };
     setDistance(draft.distanceKm);
     setPoints(draft.points);
     setSeconds(elapsedSeconds(finished ? draft.endedAt ?? Date.now() : Date.now()));
@@ -383,7 +383,7 @@ export function useWalkTracker({ userId, onRecoverDogId, onRecoverMetadata }: Op
     pointsRef.current = [];
     draftOwner.current = null;
     draftStatus.current = null;
-    metadataRef.current = { title: "", shareRoute: false, tags: [] };
+    metadataRef.current = { title: "", shareRoute: true, routePrivacy: "hidden_ends", tags: [] };
     recorderMode.current = null;
     setIsWalking(false);
     setWalkFinished(false);
