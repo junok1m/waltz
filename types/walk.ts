@@ -5,6 +5,12 @@ export type Point = {
 
 export type WalkTag = "trail" | "swim" | "coffee";
 export type RoutePrivacy = "private" | "hidden_ends" | "full" | "stats_only";
+export type WeatherCondition = "clear" | "cloudy" | "fog" | "drizzle" | "rain" | "heavy_rain" | "snow" | "storm" | "unknown";
+export type WalkWeather = {
+  temperatureC: number;
+  condition: WeatherCondition;
+  code: number;
+};
 
 export type Walk = {
   id: number;
@@ -19,5 +25,8 @@ export type Walk = {
   route_visibility?: RoutePrivacy;
   hidden_from_profile?: boolean;
   tags?: WalkTag[] | null;
+  weather_temperature_c?: number | null;
+  weather_condition?: WeatherCondition | null;
+  weather_code?: number | null;
   is_mock?: boolean;
 };
