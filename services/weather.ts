@@ -1,10 +1,9 @@
 import { Point, WalkWeather } from "../types/walk";
 
 type OpenMeteoResponse = {
-  hourly?: {
-    time?: string[];
-    temperature_2m?: number[];
-    weather_code?: number[];
+  current?: {
+    temperature_2m?: number;
+    weather_code?: number;
   };
 };
 
@@ -14,53 +13,33 @@ function conditionFromCode(code: number): WalkWeather["condition"] {
   if ([45, 48].includes(code)) return "fog";
   if ([51, 53, 55, 56, 57].includes(code)) return "drizzle";
   if ([61, 63, 65, 66, 67, 80, 81].includes(code)) return "rain";
-  if ([82].includes(code)) return "heavy_rain";
+  if (code === 82) return "heavy_rain";
   if ([71, 73, 75, 77, 85, 86].includes(code)) return "snow";
   if ([95, 96, 99].includes(code)) return "storm";
   return "unknown";
 }
 
-export async function fetchWalkWeather(point: Point | undefined, startedAt: Date): Promise<WalkWeather | null> {
+export async function fetchWalkWeather(point: Point | undefined, _startedAt: Date): Promise<WalkWeather | null> {
   if (!point) return null;
 
-  const day = startedAt.toISOString().slice(0, 10);
-  const params = new URLSearchParams({
-    latitude: String(point.latitude),
-    longitude: String(point.longitude),
-    hourly: "temperature_2m,weather_code",
-    timezone: "auto",
-    start_date: day,
-    end_date: day,
-  });
+  const latitude = encodeURIComponent(String(point.latitude));
+  const longitude = encodeURIComponent(String(point.longitude));
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`;
 
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`Weather request failed with ${response.status}`);
 
   const data = await response.json() as OpenMeteoResponse;
-  const times = data.hourly?.time ?? [];
-  const temperatures = data.hourly?.temperature_2m ?? [];
-  const codes = data.hourly?.weather_code ?? [];
-  if (!times.length || !temperatures.length || !codes.length) return null;
-
-  const target = startedAt.getTime();
-  let bestIndex = 0;
-  let bestDiff = Number.POSITIVE_INFINITY;
-  for (let index = 0; index < times.length; index += 1) {
-    const diff = Math.abs(new Date(times[index]).getTime() - target);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestIndex = index;
-    }
+  const temperatureC = data.current?.temperature_2m;
+  const code = data.current?.weather_code;
+  if (!Number.isFinite(temperatureC) || !Number.isFinite(code)) {
+    throw new Error("Weather response did not include current temperature/code");
   }
 
-  const temperatureC = temperatures[bestIndex];
-  const code = codes[bestIndex];
-  if (!Number.isFinite(temperatureC) || !Number.isFinite(code)) return null;
-
   return {
-    temperatureC: Math.round(temperatureC),
-    condition: conditionFromCode(code),
-    code,
+    temperatureC: Math.round(temperatureC as number),
+    condition: conditionFromCode(code as number),
+    code: code as number,
   };
 }
 
