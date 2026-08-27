@@ -1,4 +1,4 @@
-import { Walk } from "../types/walk";
+import type { Walk } from "../types/walk";
 
 function toLocalDateKey(value: string) {
   const date = new Date(value);
@@ -9,8 +9,8 @@ function toLocalDateKey(value: string) {
   return `${year}-${month}-${day}`;
 }
 
-function dateKeyForOffset(daysFromToday: number) {
-  const date = new Date();
+function dateKeyForOffset(daysFromToday: number, now: Date) {
+  const date = new Date(now);
   date.setHours(12, 0, 0, 0);
   date.setDate(date.getDate() + daysFromToday);
 
@@ -21,14 +21,14 @@ function dateKeyForOffset(daysFromToday: number) {
   return `${year}-${month}-${day}`;
 }
 
-export function calculateWalkStreak(walks: Walk[]) {
+export function calculateWalkStreak(walks: Walk[], now = new Date()) {
   if (walks.length === 0) {
     return 0;
   }
 
   const walkedDays = new Set(walks.map((walk) => toLocalDateKey(walk.ended_at)));
-  const today = dateKeyForOffset(0);
-  const yesterday = dateKeyForOffset(-1);
+  const today = dateKeyForOffset(0, now);
+  const yesterday = dateKeyForOffset(-1, now);
 
   // A streak stays alive for the rest of today even before today's walk.
   // If neither today nor yesterday has a walk, the streak is broken.
@@ -40,7 +40,7 @@ export function calculateWalkStreak(walks: Walk[]) {
 
   let streak = 0;
 
-  while (walkedDays.has(dateKeyForOffset(offset))) {
+  while (walkedDays.has(dateKeyForOffset(offset, now))) {
     streak += 1;
     offset -= 1;
   }
