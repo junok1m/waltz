@@ -5,7 +5,7 @@ import { DogManagerModal } from "./DogManagerModal";
 import { FeedScreen } from "./FeedScreen";
 import { HomeScreen } from "./HomeScreen";
 import { AppTab, HubScreen } from "./HubScreen";
-import { HistoryScreen } from "./HistoryScreen";
+import { ReportScreen } from "./ReportScreen";
 import { MeScreen } from "./MeScreen";
 import { WalkCompleteScreen } from "./WalkCompleteScreen";
 import { WalkingScreen } from "./WalkingScreen";
@@ -97,7 +97,7 @@ export function AppRouter(props: Props) {
   } else if (tab === "me") {
     content = <MeScreen dog={activeDog} walks={walks} badges={badges} isSigningOut={isSigningOut} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} onSignOut={props.onSignOut} />;
   } else if (tab === "map") {
-    content = <HistoryScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
+    content = <ReportScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "community") {
     content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab !== "home") {
