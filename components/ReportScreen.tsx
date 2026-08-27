@@ -200,19 +200,26 @@ function BadgeStamp({ id }: { id: string }) {
 
 function HandDrawnBorder() {
   const stroke = "#D8D0C4";
+  const common = {
+    fill: "none" as const,
+    stroke,
+    strokeWidth: 1.05,
+    strokeLinecap: "round" as const,
+  };
+
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg style={styles.borderTop} viewBox="0 0 100 12" preserveAspectRatio="none">
-        <Path d="M4 11 C3 7 5 3 9 2 C27 3.4 45 1.3 62 2.4 C76 1.4 88 3 94 2.5 C98 3 99 6 99 11" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+        <Path d="M7 8 C24 7.2 40 8.4 57 7.6 C72 8.1 84 7.1 93 8" {...common} />
       </Svg>
       <Svg style={styles.borderRight} viewBox="0 0 12 100" preserveAspectRatio="none">
-        <Path d="M1 5 C5 3 9 5 10 10 C9 29 10.7 48 9.4 66 C10.3 81 9 91 9.8 95 C9.2 98 6 99 2 99" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+        <Path d="M5.8 7 C6.4 25 5.3 42 6.1 59 C5.5 74 6.3 86 5.9 93" {...common} />
       </Svg>
       <Svg style={styles.borderBottom} viewBox="0 0 100 12" preserveAspectRatio="none">
-        <Path d="M96 1 C98 5 96 9 92 10 C75 8.8 58 10.5 41 9.5 C25 10.8 13 8.9 7 9.7 C3 9 2 6 2 1" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+        <Path d="M93 4 C77 4.8 61 3.6 44 4.4 C28 3.9 16 4.8 7 4" {...common} />
       </Svg>
       <Svg style={styles.borderLeft} viewBox="0 0 12 100" preserveAspectRatio="none">
-        <Path d="M11 95 C7 98 3 96 2 91 C3.1 75 1.4 58 2.6 41 C1.5 25 3 13 2.2 8 C3 4 6 2 11 3" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+        <Path d="M6.2 93 C5.6 76 6.7 59 5.9 42 C6.5 27 5.7 15 6.1 7" {...common} />
       </Svg>
     </View>
   );
@@ -231,10 +238,10 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 16,
   },
-  borderTop: { position: "absolute", top: 0, left: 0, right: 0, height: 18 },
-  borderRight: { position: "absolute", top: 0, right: 0, bottom: 0, width: 18 },
-  borderBottom: { position: "absolute", left: 0, right: 0, bottom: 0, height: 18 },
-  borderLeft: { position: "absolute", top: 0, left: 0, bottom: 0, width: 18 },
+  borderTop: { position: "absolute", top: 0, left: 0, right: 0, height: 14 },
+  borderRight: { position: "absolute", top: 0, right: 0, bottom: 0, width: 14 },
+  borderBottom: { position: "absolute", left: 0, right: 0, bottom: 0, height: 14 },
+  borderLeft: { position: "absolute", top: 0, left: 0, bottom: 0, width: 14 },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
   dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
   identityRight: { alignItems: "flex-end", flex: 1 },
