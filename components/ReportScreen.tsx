@@ -246,6 +246,7 @@ function LedgerRow({ label, value }: { label: string; value: string }) {
 
 function BadgeStamp({ id }: { id: string }) {
   const iconProps = { size: 18, strokeWidth: 2, color: "#687455" };
+  const mileage = id.match(/^mileage-(\d+)$/)?.[1];
   const icon =
     id === "keep-flame" ? <Flame {...iconProps} /> :
     id === "tiny-adventures" ? <Balloon {...iconProps} /> :
@@ -254,7 +255,17 @@ function BadgeStamp({ id }: { id: string }) {
     id === "coffee-stop" ? <Coffee {...iconProps} /> :
     id === "early-bird" ? <Bird {...iconProps} /> :
     id === "night-shift" ? <MoonStar {...iconProps} /> :
-    id.startsWith("mileage-") ? <Flag {...iconProps} /> :
+    mileage ? (
+      <View style={styles.mileageIcon}>
+        <Flag {...iconProps} />
+        <Text
+          pointerEvents="none"
+          style={[styles.mileageNumber, mileage.length >= 4 && styles.mileageNumberSmall]}
+        >
+          {mileage}
+        </Text>
+      </View>
+    ) :
     null;
 
   return <View style={styles.badge}>{icon}</View>;
@@ -343,7 +354,7 @@ const styles = StyleSheet.create({
   },
   ledgerLabel: { fontSize: 12, color: "#756B60" },
   ledgerValue: { fontSize: 13, fontWeight: "900", color: "#28231F", textAlign: "right" },
-  badges: { flexDirection: "row", flexWrap: "nowrap", gap: 10, alignItems: "center" },
+  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 8, alignItems: "center" },
   badge: {
     width: 34,
     height: 34,
@@ -354,6 +365,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F4F5ED",
     borderRadius: 17,
   },
+  mileageIcon: { width: 18, height: 18, alignItems: "center", justifyContent: "center" },
+  mileageNumber: {
+    position: "absolute",
+    top: 5,
+    left: 7,
+    fontSize: 5.5,
+    lineHeight: 6,
+    fontWeight: "900",
+    color: "#687455",
+  },
+  mileageNumberSmall: { fontSize: 4.6, left: 6.2 },
   empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
   footer: {
     alignItems: "center",
