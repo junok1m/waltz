@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Balloon, Bird, Coffee, Fish, Flag, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
@@ -6,6 +6,7 @@ import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
+import { fetchBoopCountsByWalkIds } from "../services/boops";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
 
@@ -98,6 +99,7 @@ export function ReportScreen({
   const [period, setPeriod] = useState<ReportPeriod>("month");
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [paperSize, setPaperSize] = useState({ width: 0, height: 0 });
+  const [boopsReceived, setBoopsReceived] = useState(0);
   const now = new Date();
   const range = rangeFor(period, now);
   const selected = useMemo(() => walks.filter((walk) => isInRange(walk.ended_at, range)), [walks, period]);
@@ -106,10 +108,22 @@ export function ReportScreen({
     [badges, period],
   );
 
+  useEffect(() => {
+    let active = true;
+    fetchBoopCountsByWalkIds(selected.map((walk) => walk.id))
+      .then((counts) => {
+        if (active) setBoopsReceived(Object.values(counts).reduce((sum, count) => sum + count, 0));
+      })
+      .catch((error) => {
+        console.error("Load report Boops error:", error);
+        if (active) setBoopsReceived(0);
+      });
+    return () => { active = false; };
+  }, [selected]);
+
   const distance = selected.reduce((sum, walk) => sum + walk.distance_km, 0);
   const seconds = selected.reduce((sum, walk) => sum + walk.duration_seconds, 0);
   const activeDays = activeDayCount(selected);
-  const longest = selected.reduce((best, walk) => Math.max(best, walk.distance_km), 0);
   const streak = calculateWalkStreak(walks, now);
   const periodLabel = PERIODS.find((item) => item.value === period)?.label ?? "This month";
 
@@ -200,7 +214,7 @@ export function ReportScreen({
           <Rule />
 
           <SectionTitle>HIGHLIGHTS</SectionTitle>
-          <LedgerRow label="Longest waltz" value={selected.length ? `${longest.toFixed(1)} km` : "—"} />
+          <LedgerRow label="Boops received" value={String(boopsReceived)} />
           <LedgerRow label="Current streak" value={streak ? `${streak} day${streak === 1 ? "" : "s"}` : "—"} />
 
           <Rule />
