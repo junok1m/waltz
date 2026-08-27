@@ -104,15 +104,8 @@ export function ReportScreen({
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}><Text style={styles.headerTitle}>Report</Text></View>
-
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.paper}>
-          <View style={styles.receiptHead}>
-            <Text style={styles.brand}>WALTZ</Text>
-            <Text style={styles.document}>WALK REPORT</Text>
-          </View>
-
           <View style={styles.identityRow}>
             <View>
               <Text style={styles.micro}>DOG</Text>
@@ -150,7 +143,7 @@ export function ReportScreen({
             </View>
           ) : null}
 
-          <SectionTitle>WALTZ SUMMARY</SectionTitle>
+          <View style={styles.summarySection}><SectionTitle>WALTZ SUMMARY</SectionTitle></View>
           <LedgerRow label="Waltzes" value={String(selected.length)} />
           <LedgerRow label="Distance" value={`${distance.toFixed(1)} km`} />
           <LedgerRow label="Waltz time" value={formatDuration(seconds)} />
@@ -229,8 +222,6 @@ function BadgeStamp({ id }: { id: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { alignItems: "center", marginBottom: 18 },
-  headerTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   scroll: { paddingBottom: 26 },
   paper: {
     backgroundColor: "#FFFDF8",
@@ -238,13 +229,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DED6CA",
     paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 18,
+    paddingTop: 28,
+    paddingBottom: 24,
   },
-  receiptHead: { alignItems: "center", paddingBottom: 20 },
-  brand: { fontSize: 11, fontWeight: "900", letterSpacing: 4, color: "#78845C" },
-  document: { fontFamily: "Schoolbell_400Regular", fontSize: 31, color: "#1D1A17", marginTop: 2 },
-  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14 },
+  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
   identityRight: { alignItems: "flex-end", flex: 1 },
   micro: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187" },
   identity: { fontSize: 15, fontWeight: "900", color: "#332E29", marginTop: 3 },
@@ -278,7 +266,8 @@ const styles = StyleSheet.create({
   menuText: { fontSize: 12, color: "#655D54" },
   menuTextActive: { fontWeight: "900", color: "#596442" },
   check: { fontWeight: "900", color: "#78845C" },
-  section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.6, color: "#78845C", marginBottom: 7 },
+  summarySection: { marginTop: 34 },
+  section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.6, color: "#78845C", marginBottom: 11 },
   ledger: {
     minHeight: 34,
     flexDirection: "row",
@@ -313,5 +302,5 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   footerName: { fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29" },
-  footerCopy: { marginTop: 2, fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
+  footerCopy: { marginTop: 10, fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
 });
