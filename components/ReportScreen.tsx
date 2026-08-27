@@ -92,6 +92,38 @@ export function ReportScreen({
 
   return (
     <View style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Report</Text>
+        <View style={styles.periodControl}>
+          <Pressable
+            style={styles.headerSelector}
+            onPress={() => setSelectorOpen((open) => !open)}
+            accessibilityRole="button"
+            accessibilityLabel="Change reporting period"
+          >
+            <Text style={styles.headerSelectorText}>{periodLabel}</Text>
+            <Text style={styles.headerChevron}>{selectorOpen ? "⌃" : "⌄"}</Text>
+          </Pressable>
+          {selectorOpen ? (
+            <View style={styles.headerMenu}>
+              {PERIODS.map((item) => (
+                <Pressable
+                  key={item.value}
+                  style={[styles.headerMenuRow, item.value === period && styles.headerMenuRowActive]}
+                  onPress={() => {
+                    setPeriod(item.value);
+                    setSelectorOpen(false);
+                  }}
+                >
+                  <Text style={[styles.headerMenuText, item.value === period && styles.headerMenuTextActive]}>{item.label}</Text>
+                  {item.value === period ? <Text style={styles.check}>✓</Text> : null}
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View
           style={styles.paperShell}
@@ -137,30 +169,6 @@ export function ReportScreen({
           </View>
 
           <Rule />
-
-          <Text style={styles.micro}>REPORTING PERIOD</Text>
-          <Pressable style={styles.selector} onPress={() => setSelectorOpen((open) => !open)}>
-            <Text style={styles.selectorText}>{periodLabel}</Text>
-            <Text style={styles.chevron}>{selectorOpen ? "⌃" : "⌄"}</Text>
-          </Pressable>
-
-          {selectorOpen ? (
-            <View style={styles.menu}>
-              {PERIODS.map((item) => (
-                <Pressable
-                  key={item.value}
-                  style={[styles.menuRow, item.value === period && styles.menuRowActive]}
-                  onPress={() => {
-                    setPeriod(item.value);
-                    setSelectorOpen(false);
-                  }}
-                >
-                  <Text style={[styles.menuText, item.value === period && styles.menuTextActive]}>{item.label}</Text>
-                  {item.value === period ? <Text style={styles.check}>✓</Text> : null}
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
 
           <View style={styles.summarySection}><SectionTitle>SUMMARY</SectionTitle></View>
           <LedgerRow label="Waltzes" value={String(selected.length)} />
@@ -233,54 +241,74 @@ function BadgeStamp({ id }: { id: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
+  header: {
+    position: "relative",
+    zIndex: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 14,
+  },
+  pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  periodControl: { position: "relative", alignItems: "flex-end" },
+  headerSelector: {
+    minWidth: 112,
+    height: 36,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#D8D1C7",
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    backgroundColor: "#FCF8F1",
+  },
+  headerSelectorText: { fontSize: 11, fontWeight: "800", color: "#332E29" },
+  headerChevron: { fontSize: 14, color: "#78845C" },
+  headerMenu: {
+    position: "absolute",
+    top: 40,
+    right: 0,
+    width: 148,
+    zIndex: 30,
+    borderWidth: 1,
+    borderColor: "#D8D1C7",
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#FFFDF8",
+  },
+  headerMenuRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFDF8",
+  },
+  headerMenuRowActive: { backgroundColor: "#F1E7D7" },
+  headerMenuText: { fontSize: 11, color: "#655D54" },
+  headerMenuTextActive: { fontWeight: "900", color: "#596442" },
   scroll: { paddingBottom: 8 },
   paperShell: {
     position: "relative",
     backgroundColor: "transparent",
+    marginHorizontal: -10,
   },
   paper: {
     position: "relative",
     zIndex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 16,
+    paddingHorizontal: 30,
+    paddingTop: 24,
+    paddingBottom: 18,
   },
   paperBorderOverlay: { position: "absolute", top: 0, left: 0, zIndex: 0 },
-  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
-  dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
+  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 14, marginBottom: 2 },
+  dogIdentity: { justifyContent: "center" },
   identityRight: { alignItems: "flex-end", flex: 1 },
   micro: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187" },
   identity: { fontFamily: "Schoolbell_400Regular", fontSize: 26, color: "#332E29" },
   identitySmall: { fontSize: 11, fontWeight: "800", color: "#655D54", marginTop: 4, textAlign: "right" },
   rule: { height: 1, backgroundColor: "#DED6CA", marginVertical: 16 },
-  selector: {
-    marginTop: 7,
-    borderWidth: 1,
-    borderColor: "#D8D1C7",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#FCF8F1",
-  },
-  selectorText: { fontSize: 13, fontWeight: "800", color: "#332E29" },
-  chevron: { fontSize: 16, color: "#78845C" },
-  menu: {
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: "#D8D1C7",
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    overflow: "hidden",
-    marginTop: -5,
-  },
-  menuRow: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#FFFDF8", flexDirection: "row", justifyContent: "space-between" },
-  menuRowActive: { backgroundColor: "#F1E7D7" },
-  menuText: { fontSize: 12, color: "#655D54" },
-  menuTextActive: { fontWeight: "900", color: "#596442" },
-  check: { fontWeight: "900", color: "#78845C" },
   summarySection: { marginTop: 24 },
   section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.6, color: "#78845C", marginBottom: 9 },
   ledger: {
