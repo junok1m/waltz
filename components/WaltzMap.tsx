@@ -20,17 +20,36 @@ function cameraFor(points: Point[]) {
 }
 
 export function WaltzMap({points,dogName="Waltz",interactive=true,showLocation=false,overview=false}:Props){
-  const [hasLayout, setHasLayout] = useState(false);
+  const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
   const line=useMemo(()=>({type:"Feature" as const,properties:{},geometry:{type:"LineString" as const,coordinates:points.map(p=>[p.longitude,p.latitude])}}),[points]);
   const {center,zoom}=cameraFor(points),cameraZoom=overview?Math.min(zoom,12.5):zoom,first=points[0],last=points[points.length-1];
-  return <View style={styles.wrap} onLayout={({nativeEvent:{layout}})=>{if(layout.width>1&&layout.height>1)setHasLayout(true)}}>
-    {hasLayout?<Mapbox.MapView pointerEvents={interactive?"auto":"none"} style={StyleSheet.absoluteFill} styleJSON={WALTZ_MAP_STYLE} logoEnabled={false} compassEnabled={interactive} scaleBarEnabled={false} attributionEnabled scrollEnabled={interactive} pitchEnabled={interactive} rotateEnabled={interactive} zoomEnabled={interactive}>
+  return <View
+    style={styles.wrap}
+    onLayout={({ nativeEvent: { layout: next } }) => {
+      if (next.width > 1 && next.height > 1) {
+        setLayout((current) => current && current.width === next.width && current.height === next.height ? current : { width: next.width, height: next.height });
+      }
+    }}
+  >
+    {layout ? <Mapbox.MapView
+      pointerEvents={interactive ? "auto" : "none"}
+      style={[StyleSheet.absoluteFill, { width: layout.width, height: layout.height }]}
+      styleJSON={WALTZ_MAP_STYLE}
+      logoEnabled={false}
+      compassEnabled={interactive}
+      scaleBarEnabled={false}
+      attributionEnabled={false}
+      scrollEnabled={interactive}
+      pitchEnabled={interactive}
+      rotateEnabled={interactive}
+      zoomEnabled={interactive}
+    >
     <Mapbox.Camera centerCoordinate={center} zoomLevel={cameraZoom} animationDuration={0}/>
     {showLocation?<Mapbox.LocationPuck puckBearingEnabled puckBearing="heading"/>:null}
     {points.length>1?<Mapbox.ShapeSource id="waltz-route-source" shape={line}><Mapbox.LineLayer id="waltz-route-line" style={{lineColor:"#78845C",lineWidth:5,lineCap:"round",lineJoin:"round"}}/></Mapbox.ShapeSource>:null}
     {first?<Mapbox.PointAnnotation id="waltz-start" coordinate={[first.longitude,first.latitude]}><View style={styles.startDot}/></Mapbox.PointAnnotation>:null}
     {last?<Mapbox.PointAnnotation id="waltz-finish" coordinate={[last.longitude,last.latitude]}><View style={styles.finishDot} accessibilityLabel={`${dogName} current location`}/></Mapbox.PointAnnotation>:null}
-  </Mapbox.MapView>:null}
+  </Mapbox.MapView> : null}
   </View>;
 }
 
