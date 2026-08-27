@@ -96,10 +96,6 @@ export function ReportScreen({
   const activeDays = activeDayCount(selected);
   const longest = selected.reduce((best, walk) => Math.max(best, walk.distance_km), 0);
   const streak = calculateWalkStreak(walks, now);
-  const avgDistance = selected.length ? distance / selected.length : 0;
-  const avgSeconds = selected.length ? seconds / selected.length : 0;
-  const perDayDistance = activeDays ? distance / activeDays : 0;
-  const perDaySeconds = activeDays ? seconds / activeDays : 0;
   const periodLabel = PERIODS.find((item) => item.value === period)?.label ?? "This month";
 
   return (
@@ -107,8 +103,7 @@ export function ReportScreen({
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.paper}>
           <View style={styles.identityRow}>
-            <View>
-              <Text style={styles.micro}>DOG</Text>
+            <View style={styles.dogIdentity}>
               <Text style={styles.identity}>{dog.name}</Text>
             </View>
             <View style={styles.identityRight}>
@@ -143,17 +138,11 @@ export function ReportScreen({
             </View>
           ) : null}
 
-          <View style={styles.summarySection}><SectionTitle>WALTZ SUMMARY</SectionTitle></View>
+          <View style={styles.summarySection}><SectionTitle>SUMMARY</SectionTitle></View>
           <LedgerRow label="Waltzes" value={String(selected.length)} />
           <LedgerRow label="Distance" value={`${distance.toFixed(1)} km`} />
           <LedgerRow label="Waltz time" value={formatDuration(seconds)} />
           <LedgerRow label="Active days" value={`${activeDays} day${activeDays === 1 ? "" : "s"}`} />
-
-          <Rule />
-
-          <SectionTitle>AVERAGES</SectionTitle>
-          <LedgerRow label="Per waltz" value={selected.length ? `${avgDistance.toFixed(1)} km · ${formatDuration(avgSeconds)}` : "—"} />
-          <LedgerRow label="Per active day" value={activeDays ? `${perDayDistance.toFixed(1)} km · ${formatDuration(perDaySeconds)}` : "—"} />
 
           <Rule />
 
@@ -233,11 +222,12 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
+  dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
   identityRight: { alignItems: "flex-end", flex: 1 },
   micro: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187" },
-  identity: { fontSize: 15, fontWeight: "900", color: "#332E29", marginTop: 3 },
+  identity: { fontFamily: "Schoolbell_400Regular", fontSize: 26, color: "#332E29" },
   identitySmall: { fontSize: 11, fontWeight: "800", color: "#655D54", marginTop: 4, textAlign: "right" },
-  rule: { height: 1, backgroundColor: "#DED6CA", marginVertical: 17 },
+  rule: { height: 1, backgroundColor: "#DED6CA", marginVertical: 22 },
   selector: {
     marginTop: 7,
     borderWidth: 1,
@@ -295,8 +285,9 @@ const styles = StyleSheet.create({
   empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
   footer: {
     alignItems: "center",
-    marginTop: 28,
-    paddingTop: 15,
+    marginTop: 34,
+    paddingTop: 20,
+    paddingBottom: 54,
     borderTopWidth: 1,
     borderTopColor: "#DED6CA",
   },
