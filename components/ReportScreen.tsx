@@ -1,21 +1,228 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Bird, Coffee, Fish, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
+import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
+import { calculateWalkStreak } from "../utils/streak";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
 
-export function ReportScreen({ walks, dog, onNavigate, onStartWalk }: { walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: () => void }) {
+type ReportPeriod = "today" | "week" | "month" | "year";
+type Range = { start: Date; end: Date };
+
+const PERIODS: Array<{ value: ReportPeriod; label: string }> = [
+  { value: "today", label: "Today" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+  { value: "year", label: "Year to date" },
+];
+
+const BADGE_NAMES: Record<string, string> = {
+  "keep-flame": "Keep the flame",
+  "tiny-adventures": "Tiny adventures",
+  trail: "Trail",
+  "gone-fishing": "Gone fishing",
+  "coffee-stop": "Coffee stop",
+  "early-bird": "Early bird",
+  "night-shift": "Night shift",
+};
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+function startOfWeek(date: Date) {
+  const start = startOfDay(date);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  return start;
+}
+function rangeFor(period: ReportPeriod, now: Date): Range {
+  const end = new Date(startOfDay(now));
+  end.setDate(end.getDate() + 1);
+  if (period === "today") return { start: startOfDay(now), end };
+  if (period === "week") return { start: startOfWeek(now), end };
+  if (period === "month") return { start: new Date(now.getFullYear(), now.getMonth(), 1), end };
+  return { start: new Date(now.getFullYear(), 0, 1), end };
+}
+function isInRange(value: string, range: Range) {
+  const time = new Date(value).getTime();
+  return time >= range.start.getTime() && time < range.end.getTime();
+}
+function formatDuration(seconds: number) {
+  const minutes = Math.round(seconds / 60);
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+function reportDate(period: ReportPeriod, now: Date) {
+  if (period === "today") return now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+  if (period === "week") {
+    const start = startOfWeek(now);
+    return `${start.toLocaleDateString("en-AU", { day: "numeric", month: "short" })} – ${now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}`;
+  }
+  if (period === "month") return now.toLocaleDateString("en-AU", { month: "long", year: "numeric" });
+  return `1 Jan – ${now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}`;
+}
+function activeDayCount(walks: Walk[]) {
+  return new Set(walks.map((walk) => {
+    const date = new Date(walk.ended_at);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  })).size;
+}
+
+export function ReportScreen({
+  walks,
+  badges,
+  dog,
+  onNavigate,
+  onStartWalk,
+}: {
+  walks: Walk[];
+  badges: DogBadge[];
+  dog: Dog;
+  onNavigate: (tab: AppTab) => void;
+  onStartWalk: () => void;
+}) {
+  const [period, setPeriod] = useState<ReportPeriod>("month");
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const now = new Date();
+  const range = rangeFor(period, now);
+  const selected = useMemo(() => walks.filter((walk) => isInRange(walk.ended_at, range)), [walks, period]);
+  const earned = useMemo(
+    () => badges.filter((badge) => badge.badge_type === "monthly" && isInRange(badge.earned_at, range)),
+    [badges, period],
+  );
+
+  const distance = selected.reduce((sum, walk) => sum + walk.distance_km, 0);
+  const seconds = selected.reduce((sum, walk) => sum + walk.duration_seconds, 0);
+  const activeDays = activeDayCount(selected);
+  const longest = selected.reduce((best, walk) => Math.max(best, walk.distance_km), 0);
+  const streak = calculateWalkStreak(walks, now);
+  const avgDistance = selected.length ? distance / selected.length : 0;
+  const avgSeconds = selected.length ? seconds / selected.length : 0;
+  const perDayDistance = activeDays ? distance / activeDays : 0;
+  const perDaySeconds = activeDays ? seconds / activeDays : 0;
+  const periodLabel = PERIODS.find((item) => item.value === period)?.label ?? "This month";
+
   return (
     <View style={styles.screen}>
-      <View style={styles.header}><Text style={styles.title}>Report</Text></View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}><Text style={styles.headerTitle}>Report</Text></View>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.paper}>
-          <Text style={styles.brand}>WALTZ</Text>
-          <Text style={styles.document}>WALK REPORT</Text>
-          <Text style={styles.copy}>{dog.name} · {walks.length} waltzes</Text>
+          <View style={styles.receiptHead}>
+            <Text style={styles.brand}>WALTZ</Text>
+            <Text style={styles.document}>WALK REPORT</Text>
+          </View>
+
+          <View style={styles.identityRow}>
+            <View>
+              <Text style={styles.micro}>DOG</Text>
+              <Text style={styles.identity}>{dog.name}</Text>
+            </View>
+            <View style={styles.identityRight}>
+              <Text style={styles.micro}>REPORT DATE</Text>
+              <Text style={styles.identitySmall}>{reportDate(period, now)}</Text>
+            </View>
+          </View>
+
+          <Rule />
+
+          <Text style={styles.micro}>REPORTING PERIOD</Text>
+          <Pressable style={styles.selector} onPress={() => setSelectorOpen((open) => !open)}>
+            <Text style={styles.selectorText}>{periodLabel}</Text>
+            <Text style={styles.chevron}>{selectorOpen ? "⌃" : "⌄"}</Text>
+          </Pressable>
+
+          {selectorOpen ? (
+            <View style={styles.menu}>
+              {PERIODS.map((item) => (
+                <Pressable
+                  key={item.value}
+                  style={[styles.menuRow, item.value === period && styles.menuRowActive]}
+                  onPress={() => {
+                    setPeriod(item.value);
+                    setSelectorOpen(false);
+                  }}
+                >
+                  <Text style={[styles.menuText, item.value === period && styles.menuTextActive]}>{item.label}</Text>
+                  {item.value === period ? <Text style={styles.check}>✓</Text> : null}
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          <SectionTitle>WALTZ SUMMARY</SectionTitle>
+          <LedgerRow label="Waltzes" value={String(selected.length)} />
+          <LedgerRow label="Distance" value={`${distance.toFixed(1)} km`} />
+          <LedgerRow label="Waltz time" value={formatDuration(seconds)} />
+          <LedgerRow label="Active days" value={`${activeDays} day${activeDays === 1 ? "" : "s"}`} />
+
+          <Rule />
+
+          <SectionTitle>AVERAGES</SectionTitle>
+          <LedgerRow label="Per waltz" value={selected.length ? `${avgDistance.toFixed(1)} km · ${formatDuration(avgSeconds)}` : "—"} />
+          <LedgerRow label="Per active day" value={activeDays ? `${perDayDistance.toFixed(1)} km · ${formatDuration(perDaySeconds)}` : "—"} />
+
+          <Rule />
+
+          <SectionTitle>HIGHLIGHTS</SectionTitle>
+          <LedgerRow label="Longest waltz" value={selected.length ? `${longest.toFixed(1)} km` : "—"} />
+          <LedgerRow label="Current streak" value={streak ? `${streak} day${streak === 1 ? "" : "s"}` : "—"} />
+
+          <Rule />
+
+          <SectionTitle>EARNED THIS PERIOD</SectionTitle>
+          {earned.length ? (
+            <View style={styles.badges}>
+              {earned.map((badge) => <BadgeStamp key={badge.id} id={badge.badge_id} />)}
+            </View>
+          ) : (
+            <Text style={styles.empty}>No new stamps yet. Tiny paws are still clocking in.</Text>
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerName}>{dog.name}</Text>
+            <Text style={styles.footerCopy}>generated by Waltz · {now.getFullYear()}</Text>
+          </View>
         </View>
       </ScrollView>
+
       <BottomNav active="map" onNavigate={onNavigate} onStartPress={onStartWalk} />
+    </View>
+  );
+}
+
+function Rule() {
+  return <View style={styles.rule} />;
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <Text style={styles.section}>{children}</Text>;
+}
+
+function LedgerRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.ledger}>
+      <Text style={styles.ledgerLabel}>{label}</Text>
+      <Text style={styles.ledgerValue}>{value}</Text>
+    </View>
+  );
+}
+
+function BadgeStamp({ id }: { id: string }) {
+  const iconProps = { size: 18, strokeWidth: 2, color: "#687455" };
+  const icon =
+    id === "keep-flame" ? <Flame {...iconProps} /> :
+    id === "trail" ? <Mountain {...iconProps} /> :
+    id === "gone-fishing" ? <Fish {...iconProps} /> :
+    id === "coffee-stop" ? <Coffee {...iconProps} /> :
+    id === "early-bird" ? <Bird {...iconProps} /> :
+    id === "night-shift" ? <MoonStar {...iconProps} /> :
+    null;
+
+  return (
+    <View style={styles.badge}>
+      {icon ? <View style={styles.badgeIcon}>{icon}</View> : null}
+      <Text style={styles.badgeText}>{BADGE_NAMES[id] ?? id.replaceAll("-", " ")}</Text>
     </View>
   );
 }
@@ -23,10 +230,88 @@ export function ReportScreen({ walks, dog, onNavigate, onStartWalk }: { walks: W
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { alignItems: "center", marginBottom: 18 },
-  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  content: { paddingBottom: 26 },
-  paper: { backgroundColor: "#FFFDF8", borderWidth: 1, borderColor: "#DED6CA", borderRadius: 18, padding: 20 },
-  brand: { fontSize: 11, fontWeight: "900", letterSpacing: 4, color: "#78845C", textAlign: "center" },
-  document: { fontFamily: "Schoolbell_400Regular", fontSize: 31, color: "#1D1A17", textAlign: "center", marginTop: 2 },
-  copy: { marginTop: 20, fontSize: 12, color: "#756B60" },
+  headerTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  scroll: { paddingBottom: 26 },
+  paper: {
+    backgroundColor: "#FFFDF8",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#DED6CA",
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 18,
+  },
+  receiptHead: { alignItems: "center", paddingBottom: 20 },
+  brand: { fontSize: 11, fontWeight: "900", letterSpacing: 4, color: "#78845C" },
+  document: { fontFamily: "Schoolbell_400Regular", fontSize: 31, color: "#1D1A17", marginTop: 2 },
+  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14 },
+  identityRight: { alignItems: "flex-end", flex: 1 },
+  micro: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187" },
+  identity: { fontSize: 15, fontWeight: "900", color: "#332E29", marginTop: 3 },
+  identitySmall: { fontSize: 11, fontWeight: "800", color: "#655D54", marginTop: 4, textAlign: "right" },
+  rule: { height: 1, backgroundColor: "#DED6CA", marginVertical: 17 },
+  selector: {
+    marginTop: 7,
+    borderWidth: 1,
+    borderColor: "#D8D1C7",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FCF8F1",
+  },
+  selectorText: { fontSize: 13, fontWeight: "800", color: "#332E29" },
+  chevron: { fontSize: 16, color: "#78845C" },
+  menu: {
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: "#D8D1C7",
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    overflow: "hidden",
+    marginTop: -5,
+  },
+  menuRow: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#FFFDF8", flexDirection: "row", justifyContent: "space-between" },
+  menuRowActive: { backgroundColor: "#F1E7D7" },
+  menuText: { fontSize: 12, color: "#655D54" },
+  menuTextActive: { fontWeight: "900", color: "#596442" },
+  check: { fontWeight: "900", color: "#78845C" },
+  section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.6, color: "#78845C", marginBottom: 7 },
+  ledger: {
+    minHeight: 34,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E9E2D8",
+  },
+  ledgerLabel: { fontSize: 12, color: "#756B60" },
+  ledgerValue: { fontSize: 13, fontWeight: "900", color: "#28231F", textAlign: "right" },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#CCD2BF",
+    backgroundColor: "#F4F5ED",
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+  },
+  badgeIcon: { width: 19, alignItems: "center" },
+  badgeText: { fontSize: 10, fontWeight: "800", color: "#596442", textTransform: "capitalize" },
+  empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
+  footer: {
+    alignItems: "center",
+    marginTop: 28,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: "#DED6CA",
+    borderStyle: "dashed",
+  },
+  footerName: { fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29" },
+  footerCopy: { marginTop: 2, fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
 });
