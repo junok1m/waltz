@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": ".test-build",
+    "rootDir": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false
+  },
+  "include": [
+    "types/badge.ts",
+    "types/walk.ts",
+    "utils/badgeLogic.ts",
+    "utils/distance.ts",
+    "utils/locationFilter.ts",
+    "utils/routePrivacy.ts",
+    "utils/streak.ts",
+    "utils/weatherCondition.ts"
+  ]
+}
