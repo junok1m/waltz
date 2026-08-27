@@ -59,6 +59,29 @@ function activeDayCount(walks: Walk[]) {
   })).size;
 }
 
+function wobblyPaperBorder(width: number, height: number) {
+  const inset = 2;
+  const corner = Math.min(18, width / 12, height / 12);
+  const right = width - inset;
+  const bottom = height - inset;
+
+  return [
+    `M ${inset + corner} ${inset + 0.4}`,
+    `C ${width * 0.25} ${inset - 0.2}, ${width * 0.42} ${inset + 0.8}, ${width * 0.58} ${inset + 0.1}`,
+    `C ${width * 0.72} ${inset + 0.7}, ${right - corner * 0.45} ${inset - 0.2}, ${right - corner} ${inset + 0.5}`,
+    `C ${right - corner * 0.28} ${inset + 0.8}, ${right - 0.2} ${inset + corner * 0.42}, ${right - 0.1} ${inset + corner}`,
+    `C ${right + 0.4} ${height * 0.28}, ${right - 0.6} ${height * 0.46}, ${right + 0.1} ${height * 0.62}`,
+    `C ${right - 0.5} ${height * 0.77}, ${right + 0.5} ${bottom - corner * 0.45}, ${right - 0.2} ${bottom - corner}`,
+    `C ${right - 0.6} ${bottom - corner * 0.3}, ${right - corner * 0.42} ${bottom}, ${right - corner} ${bottom - 0.1}`,
+    `C ${width * 0.74} ${bottom + 0.4}, ${width * 0.57} ${bottom - 0.6}, ${width * 0.4} ${bottom}`,
+    `C ${width * 0.25} ${bottom - 0.5}, ${inset + corner * 0.45} ${bottom + 0.4}, ${inset + corner} ${bottom - 0.2}`,
+    `C ${inset + corner * 0.3} ${bottom - 0.6}, ${inset + 0.4} ${bottom - corner * 0.42}, ${inset + 0.3} ${bottom - corner}`,
+    `C ${inset - 0.2} ${height * 0.76}, ${inset + 0.8} ${height * 0.58}, ${inset + 0.2} ${height * 0.41}`,
+    `C ${inset + 0.7} ${height * 0.25}, ${inset - 0.2} ${inset + corner * 0.45}, ${inset + 0.4} ${inset + corner}`,
+    `C ${inset + 0.8} ${inset + corner * 0.3}, ${inset + corner * 0.42} ${inset + 0.8}, ${inset + corner} ${inset + 0.4} Z`,
+  ].join(" ");
+}
+
 export function ReportScreen({
   walks,
   badges,
@@ -143,17 +166,15 @@ export function ReportScreen({
               width={paperSize.width}
               height={paperSize.height}
               style={styles.paperBorderOverlay}
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
+              viewBox={`0 0 ${paperSize.width} ${paperSize.height}`}
             >
               <Path
-                d="M6 2.4 C20 1.8 37 2.8 54 2.1 C70 2.7 84 1.8 93 2.5 C96.8 2.8 98.1 5.1 97.9 8.8 C98.4 26 97.4 43 98.1 60 C97.5 76 98.5 88 97.8 93.2 C97.4 96.8 95.4 98 91.4 97.9 C75 98.4 59 97.4 42 98 C27 97.5 15 98.4 7.8 97.8 C4.2 97.4 2.4 95.4 2.3 91.7 C1.8 75 2.8 58 2.2 41 C2.7 25 1.8 13 2.4 7.2 C2.8 4.1 4.1 2.8 6 2.4 Z"
+                d={wobblyPaperBorder(paperSize.width, paperSize.height)}
                 fill="none"
                 stroke="#D8D0C4"
                 strokeWidth={1.05}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
               />
             </Svg>
           ) : null}
