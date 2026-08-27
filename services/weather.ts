@@ -1,4 +1,5 @@
-import { Point, WalkWeather } from "../types/walk";
+import type { Point, WalkWeather } from "../types/walk";
+import { conditionWithPrecipitation } from "../utils/weatherCondition";
 
 type OpenMeteoResponse = {
   current?: {
@@ -9,33 +10,6 @@ type OpenMeteoResponse = {
     showers?: number;
   };
 };
-
-function conditionFromCode(code: number): WalkWeather["condition"] {
-  if (code === 0) return "clear";
-  if ([1, 2, 3].includes(code)) return "cloudy";
-  if ([45, 48].includes(code)) return "fog";
-  if ([51, 53, 55, 56, 57].includes(code)) return "drizzle";
-  if ([61, 63, 65, 66, 67, 80, 81].includes(code)) return "rain";
-  if (code === 82) return "heavy_rain";
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return "snow";
-  if ([95, 96, 99].includes(code)) return "storm";
-  return "unknown";
-}
-
-function conditionWithPrecipitation(code: number, precipitation: number, rain: number, showers: number): WalkWeather["condition"] {
-  const codedCondition = conditionFromCode(code);
-
-  // Keep severe/specific conditions from the WMO code.
-  if (["storm", "snow", "heavy_rain"].includes(codedCondition)) return codedCondition;
-
-  // Open-Meteo's point-in-time WMO code can lag light/local rain. Use the
-  // measured/modelled current precipitation fields as a second signal.
-  const liquidPrecipitation = Math.max(precipitation, rain, showers);
-  if (liquidPrecipitation > 0.5) return "rain";
-  if (liquidPrecipitation > 0) return "drizzle";
-
-  return codedCondition;
-}
 
 export async function fetchWalkWeather(point: Point | undefined, _startedAt: Date): Promise<WalkWeather | null> {
   if (!point) return null;
