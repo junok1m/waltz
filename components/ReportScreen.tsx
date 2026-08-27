@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   paperShell: {
     position: "relative",
     backgroundColor: "transparent",
-    marginHorizontal: -10,
+    marginHorizontal: 0,
   },
   paper: {
     position: "relative",
