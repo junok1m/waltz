@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { Balloon, Bird, Coffee, Fish, Flag, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
+import { Balloon, Bird, Bone, CalendarDays, Coffee, Fish, Flag, Flame, Footprints, Gauge, Mountain, MoonStar, Timer } from "@sketchyicons/react-native";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
@@ -206,16 +206,16 @@ export function ReportScreen({
           <Rule />
 
           <View style={styles.summarySection}><SectionTitle>SUMMARY</SectionTitle></View>
-          <LedgerRow label="Waltzes" value={String(selected.length)} />
-          <LedgerRow label="Distance" value={`${distance.toFixed(1)} km`} />
-          <LedgerRow label="Waltz time" value={formatDuration(seconds)} />
-          <LedgerRow label="Active days" value={`${activeDays} day${activeDays === 1 ? "" : "s"}`} />
+          <LedgerRow icon={<Footprints size={17} strokeWidth={2} color="#78845C" />} label="Waltzes" value={String(selected.length)} />
+          <LedgerRow icon={<Gauge size={17} strokeWidth={2} color="#78845C" />} label="Distance" value={`${distance.toFixed(1)} km`} />
+          <LedgerRow icon={<Timer size={17} strokeWidth={2} color="#78845C" />} label="Waltz time" value={formatDuration(seconds)} />
+          <LedgerRow icon={<CalendarDays size={17} strokeWidth={2} color="#78845C" />} label="Active days" value={`${activeDays} day${activeDays === 1 ? "" : "s"}`} />
 
           <Rule />
 
           <SectionTitle>HIGHLIGHTS</SectionTitle>
-          <LedgerRow label="Boops received" value={String(boopsReceived)} />
-          <LedgerRow label="Current streak" value={streak ? `${streak} day${streak === 1 ? "" : "s"}` : "—"} />
+          <LedgerRow icon={<Bone size={17} strokeWidth={2} color="#78845C" />} label="Boops received" value={String(boopsReceived)} />
+          <LedgerRow icon={<Flame size={17} strokeWidth={2} color="#78845C" />} label="Current streak" value={streak ? `${streak} day${streak === 1 ? "" : "s"}` : "—"} />
 
           <Rule />
 
@@ -249,10 +249,13 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <Text style={styles.section}>{children}</Text>;
 }
 
-function LedgerRow({ label, value }: { label: string; value: string }) {
+function LedgerRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <View style={styles.ledger}>
-      <Text style={styles.ledgerLabel}>{label}</Text>
+      <View style={styles.ledgerLabelRow}>
+        <View style={styles.ledgerIcon}>{icon}</View>
+        <Text style={styles.ledgerLabel}>{label}</Text>
+      </View>
       <Text style={styles.ledgerValue}>{value}</Text>
     </View>
   );
@@ -366,6 +369,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#E9E2D8",
   },
+  ledgerLabelRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  ledgerIcon: { width: 18, alignItems: "center", justifyContent: "center" },
   ledgerLabel: { fontSize: 12, color: "#756B60" },
   ledgerValue: { fontSize: 13, fontWeight: "900", color: "#28231F", textAlign: "right" },
   badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 8, alignItems: "center" },
