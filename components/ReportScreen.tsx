@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { Balloon, Bird, Coffee, Fish, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
+import { Balloon, Bird, Coffee, Fish, Flag, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
@@ -102,7 +102,7 @@ export function ReportScreen({
   const range = rangeFor(period, now);
   const selected = useMemo(() => walks.filter((walk) => isInRange(walk.ended_at, range)), [walks, period]);
   const earned = useMemo(
-    () => badges.filter((badge) => badge.badge_type === "monthly" && isInRange(badge.earned_at, range)),
+    () => badges.filter((badge) => (badge.badge_type === "monthly" || badge.badge_type === "mileage") && isInRange(badge.earned_at, range)),
     [badges, period],
   );
 
@@ -205,7 +205,7 @@ export function ReportScreen({
 
           <Rule />
 
-          <SectionTitle>EARNED THIS PERIOD</SectionTitle>
+          <SectionTitle>EARNED</SectionTitle>
           {earned.length ? (
             <View style={styles.badges}>
               {earned.map((badge) => <BadgeStamp key={badge.id} id={badge.badge_id} />)}
@@ -254,6 +254,7 @@ function BadgeStamp({ id }: { id: string }) {
     id === "coffee-stop" ? <Coffee {...iconProps} /> :
     id === "early-bird" ? <Bird {...iconProps} /> :
     id === "night-shift" ? <MoonStar {...iconProps} /> :
+    id.startsWith("mileage-") ? <Flag {...iconProps} /> :
     null;
 
   return <View style={styles.badge}>{icon}</View>;
