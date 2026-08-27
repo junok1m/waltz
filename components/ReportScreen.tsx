@@ -93,17 +93,7 @@ export function ReportScreen({
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.paperShell}>
-          <Svg pointerEvents="none" style={styles.paperBorder} viewBox="0 0 100 100" preserveAspectRatio="none">
-            <Path
-              d="M6 1.8 C3.7 1.7 2.2 3.4 2.1 6.2 L1.9 24.5 C2.1 42.8 1.8 61.4 2.2 79.5 L2.4 93.5 C2.5 97.1 4.2 98.4 7.2 98.2 L27.8 98.4 C48.2 98.1 68.1 98.5 88.9 98.2 L93.1 98 C97 97.8 98.2 96.2 98 92.9 L98.2 72.8 C97.9 52.4 98.3 31.5 98 10.7 L97.8 6.4 C97.7 3.2 96.1 1.8 92.8 2 L72.2 1.7 C51.7 2.1 31.1 1.6 10.8 2 Z"
-              fill="none"
-              stroke="#D8D0C4"
-              strokeWidth={1.15}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          </Svg>
+          <HandDrawnBorder />
           <View style={styles.paper}>
           <View style={styles.identityRow}>
             <View style={styles.dogIdentity}>
@@ -208,13 +198,32 @@ function BadgeStamp({ id }: { id: string }) {
   return <View style={styles.badge}>{icon}</View>;
 }
 
+function HandDrawnBorder() {
+  const stroke = "#D8D0C4";
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg style={styles.borderTop} viewBox="0 0 100 12" preserveAspectRatio="none">
+        <Path d="M4 11 C3 7 5 3 9 2 C27 3.4 45 1.3 62 2.4 C76 1.4 88 3 94 2.5 C98 3 99 6 99 11" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+      </Svg>
+      <Svg style={styles.borderRight} viewBox="0 0 12 100" preserveAspectRatio="none">
+        <Path d="M1 5 C5 3 9 5 10 10 C9 29 10.7 48 9.4 66 C10.3 81 9 91 9.8 95 C9.2 98 6 99 2 99" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+      </Svg>
+      <Svg style={styles.borderBottom} viewBox="0 0 100 12" preserveAspectRatio="none">
+        <Path d="M96 1 C98 5 96 9 92 10 C75 8.8 58 10.5 41 9.5 C25 10.8 13 8.9 7 9.7 C3 9 2 6 2 1" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+      </Svg>
+      <Svg style={styles.borderLeft} viewBox="0 0 12 100" preserveAspectRatio="none">
+        <Path d="M11 95 C7 98 3 96 2 91 C3.1 75 1.4 58 2.6 41 C1.5 25 3 13 2.2 8 C3 4 6 2 11 3" fill="none" stroke={stroke} strokeWidth={1.15} strokeLinecap="round" />
+      </Svg>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   scroll: { paddingBottom: 8 },
   paperShell: {
     position: "relative",
-    backgroundColor: "#FFFDF8",
-    borderRadius: 18,
+    backgroundColor: "transparent",
   },
   paper: {
     position: "relative",
@@ -222,7 +231,10 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 16,
   },
-  paperBorder: { ...StyleSheet.absoluteFillObject },
+  borderTop: { position: "absolute", top: 0, left: 0, right: 0, height: 18 },
+  borderRight: { position: "absolute", top: 0, right: 0, bottom: 0, width: 18 },
+  borderBottom: { position: "absolute", left: 0, right: 0, bottom: 0, height: 18 },
+  borderLeft: { position: "absolute", top: 0, left: 0, bottom: 0, width: 18 },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
   dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
   identityRight: { alignItems: "flex-end", flex: 1 },
