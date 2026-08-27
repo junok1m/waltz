@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Bird, Coffee, Fish, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
+import { Balloon, Bird, Coffee, Fish, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
@@ -194,6 +194,7 @@ function BadgeStamp({ id }: { id: string }) {
   const iconProps = { size: 18, strokeWidth: 2, color: "#687455" };
   const icon =
     id === "keep-flame" ? <Flame {...iconProps} /> :
+    id === "tiny-adventures" ? <Balloon {...iconProps} /> :
     id === "trail" ? <Mountain {...iconProps} /> :
     id === "gone-fishing" ? <Fish {...iconProps} /> :
     id === "coffee-stop" ? <Coffee {...iconProps} /> :
@@ -285,9 +286,9 @@ const styles = StyleSheet.create({
   empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
   footer: {
     alignItems: "center",
-    marginTop: 34,
+    marginTop: 48,
     paddingTop: 20,
-    paddingBottom: 54,
+    paddingBottom: 14,
     borderTopWidth: 1,
     borderTopColor: "#DED6CA",
   },
