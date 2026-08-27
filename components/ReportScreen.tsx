@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { Balloon, Bird, Coffee, Fish, Flame, Mountain, MoonStar } from "@sketchyicons/react-native";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
@@ -92,6 +93,17 @@ export function ReportScreen({
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.paper}>
+          <Svg pointerEvents="none" style={styles.paperBorder} viewBox="0 0 100 100" preserveAspectRatio="none">
+            <Path
+              d="M6 1.8 C3.7 1.7 2.2 3.4 2.1 6.2 L1.9 24.5 C2.1 42.8 1.8 61.4 2.2 79.5 L2.4 93.5 C2.5 97.1 4.2 98.4 7.2 98.2 L27.8 98.4 C48.2 98.1 68.1 98.5 88.9 98.2 L93.1 98 C97 97.8 98.2 96.2 98 92.9 L98.2 72.8 C97.9 52.4 98.3 31.5 98 10.7 L97.8 6.4 C97.7 3.2 96.1 1.8 92.8 2 L72.2 1.7 C51.7 2.1 31.1 1.6 10.8 2 Z"
+              fill="none"
+              stroke="#D8D0C4"
+              strokeWidth={1.15}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </Svg>
           <View style={styles.identityRow}>
             <View style={styles.dogIdentity}>
               <Text style={styles.identity}>{dog.name}</Text>
@@ -200,12 +212,11 @@ const styles = StyleSheet.create({
   paper: {
     backgroundColor: "#FFFDF8",
     borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#DED6CA",
     paddingHorizontal: 20,
     paddingTop: 22,
     paddingBottom: 16,
   },
+  paperBorder: { ...StyleSheet.absoluteFillObject },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
   dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
   identityRight: { alignItems: "flex-end", flex: 1 },
