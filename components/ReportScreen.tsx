@@ -67,17 +67,17 @@ function wobblyPaperBorder(width: number, height: number) {
 
   return [
     `M ${inset + corner} ${inset + 0.4}`,
-    `C ${width * 0.25} ${inset - 1.0}, ${width * 0.42} ${inset + 1.8}, ${width * 0.58} ${inset - 0.4}`,
-    `C ${width * 0.72} ${inset + 1.4}, ${right - corner * 0.45} ${inset - 0.8}, ${right - corner} ${inset + 1.0}`,
+    `C ${width * 0.25} ${inset - 1.2}, ${width * 0.42} ${inset + 2.2}, ${width * 0.58} ${inset - 0.5}`,
+    `C ${width * 0.72} ${inset + 1.7}, ${right - corner * 0.45} ${inset - 1.0}, ${right - corner} ${inset + 1.2}`,
     `C ${right - corner * 0.28} ${inset + 0.8}, ${right - 0.2} ${inset + corner * 0.42}, ${right - 0.1} ${inset + corner}`,
-    `C ${right + 1.2} ${height * 0.28}, ${right - 1.4} ${height * 0.46}, ${right + 0.8} ${height * 0.62}`,
-    `C ${right - 1.1} ${height * 0.77}, ${right + 1.4} ${bottom - corner * 0.45}, ${right - 0.8} ${bottom - corner}`,
+    `C ${right + 1.5} ${height * 0.28}, ${right - 1.7} ${height * 0.46}, ${right + 1.0} ${height * 0.62}`,
+    `C ${right - 1.3} ${height * 0.77}, ${right + 1.7} ${bottom - corner * 0.45}, ${right - 1.0} ${bottom - corner}`,
     `C ${right - 0.6} ${bottom - corner * 0.3}, ${right - corner * 0.42} ${bottom}, ${right - corner} ${bottom - 0.1}`,
-    `C ${width * 0.74} ${bottom + 1.2}, ${width * 0.57} ${bottom - 1.4}, ${width * 0.4} ${bottom + 0.7}`,
-    `C ${width * 0.25} ${bottom - 1.1}, ${inset + corner * 0.45} ${bottom + 1.2}, ${inset + corner} ${bottom - 0.8}`,
+    `C ${width * 0.74} ${bottom + 1.5}, ${width * 0.57} ${bottom - 1.7}, ${width * 0.4} ${bottom + 0.9}`,
+    `C ${width * 0.25} ${bottom - 1.3}, ${inset + corner * 0.45} ${bottom + 1.5}, ${inset + corner} ${bottom - 1.0}`,
     `C ${inset + corner * 0.3} ${bottom - 0.6}, ${inset + 0.4} ${bottom - corner * 0.42}, ${inset + 0.3} ${bottom - corner}`,
-    `C ${inset - 1.0} ${height * 0.76}, ${inset + 1.6} ${height * 0.58}, ${inset - 0.6} ${height * 0.41}`,
-    `C ${inset + 1.4} ${height * 0.25}, ${inset - 0.8} ${inset + corner * 0.45}, ${inset + 1.0} ${inset + corner}`,
+    `C ${inset - 1.2} ${height * 0.76}, ${inset + 1.9} ${height * 0.58}, ${inset - 0.8} ${height * 0.41}`,
+    `C ${inset + 1.7} ${height * 0.25}, ${inset - 1.0} ${inset + corner * 0.45}, ${inset + 1.2} ${inset + corner}`,
     `C ${inset + 0.8} ${inset + corner * 0.3}, ${inset + corner * 0.42} ${inset + 0.8}, ${inset + corner} ${inset + 0.4} Z`,
   ].join(" ");
 }
