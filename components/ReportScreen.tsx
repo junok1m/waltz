@@ -299,7 +299,6 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     borderTopWidth: 1,
     borderTopColor: "#DED6CA",
-    borderStyle: "dashed",
   },
   footerName: { fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29" },
   footerCopy: { marginTop: 10, fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
