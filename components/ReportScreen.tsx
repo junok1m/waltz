@@ -18,16 +18,6 @@ const PERIODS: Array<{ value: ReportPeriod; label: string }> = [
   { value: "year", label: "Year to date" },
 ];
 
-const BADGE_NAMES: Record<string, string> = {
-  "keep-flame": "Keep the flame",
-  "tiny-adventures": "Tiny adventures",
-  trail: "Trail",
-  "gone-fishing": "Gone fishing",
-  "coffee-stop": "Coffee stop",
-  "early-bird": "Early bird",
-  "night-shift": "Night shift",
-};
-
 function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -202,12 +192,7 @@ function BadgeStamp({ id }: { id: string }) {
     id === "night-shift" ? <MoonStar {...iconProps} /> :
     null;
 
-  return (
-    <View style={styles.badge}>
-      {icon ? <View style={styles.badgeIcon}>{icon}</View> : null}
-      <Text style={styles.badgeText}>{BADGE_NAMES[id] ?? id.replaceAll("-", " ")}</Text>
-    </View>
-  );
+  return <View style={styles.badge}>{icon}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -269,29 +254,25 @@ const styles = StyleSheet.create({
   },
   ledgerLabel: { fontSize: 12, color: "#756B60" },
   ledgerValue: { fontSize: 13, fontWeight: "900", color: "#28231F", textAlign: "right" },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  badges: { flexDirection: "row", flexWrap: "nowrap", gap: 10, alignItems: "center" },
   badge: {
-    flexDirection: "row",
+    width: 38,
+    height: 38,
     alignItems: "center",
-    gap: 6,
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: "#CCD2BF",
     backgroundColor: "#F4F5ED",
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 7,
+    borderRadius: 19,
   },
-  badgeIcon: { width: 19, alignItems: "center" },
-  badgeText: { fontSize: 10, fontWeight: "800", color: "#596442", textTransform: "capitalize" },
   empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
   footer: {
     alignItems: "center",
-    marginTop: 48,
-    paddingTop: 20,
-    paddingBottom: 14,
+    marginTop: 28,
+    paddingTop: 14,
+    paddingBottom: 2,
     borderTopWidth: 1,
     borderTopColor: "#DED6CA",
   },
-  footerName: { fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29" },
-  footerCopy: { marginTop: 10, fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
+  footerCopy: { fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
 });
