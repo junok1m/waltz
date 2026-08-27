@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   paperBorder: { ...StyleSheet.absoluteFillObject, zIndex: 0 },
-  paperContent: { zIndex: 1 },
+  paperContent: { position: "relative", zIndex: 1, elevation: 1 },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 2 },
   dogIdentity: { minHeight: 32, justifyContent: "flex-end" },
   identityRight: { alignItems: "flex-end", flex: 1 },
