@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 18,
   },
-  paperBorderOverlay: { position: "absolute", top: 0, left: 0, zIndex: 0 },
+  paperBorderOverlay: { position: "absolute", top: 0, left: 0, zIndex: 2 },
   identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 14, marginBottom: 2 },
   dogIdentity: { justifyContent: "center" },
   identityRight: { alignItems: "flex-end", flex: 1 },
