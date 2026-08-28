@@ -46,25 +46,41 @@ function activeDayCount(walks: Walk[]) {
   })).size;
 }
 
+function WobblyRule() {
+  return (
+    <View style={styles.rule}>
+      <Svg width="100%" height={6} viewBox="0 0 100 6" preserveAspectRatio="none">
+        <Path
+          d="M 0 3.2 C 12 1.7, 24 4.4, 37 2.8 C 51 1.4, 63 4.5, 76 2.7 C 87 1.8, 94 3.8, 100 2.9"
+          fill="none"
+          stroke="#E4DDD3"
+          strokeWidth={0.7}
+          strokeLinecap="round"
+        />
+      </Svg>
+    </View>
+  );
+}
+
 function wobblyPaperBorder(width: number, height: number) {
-  const inset = 3;
+  const inset = 5;
   const corner = Math.min(18, width / 12, height / 12);
   const right = width - inset;
   const bottom = height - inset;
 
   return [
-    `M ${inset + corner} ${inset + 0.4}`,
-    `C ${width * 0.25} ${inset - 1.2}, ${width * 0.42} ${inset + 2.2}, ${width * 0.58} ${inset - 0.5}`,
-    `C ${width * 0.72} ${inset + 1.7}, ${right - corner * 0.45} ${inset - 1.0}, ${right - corner} ${inset + 1.2}`,
+    `M ${inset + corner} ${inset + 0.8}`,
+    `C ${width * 0.25} ${inset - 2.6}, ${width * 0.42} ${inset + 3.4}, ${width * 0.58} ${inset - 1.4}`,
+    `C ${width * 0.72} ${inset + 3.0}, ${right - corner * 0.45} ${inset - 2.3}, ${right - corner} ${inset + 1.8}`,
     `C ${right - corner * 0.28} ${inset + 0.8}, ${right - 0.2} ${inset + corner * 0.42}, ${right - 0.1} ${inset + corner}`,
-    `C ${right + 1.5} ${height * 0.28}, ${right - 1.7} ${height * 0.46}, ${right + 1.0} ${height * 0.62}`,
-    `C ${right - 1.3} ${height * 0.77}, ${right + 1.7} ${bottom - corner * 0.45}, ${right - 1.0} ${bottom - corner}`,
+    `C ${right + 2.8} ${height * 0.28}, ${right - 3.1} ${height * 0.46}, ${right + 2.4} ${height * 0.62}`,
+    `C ${right - 2.7} ${height * 0.77}, ${right + 3.0} ${bottom - corner * 0.45}, ${right - 1.8} ${bottom - corner}`,
     `C ${right - 0.6} ${bottom - corner * 0.3}, ${right - corner * 0.42} ${bottom}, ${right - corner} ${bottom - 0.1}`,
-    `C ${width * 0.74} ${bottom + 1.5}, ${width * 0.57} ${bottom - 1.7}, ${width * 0.4} ${bottom + 0.9}`,
-    `C ${width * 0.25} ${bottom - 1.3}, ${inset + corner * 0.45} ${bottom + 1.5}, ${inset + corner} ${bottom - 1.0}`,
+    `C ${width * 0.74} ${bottom + 2.8}, ${width * 0.57} ${bottom - 3.0}, ${width * 0.4} ${bottom + 2.2}`,
+    `C ${width * 0.25} ${bottom - 2.7}, ${inset + corner * 0.45} ${bottom + 3.0}, ${inset + corner} ${bottom - 1.8}`,
     `C ${inset + corner * 0.3} ${bottom - 0.6}, ${inset + 0.4} ${bottom - corner * 0.42}, ${inset + 0.3} ${bottom - corner}`,
-    `C ${inset - 1.2} ${height * 0.76}, ${inset + 1.9} ${height * 0.58}, ${inset - 0.8} ${height * 0.41}`,
-    `C ${inset + 1.7} ${height * 0.25}, ${inset - 1.0} ${inset + corner * 0.45}, ${inset + 1.2} ${inset + corner}`,
+    `C ${inset - 2.8} ${height * 0.76}, ${inset + 3.2} ${height * 0.58}, ${inset - 2.4} ${height * 0.41}`,
+    `C ${inset + 3.0} ${height * 0.25}, ${inset - 2.5} ${inset + corner * 0.45}, ${inset + 1.8} ${inset + corner}`,
     `C ${inset + 0.8} ${inset + corner * 0.3}, ${inset + corner * 0.42} ${inset + 0.8}, ${inset + corner} ${inset + 0.4} Z`,
   ].join(" ");
 }
@@ -164,7 +180,7 @@ export function ReportScreen({
             </Text>
             {boopsReceived ? <Text style={styles.boops}>{boopsReceived} boop{boopsReceived === 1 ? "" : "s"} this period</Text> : null}
 
-            <View style={styles.rule} />
+            <WobblyRule />
 
             <Text style={styles.section}>This period</Text>
             {buckets.length ? (
@@ -184,7 +200,7 @@ export function ReportScreen({
 
             {earned.length ? (
               <>
-                <View style={styles.rule} />
+                <WobblyRule />
                 <Text style={styles.section}>Stamps</Text>
                 <View style={styles.badges}>
                   {earned.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={44} labelLines={2} />)}
@@ -242,7 +258,7 @@ const styles = StyleSheet.create({
   hero: { fontSize: 44, fontWeight: "900", color: "#1D1A17", marginTop: 14, letterSpacing: -0.8 },
   meta: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 6 },
   boops: { fontSize: 11, color: "#9A9187", marginTop: 10 },
-  rule: { height: 1, backgroundColor: "#E4DDD3", marginVertical: 16 },
+  rule: { height: 6, marginVertical: 13 },
   section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.5, color: "#78845C", marginBottom: 10, textTransform: "uppercase" },
   bars: { height: 98, width: "100%", flexDirection: "row", alignItems: "flex-end" },
   barCell: { flex: 1, minWidth: 0, height: 98, alignItems: "center", justifyContent: "flex-end" },
