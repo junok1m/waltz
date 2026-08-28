@@ -52,7 +52,7 @@ export function MeBadgeActivityCard({ dogName, badge }: { dogName: string; badge
   );
 }
 
-export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () => void }) {
+export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu?: () => void }) {
   const points = walk.route_points ?? [];
   const [boopCount, setBoopCount] = useState(0);
   const [mapOpen, setMapOpen] = useState(false);
@@ -90,7 +90,7 @@ export function MeWalkActivityCard({ walk, onMenu }: { walk: Walk; onMenu: () =>
               : null}
           </View>
         </View>
-        <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable>
+        {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
       </View>
       <WalkTagIcons tags={walk.tags} />
       {canShowMap ? (
