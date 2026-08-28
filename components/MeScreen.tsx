@@ -91,7 +91,12 @@ export function MeScreen({
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}><Text style={styles.title}>{dog.name}</Text></View>
+      <View style={styles.header}>
+        <Text style={styles.title}>{dog.name}</Text>
+        <Pressable style={styles.editButton} onPress={onEditDog}>
+          <Text style={styles.editButtonText}>Edit profile</Text>
+        </Pressable>
+      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profile}>
           {dog.avatar_url
@@ -99,7 +104,6 @@ export function MeScreen({
             : <View style={styles.avatarFallback}><DogIcon size={42} strokeWidth={2} color="#665D54" /></View>}
           <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
           <Text style={styles.summary}>{walks.length} waltzes · {totalDistance.toFixed(1)} km · {streak} day streak</Text>
-          <Pressable style={styles.editButton} onPress={onEditDog}><Text style={styles.editButtonText}>Edit profile</Text></Pressable>
         </View>
 
         <Text style={styles.sectionTitle}>{monthTitle} Badges</Text>
@@ -156,7 +160,7 @@ function BadgeRow({ badges }: { badges: DogBadge[] }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { alignItems: "center", marginBottom: 10 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   content: { paddingBottom: 24, gap: 14 },
   profile: { alignItems: "center", paddingVertical: 10 },
@@ -164,8 +168,8 @@ const styles = StyleSheet.create({
   avatarFallback: { width: 92, height: 92, borderRadius: 46, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
   profileLine: { fontSize: 14, color: "#655D54", marginTop: 10 },
   summary: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 9 },
-  editButton: { marginTop: 12, borderRadius: 999, backgroundColor: "#F1E7D7", paddingHorizontal: 16, paddingVertical: 8 },
-  editButtonText: { fontSize: 11, fontWeight: "800", color: "#655D54" },
+  editButton: { paddingVertical: 8 },
+  editButtonText: { fontSize: 11, fontWeight: "800", color: "#78845C" },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
   sectionCopy: { fontSize: 11, color: "#756B60", marginTop: -8, lineHeight: 16 },
   badgeRow: { gap: 10, paddingVertical: 3, paddingRight: 10 },
