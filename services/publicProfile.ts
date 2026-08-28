@@ -7,10 +7,14 @@ export type PublicDogProfile = {
   dog: Dog;
   walks: Walk[];
   badges: DogBadge[];
+  totalWaltzes: number;
+  totalDistance: number;
+  boopCounts: Record<number, number>;
+  boopedWalkIds: number[];
 };
 
-export async function fetchPublicDogProfile(dogId: string): Promise<PublicDogProfile> {
-  const [dogResult, walksResult, eventsResult] = await Promise.all([
+export async function fetchPublicDogProfile(dogId: string, viewerDogId: string): Promise<PublicDogProfile> {
+  const [dogResult, walksResult, allWalksResult, eventsResult] = await Promise.all([
     supabase.from("dogs").select("*").eq("id", dogId).single(),
     supabase
       .from("walks")
@@ -20,6 +24,12 @@ export async function fetchPublicDogProfile(dogId: string): Promise<PublicDogPro
       .eq("hidden_from_profile", false)
       .order("ended_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("walks")
+      .select("id,distance_km,walk_dogs!inner(dog_id)")
+      .eq("walk_dogs.dog_id", dogId)
+      .eq("share_route", true)
+      .eq("hidden_from_profile", false),
     supabase
       .from("activity_events")
       .select("id,dog_id,badge_id,created_at")
@@ -31,6 +41,7 @@ export async function fetchPublicDogProfile(dogId: string): Promise<PublicDogPro
 
   if (dogResult.error) throw dogResult.error;
   if (walksResult.error) throw walksResult.error;
+  if (allWalksResult.error) throw allWalksResult.error;
   if (eventsResult.error) throw eventsResult.error;
 
   const walks = (walksResult.data ?? []).map((walk) => ({
@@ -46,5 +57,29 @@ export async function fetchPublicDogProfile(dogId: string): Promise<PublicDogPro
     earned_at: event.created_at,
   }));
 
-  return { dog: dogResult.data as Dog, walks, badges };
+  const allWalks = allWalksResult.data ?? [];
+  const walkIds = allWalks.map((walk) => walk.id);
+  const boopCounts: Record<number, number> = {};
+  const boopedWalkIds: number[] = [];
+  if (walkIds.length) {
+    const { data: boops, error: boopsError } = await supabase
+      .from("boops")
+      .select("walk_id,from_dog_id")
+      .in("walk_id", walkIds);
+    if (boopsError) throw boopsError;
+    for (const boop of boops ?? []) {
+      boopCounts[boop.walk_id] = (boopCounts[boop.walk_id] ?? 0) + 1;
+      if (boop.from_dog_id === viewerDogId) boopedWalkIds.push(boop.walk_id);
+    }
+  }
+
+  return {
+    dog: dogResult.data as Dog,
+    walks,
+    badges,
+    totalWaltzes: allWalks.length,
+    totalDistance: allWalks.reduce((sum, walk) => sum + walk.distance_km, 0),
+    boopCounts,
+    boopedWalkIds,
+  };
 }
