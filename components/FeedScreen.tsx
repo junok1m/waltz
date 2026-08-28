@@ -1,7 +1,6 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, X } from "@sketchyicons/react-native";
-import Svg, { Path } from "react-native-svg";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
 import { BottomNav } from "./BottomNav";
@@ -14,6 +13,7 @@ import { dogAvatarSource } from "../utils/mockDogAvatars";
 import { formatTime } from "../utils/time";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 import { WalkTagIcons } from "./WalkTagIcons";
+import { WobblyCard, WobblyDivider } from "./WobblyCard";
 
 type Props = {
   dog: Dog;
@@ -22,61 +22,6 @@ type Props = {
   onStartWalk: () => void;
   onOpenDogProfile: (dogId: string) => void;
 };
-
-function wobblyCardBorder(width: number, height: number) {
-  const inset = 4;
-  const right = width - inset;
-  const bottom = height - inset;
-  const corner = Math.min(13, width / 10, height / 5);
-
-  return [
-    `M ${inset + corner} ${inset + 0.3}`,
-    `C ${width * 0.22} ${inset - 1.4}, ${width * 0.38} ${inset + 1.7}, ${width * 0.54} ${inset - 0.5}`,
-    `C ${width * 0.69} ${inset + 1.4}, ${width * 0.83} ${inset - 1.1}, ${right - corner} ${inset + 0.4}`,
-    `Q ${right} ${inset}, ${right + 0.2} ${inset + corner}`,
-    `C ${right - 1.1} ${height * 0.25}, ${right + 1.5} ${height * 0.38}, ${right - 0.4} ${height * 0.52}`,
-    `C ${right + 1.2} ${height * 0.66}, ${right - 1.4} ${height * 0.79}, ${right + 0.1} ${bottom - corner}`,
-    `Q ${right} ${bottom}, ${right - corner} ${bottom + 0.1}`,
-    `C ${width * 0.79} ${bottom - 1.5}, ${width * 0.63} ${bottom + 1.6}, ${width * 0.47} ${bottom - 0.4}`,
-    `C ${width * 0.32} ${bottom + 1.3}, ${width * 0.18} ${bottom - 1.2}, ${inset + corner} ${bottom + 0.2}`,
-    `Q ${inset} ${bottom}, ${inset - 0.1} ${bottom - corner}`,
-    `C ${inset + 1.3} ${height * 0.78}, ${inset - 0.6} ${height * 0.64}, ${inset + 0.9} ${height * 0.49}`,
-    `C ${inset - 1.4} ${height * 0.34}, ${inset + 0.5} ${height * 0.21}, ${inset + 0.1} ${inset + corner}`,
-    `Q ${inset} ${inset}, ${inset + corner} ${inset + 0.3} Z`,
-  ].join(" ");
-}
-
-function WobblyDivider() {
-  return (
-    <View style={s.divider}>
-      <Svg width="100%" height={5} viewBox="0 0 100 5" preserveAspectRatio="none">
-        <Path d="M 0 2.7 C 15 1.4, 29 3.8, 43 2.2 C 58 1.1, 72 3.7, 85 2.3 C 92 1.7, 97 3.1, 100 2.5" fill="none" stroke="#E5E0D8" strokeWidth={0.65} strokeLinecap="round" />
-      </Svg>
-    </View>
-  );
-}
-
-function WobblyCard({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
-  return (
-    <View
-      style={s.wobblyCard}
-      onLayout={({ nativeEvent: { layout } }) => {
-        if (layout.width > 0 && layout.height > 0 && (layout.width !== size.width || layout.height !== size.height)) {
-          setSize({ width: layout.width, height: layout.height });
-        }
-      }}
-    >
-      {size.width > 0 && size.height > 0 ? (
-        <Svg pointerEvents="none" width={size.width} height={size.height} style={s.cardBorder} viewBox={`0 0 ${size.width} ${size.height}`}>
-          <Path d={wobblyCardBorder(size.width, size.height)} fill="#FFFDF8" stroke="#D8D1C7" strokeWidth={1.05} strokeLinecap="round" strokeLinejoin="round" />
-        </Svg>
-      ) : null}
-      <View style={[s.cardContent, compact && s.badgeCardContent]}>{children}</View>
-    </View>
-  );
-}
 
 export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk, onOpenDogProfile }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -222,7 +167,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk, onOpenDo
                 </Pressable>
               ) : null}
 
-              <WobblyDivider />
+              <WobblyDivider style={s.divider} />
               <View style={s.actions}>
                 <View style={s.metricItem}>
                   <Ruler size={17} strokeWidth={2} color="#78845C" />
@@ -285,7 +230,7 @@ function badgeMessage(event: FeedBadgeEvent) {
 }
 
 function BadgeEventCard({ event, onDogPress }: { event: FeedBadgeEvent; onDogPress: () => void }) {
-  return <WobblyCard compact>
+  return <WobblyCard contentStyle={s.badgeCardContent}>
     <BadgeIcon badgeId={event.badge_id} size={52} showLabel={false} />
     <Pressable style={s.badgeCopy} onPress={onDogPress} accessibilityRole="button" accessibilityLabel={`Open ${event.dog_name}'s profile`}>
       <Text style={s.badgeMessage}>{badgeMessage(event)}</Text>
@@ -305,9 +250,6 @@ const s = StyleSheet.create({
   emptyDogs: { fontSize: 34 },
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1D1A17", marginTop: 10 },
   emptyText: { fontSize: 12, color: "#756B60", marginTop: 5 },
-  wobblyCard: { position: "relative" },
-  cardBorder: { position: "absolute", top: 0, left: 0 },
-  cardContent: { position: "relative", zIndex: 1, padding: 16 },
   badgeCardContent: { flexDirection: "row", alignItems: "center", gap: 12 },
   badgeCopy: { flex: 1 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
