@@ -25,19 +25,33 @@ function wobblyCardBorder(width: number, height: number) {
   const inset = 4;
   const right = width - inset;
   const bottom = height - inset;
-  const corner = Math.min(14, width / 10, height / 6);
+  const corner = Math.min(13, width / 10, height / 5);
 
   return [
-    `M ${inset + corner} ${inset + 0.5}`,
-    `C ${width * 0.28} ${inset - 1.3}, ${width * 0.48} ${inset + 1.6}, ${width * 0.68} ${inset - 0.6}`,
-    `C ${width * 0.82} ${inset + 1.3}, ${right - corner * 0.4} ${inset - 1.1}, ${right - corner} ${inset + 0.6}`,
-    `C ${right - 1.4} ${inset + corner * 0.35}, ${right + 0.5} ${height * 0.32}, ${right - 1.2} ${height * 0.54}`,
-    `C ${right + 1.3} ${height * 0.72}, ${right - 0.8} ${bottom - corner * 0.35}, ${right - corner} ${bottom - 0.3}`,
-    `C ${width * 0.74} ${bottom + 1.4}, ${width * 0.52} ${bottom - 1.5}, ${width * 0.31} ${bottom + 0.7}`,
-    `C ${width * 0.18} ${bottom - 1.2}, ${inset + corner * 0.4} ${bottom + 1.0}, ${inset + corner} ${bottom - 0.4}`,
-    `C ${inset + 1.3} ${bottom - corner * 0.35}, ${inset - 0.9} ${height * 0.68}, ${inset + 1.1} ${height * 0.46}`,
-    `C ${inset - 1.2} ${height * 0.27}, ${inset + 0.8} ${inset + corner * 0.4}, ${inset + corner} ${inset + 0.5} Z`,
+    `M ${inset + corner} ${inset + 0.3}`,
+    `C ${width * 0.22} ${inset - 1.4}, ${width * 0.38} ${inset + 1.7}, ${width * 0.54} ${inset - 0.5}`,
+    `C ${width * 0.69} ${inset + 1.4}, ${width * 0.83} ${inset - 1.1}, ${right - corner} ${inset + 0.4}`,
+    `Q ${right} ${inset}, ${right + 0.2} ${inset + corner}`,
+    `C ${right - 1.1} ${height * 0.25}, ${right + 1.5} ${height * 0.38}, ${right - 0.4} ${height * 0.52}`,
+    `C ${right + 1.2} ${height * 0.66}, ${right - 1.4} ${height * 0.79}, ${right + 0.1} ${bottom - corner}`,
+    `Q ${right} ${bottom}, ${right - corner} ${bottom + 0.1}`,
+    `C ${width * 0.79} ${bottom - 1.5}, ${width * 0.63} ${bottom + 1.6}, ${width * 0.47} ${bottom - 0.4}`,
+    `C ${width * 0.32} ${bottom + 1.3}, ${width * 0.18} ${bottom - 1.2}, ${inset + corner} ${bottom + 0.2}`,
+    `Q ${inset} ${bottom}, ${inset - 0.1} ${bottom - corner}`,
+    `C ${inset + 1.3} ${height * 0.78}, ${inset - 0.6} ${height * 0.64}, ${inset + 0.9} ${height * 0.49}`,
+    `C ${inset - 1.4} ${height * 0.34}, ${inset + 0.5} ${height * 0.21}, ${inset + 0.1} ${inset + corner}`,
+    `Q ${inset} ${inset}, ${inset + corner} ${inset + 0.3} Z`,
   ].join(" ");
+}
+
+function WobblyDivider() {
+  return (
+    <View style={s.divider}>
+      <Svg width="100%" height={5} viewBox="0 0 100 5" preserveAspectRatio="none">
+        <Path d="M 0 2.7 C 15 1.4, 29 3.8, 43 2.2 C 58 1.1, 72 3.7, 85 2.3 C 92 1.7, 97 3.1, 100 2.5" fill="none" stroke="#E5E0D8" strokeWidth={0.65} strokeLinecap="round" />
+      </Svg>
+    </View>
+  );
 }
 
 function WobblyCard({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
@@ -194,8 +208,10 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
                 </View>
               </View>
 
-              <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
-              {walk.tags.length ? <View style={s.walkTags}><WalkTagIcons tags={walk.tags} /></View> : null}
+              <View style={s.walkTitleRow}>
+                <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
+                {walk.tags.length ? <WalkTagIcons tags={walk.tags} /> : null}
+              </View>
               {walk.route_points.length ? (
                 <Pressable style={s.map} onPress={() => setExpandedWalk(walk)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s route map`}>
                   <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} overview />
@@ -203,6 +219,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
                 </Pressable>
               ) : null}
 
+              <WobblyDivider />
               <View style={s.actions}>
                 <View style={s.metricItem}>
                   <Ruler size={17} strokeWidth={2} color="#78845C" />
@@ -297,12 +314,13 @@ const s = StyleSheet.create({
   cardHeaderCopy: { flex: 1, marginLeft: 8 },
   dogName: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
-  walkTitle: { fontSize: 17, fontWeight: "700", color: "#332E29", marginTop: 16 },
-  walkTags: { marginTop: 9 },
+  walkTitleRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 18 },
+  walkTitle: { flex: 1, fontSize: 17, fontWeight: "700", color: "#332E29" },
   map: { height: 138, borderRadius: 4, overflow: "hidden", marginTop: 12 },
   expandIcon: { position: "absolute", top: 8, right: 8, width: 29, height: 29, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,253,248,.88)", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 4 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
-  actions: { flexDirection: "row", alignItems: "center", gap: 22, borderTopWidth: 1, borderTopColor: "#E5E0D8", marginTop: 14, paddingTop: 11 },
+  divider: { height: 5, marginTop: 12 },
+  actions: { flexDirection: "row", alignItems: "center", gap: 22, paddingTop: 8 },
   metricItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   boopButton: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 4 },
   boopButtonActive: { opacity: 0.65 },
