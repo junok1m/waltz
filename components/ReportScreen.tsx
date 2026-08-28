@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
-import { Calendar1, Download, Footprints, Share as ShareIcon, Timer } from "@sketchyicons/react-native";
+import { CalendarDays, Download, Footprints, Share as ShareIcon, Timer } from "@sketchyicons/react-native";
 import Svg, { Path } from "react-native-svg";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
@@ -205,7 +205,7 @@ export function ReportScreen({
                 <Text style={styles.metaText}>{formatDuration(summary.seconds)}</Text>
               </View>
               <View style={styles.metaItem}>
-                <Calendar1 size={16} strokeWidth={2} color="#78845C" />
+                <CalendarDays size={16} strokeWidth={2} color="#78845C" />
                 <Text style={styles.metaText}>{activeDays} day{activeDays === 1 ? "" : "s"} out</Text>
               </View>
             </View>
