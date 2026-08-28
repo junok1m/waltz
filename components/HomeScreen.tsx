@@ -147,8 +147,11 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    justifyContent: "space-between",
+    minHeight: 42,
+    marginBottom: 14,
   },
   logo: {
     fontFamily: "Schoolbell_400Regular",
@@ -159,7 +162,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    marginTop: 3,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
