@@ -1,5 +1,5 @@
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Dog as DogIcon } from "@sketchyicons/react-native";
+import { Dog as DogIcon, Pencil } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
@@ -93,8 +93,8 @@ export function MeScreen({
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{dog.name}</Text>
-        <Pressable style={styles.editButton} onPress={onEditDog}>
-          <Text style={styles.editButtonText}>Edit profile</Text>
+        <Pressable style={styles.editButton} onPress={onEditDog} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit profile">
+          <Pencil size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -169,7 +169,6 @@ const styles = StyleSheet.create({
   profileLine: { fontSize: 14, color: "#655D54", marginTop: 10 },
   summary: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 9 },
   editButton: { paddingVertical: 8 },
-  editButtonText: { fontSize: 11, fontWeight: "800", color: "#78845C" },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
   sectionCopy: { fontSize: 11, color: "#756B60", marginTop: -8, lineHeight: 16 },
   badgeRow: { gap: 10, paddingVertical: 3, paddingRight: 10 },
