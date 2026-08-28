@@ -10,6 +10,7 @@ import { Dog } from "../types/dog";
 import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
 import { Walk } from "../types/walk";
 import { rankFeedItemsForViewer } from "../utils/feedRanking";
+import { dogAvatarSource } from "../utils/mockDogAvatars";
 import { formatTime } from "../utils/time";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 import { WalkTagIcons } from "./WalkTagIcons";
@@ -19,6 +20,7 @@ type Props = {
   viewerWalks: Walk[];
   onNavigate: (tab: AppTab) => void;
   onStartWalk: () => void;
+  onOpenDogProfile: (dogId: string) => void;
 };
 
 function wobblyCardBorder(width: number, height: number) {
@@ -76,7 +78,7 @@ function WobblyCard({ children, compact = false }: { children: ReactNode; compac
   );
 }
 
-export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props) {
+export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk, onOpenDogProfile }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -185,15 +187,16 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
         ) : null}
 
         {items.map((item) => {
-          if (item.kind === "badge") return <BadgeEventCard key={`badge-${item.id}`} event={item} />;
+          if (item.kind === "badge") return <BadgeEventCard key={`badge-${item.id}`} event={item} onDogPress={() => onOpenDogProfile(item.dog_id)} />;
           const walk = item;
           const busy = busyWalkIds.has(walk.id);
+          const avatarSource = dogAvatarSource(walk.dog_id, walk.dog_avatar_url);
           return (
             <WobblyCard key={walk.id}>
-              <View style={s.cardHeader}>
+              <Pressable style={s.cardHeader} onPress={() => onOpenDogProfile(walk.dog_id)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s profile`}>
                 <View style={s.avatar}>
-                  {walk.dog_avatar_url
-                    ? <Image source={{ uri: walk.dog_avatar_url }} style={s.avatarImage} />
+                  {avatarSource
+                    ? <Image source={avatarSource} style={s.avatarImage} />
                     : <DogIcon size={29} strokeWidth={1.8} color="#78845C" />}
                 </View>
                 <View style={s.cardHeaderCopy}>
@@ -206,7 +209,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
                     })}
                   </Text>
                 </View>
-              </View>
+              </Pressable>
 
               <View style={s.walkTitleRow}>
                 <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
@@ -281,13 +284,13 @@ function badgeMessage(event: FeedBadgeEvent) {
   return `${event.dog_name} got the ${BADGE_META[event.badge_id]?.title ?? event.badge_id.replaceAll("-", " ")} badge`;
 }
 
-function BadgeEventCard({ event }: { event: FeedBadgeEvent }) {
+function BadgeEventCard({ event, onDogPress }: { event: FeedBadgeEvent; onDogPress: () => void }) {
   return <WobblyCard compact>
     <BadgeIcon badgeId={event.badge_id} size={52} showLabel={false} />
-    <View style={s.badgeCopy}>
+    <Pressable style={s.badgeCopy} onPress={onDogPress} accessibilityRole="button" accessibilityLabel={`Open ${event.dog_name}'s profile`}>
       <Text style={s.badgeMessage}>{badgeMessage(event)}</Text>
       <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
-    </View>
+    </Pressable>
   </WobblyCard>;
 }
 
