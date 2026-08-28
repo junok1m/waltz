@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ArrowLeft, Dog as DogIcon } from "@sketchyicons/react-native";
+import { ArrowLeft, Bone, Dog as DogIcon, Footprints, Ruler } from "@sketchyicons/react-native";
 import type { AppTab } from "./HubScreen";
 import type { Dog } from "../types/dog";
 import type { PublicDogProfile } from "../services/publicProfile";
@@ -10,7 +10,7 @@ import { dogAvatarSource } from "../utils/mockDogAvatars";
 import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
 import { MeBadgeActivityCard, MeWalkActivityCard } from "./MeActivityCards";
-import { WobblyCard } from "./WobblyCard";
+import { WobblyCard, WobblyDivider } from "./WobblyCard";
 import { WaltzErrorScreen } from "./WaltzErrorScreen";
 import { WaltzLoadingScreen } from "./WaltzLoadingScreen";
 
@@ -103,7 +103,6 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
   if (!profile) return <WaltzLoadingScreen />;
 
   const { dog, walks, badges } = profile;
-  const detail = [dog.breed, ageLabel(profile), dog.weight_kg ? `${dog.weight_kg} kg` : null].filter(Boolean).join(" · ");
   const avatarSource = dogAvatarSource(dog.id, dog.avatar_url);
   const timeline: TimelineItem[] = [
     ...walks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
@@ -116,7 +115,10 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
         <Pressable style={styles.backButton} onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to feed">
           <ArrowLeft size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
-        <Text style={styles.title}>{dog.name}</Text>
+        <View style={styles.headingCopy}>
+          <Text style={styles.title}>{dog.name}</Text>
+          <Text style={styles.headingDetail}>{[dog.breed, ageLabel(profile)].filter(Boolean).join(" · ")}</Text>
+        </View>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -125,11 +127,11 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
             ? <Image source={avatarSource} style={styles.avatar} />
             : <View style={styles.avatarFallback}><DogIcon size={48} strokeWidth={1.8} color="#78845C" /></View>}
           <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
-          {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+          <WobblyDivider style={styles.summaryDivider} />
           <View style={styles.summary}>
-            <Summary value={String(profile.totalWaltzes)} label="total waltzes" />
-            <Summary value={`${totals.distance.toFixed(1)} km`} label="total distance" />
-            <Summary value={String(totals.boops)} label="boops" />
+            <ProfileStat icon={<Footprints size={20} strokeWidth={2} color="#78845C" />} value={String(profile.totalWaltzes)} />
+            <ProfileStat icon={<Ruler size={20} strokeWidth={2} color="#78845C" />} value={`${totals.distance.toFixed(1)} km`} />
+            <ProfileStat icon={<Bone size={20} strokeWidth={2} color="#78845C" />} value={String(totals.boops)} />
           </View>
         </WobblyCard>
 
@@ -142,7 +144,6 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
 
         <View>
           <Text style={styles.sectionTitle}>Recent activity</Text>
-          <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
           <View style={styles.walks}>
             {timeline.length
               ? timeline.slice(0, 8).map((item) => item.kind === "walk"
@@ -166,28 +167,28 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
   );
 }
 
-function Summary({ value, label }: { value: string; label: string }) {
-  return <View style={styles.summaryItem}><Text style={styles.summaryValue}>{value}</Text><Text style={styles.summaryLabel}>{label}</Text></View>;
+function ProfileStat({ icon, value }: { icon: React.ReactNode; value: string }) {
+  return <View style={styles.summaryItem}>{icon}<Text style={styles.summaryValue}>{value}</Text></View>;
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { minHeight: 42, flexDirection: "row", alignItems: "center", marginBottom: 14 },
   backButton: { paddingVertical: 8, paddingRight: 12 },
+  headingCopy: { flex: 1, flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 10 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  headingDetail: { fontSize: 11, color: "#82786E" },
   scroll: { flex: 1 },
   content: { paddingBottom: 24, gap: 22 },
   profile: { alignItems: "center", paddingVertical: 22 },
   avatar: { width: 112, height: 112, borderRadius: 56 },
   avatarFallback: { width: 112, height: 112, borderRadius: 56, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
   profileLine: { marginTop: 12, fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29", textAlign: "center" },
-  detail: { marginTop: 5, fontSize: 11, color: "#82786E", textAlign: "center" },
-  summary: { width: "100%", flexDirection: "row", marginTop: 18, paddingVertical: 14, borderTopWidth: 1, borderBottomWidth: 1, borderColor: "#E4DDD3" },
-  summaryItem: { flex: 1, alignItems: "center" },
-  summaryValue: { fontSize: 16, fontWeight: "900", color: "#596442" },
-  summaryLabel: { marginTop: 3, fontSize: 8, fontWeight: "700", color: "#8A8176", textTransform: "uppercase" },
+  summaryDivider: { width: "100%", marginTop: 18 },
+  summary: { width: "100%", flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingTop: 12 },
+  summaryItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  summaryValue: { fontSize: 14, fontWeight: "800", color: "#596442" },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17" },
-  sectionCopy: { marginTop: -2, fontSize: 11, color: "#756B60" },
   badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12, marginTop: 12 },
   walks: { gap: 14, marginTop: 12 },
   empty: { paddingVertical: 20, color: "#82786E", textAlign: "center" },
