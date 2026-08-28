@@ -20,11 +20,11 @@ export const BADGE_META:Record<string,BadgeMeta>={
   "local-royalty":{title:"Local royalty",color:"#F5E7B8",icon:size=><Crown size={size} strokeWidth={2} color="#8A7440"/>},
 };
 
-export function BadgeIcon({badgeId,size=56,showLabel=true}:{badgeId:string;size?:number;showLabel?:boolean}){
+export function BadgeIcon({badgeId,size=56,showLabel=true,labelLines=1}:{badgeId:string;size?:number;showLabel?:boolean;labelLines?:number}){
   const meta=BADGE_META[badgeId];
   if(!meta)return null;
   const iconSize=Math.round(size*.45);
-  return <View style={[s.item,{width:showLabel?Math.max(size+18,74):size}]}><View style={[s.circle,{width:size,height:size,borderRadius:size/2,backgroundColor:meta.color}]}>{meta.icon(iconSize)}</View>{showLabel?<Text numberOfLines={1} style={[s.label,{width:Math.max(size+18,74)}]}>{meta.title}</Text>:null}</View>;
+  return <View style={[s.item,{width:showLabel?Math.max(size+18,74):size}]}><View style={[s.circle,{width:size,height:size,borderRadius:size/2,backgroundColor:meta.color}]}>{meta.icon(iconSize)}</View>{showLabel?<Text numberOfLines={labelLines} style={[s.label,labelLines > 1 && s.labelTwoLines,{width:Math.max(size+18,74)}]}>{meta.title}</Text>:null}</View>;
 }
 
-const s=StyleSheet.create({item:{alignItems:"center",gap:5},circle:{alignItems:"center",justifyContent:"center"},label:{fontSize:9,fontWeight:"700",color:"#655D54",textAlign:"center"}});
+const s=StyleSheet.create({item:{alignItems:"center",gap:5},circle:{alignItems:"center",justifyContent:"center"},label:{fontSize:9,lineHeight:11,fontWeight:"700",color:"#655D54",textAlign:"center"},labelTwoLines:{minHeight:22}});
