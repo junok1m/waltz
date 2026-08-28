@@ -115,10 +115,6 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
         <Pressable style={styles.backButton} onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to feed">
           <ArrowLeft size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
-        <View style={styles.headingCopy}>
-          <Text style={styles.title}>{dog.name}</Text>
-          <Text style={styles.headingDetail}>{[dog.breed, ageLabel(profile)].filter(Boolean).join(" · ")}</Text>
-        </View>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -126,6 +122,8 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
           {avatarSource
             ? <Image source={avatarSource} style={styles.avatar} />
             : <View style={styles.avatarFallback}><DogIcon size={48} strokeWidth={1.8} color="#78845C" /></View>}
+          <Text style={styles.profileName}>{dog.name}</Text>
+          <Text style={styles.profileDetail}>{[dog.breed, ageLabel(profile)].filter(Boolean).join(" · ")}</Text>
           <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
           <WobblyDivider style={styles.summaryDivider} />
           <View style={styles.summary}>
@@ -175,15 +173,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { minHeight: 42, flexDirection: "row", alignItems: "center", marginBottom: 14 },
   backButton: { paddingVertical: 8, paddingRight: 12 },
-  headingCopy: { flex: 1, flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 10 },
-  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  headingDetail: { fontSize: 11, color: "#82786E" },
   scroll: { flex: 1 },
   content: { paddingBottom: 24, gap: 22 },
   profile: { alignItems: "center", paddingVertical: 22 },
   avatar: { width: 112, height: 112, borderRadius: 56 },
   avatarFallback: { width: 112, height: 112, borderRadius: 56, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
-  profileLine: { marginTop: 12, fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29", textAlign: "center" },
+  profileName: { marginTop: 10, fontFamily: "Schoolbell_400Regular", fontSize: 30, color: "#1D1A17" },
+  profileDetail: { marginTop: -2, fontSize: 11, color: "#82786E" },
+  profileLine: { marginTop: 10, fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29", textAlign: "center" },
   summaryDivider: { width: "100%", marginTop: 18 },
   summary: { width: "100%", flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingTop: 12 },
   summaryItem: { flexDirection: "row", alignItems: "center", gap: 6 },
