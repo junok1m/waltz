@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
-import { Share as ShareIcon } from "@sketchyicons/react-native";
+import { Alert, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
+import { Calendar1, Download, Footprints, Share as ShareIcon, Timer } from "@sketchyicons/react-native";
 import Svg, { Path } from "react-native-svg";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
@@ -133,13 +133,22 @@ export function ReportScreen({
     });
   }
 
+  function downloadReport() {
+    Alert.alert("Download report", "Image download is the next step — the report layout is ready for export.");
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.pageTitle}>Report</Text>
-        <Pressable style={styles.shareButton} onPress={shareReport} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share report">
-          <ShareIcon size={22} strokeWidth={2} color="#78845C" />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.headerButton} onPress={shareReport} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share report">
+            <ShareIcon size={22} strokeWidth={2} color="#78845C" />
+          </Pressable>
+          <Pressable style={styles.headerButton} onPress={downloadReport} hitSlop={8} accessibilityRole="button" accessibilityLabel="Download report">
+            <Download size={22} strokeWidth={2} color="#78845C" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -179,16 +188,27 @@ export function ReportScreen({
               ))}
             </View>
 
-            <Text style={styles.identity}>{dog.name}</Text>
-            <Text style={styles.dateLine}>{reportDate(period, now)}</Text>
-            <Text style={styles.hero}>{summary.distance.toFixed(1)} km</Text>
-            <Text style={styles.meta}>
-              {summary.count} waltz{summary.count === 1 ? "" : "es"}
-              {" · "}
-              {formatDuration(summary.seconds)}
-              {" · "}
-              {activeDays} day{activeDays === 1 ? "" : "s"} out
+            <View style={styles.identityRow}>
+              <Text style={styles.identity}>{dog.name}</Text>
+              <Text style={styles.dateLine}>{reportDate(period, now)}</Text>
+            </View>
+            <Text style={styles.hero}>
+              {summary.distance.toFixed(1)}<Text style={styles.heroUnit}> km</Text>
             </Text>
+            <View style={styles.meta}>
+              <View style={styles.metaItem}>
+                <Footprints size={16} strokeWidth={2} color="#78845C" />
+                <Text style={styles.metaText}>{summary.count} waltz{summary.count === 1 ? "" : "es"}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Timer size={16} strokeWidth={2} color="#78845C" />
+                <Text style={styles.metaText}>{formatDuration(summary.seconds)}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Calendar1 size={16} strokeWidth={2} color="#78845C" />
+                <Text style={styles.metaText}>{activeDays} day{activeDays === 1 ? "" : "s"} out</Text>
+              </View>
+            </View>
             {boopsReceived ? <Text style={styles.boops}>{boopsReceived} boop{boopsReceived === 1 ? "" : "s"} this period</Text> : null}
 
             <WobblyRule />
@@ -235,7 +255,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
   pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  shareButton: { paddingVertical: 8 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 14 },
+  headerButton: { paddingVertical: 8 },
   scrollView: { flex: 1 },
   scroll: { paddingBottom: 18 },
   paperShell: {
@@ -265,10 +286,14 @@ const styles = StyleSheet.create({
   periodTextActive: { color: "#596442", fontWeight: "900" },
   periodMark: { height: 2, marginTop: 4, backgroundColor: "transparent" },
   periodMarkActive: { backgroundColor: "#78845C" },
+  identityRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" },
   identity: { fontFamily: "Schoolbell_400Regular", fontSize: 28, color: "#332E29" },
-  dateLine: { fontSize: 12, color: "#82786E", marginTop: 8 },
-  hero: { fontSize: 44, fontWeight: "900", color: "#1D1A17", marginTop: 14, letterSpacing: -0.8 },
-  meta: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 6 },
+  dateLine: { fontSize: 12, color: "#82786E" },
+  hero: { fontFamily: "Schoolbell_400Regular", fontSize: 58, lineHeight: 66, color: "#1D1A17", marginTop: 12 },
+  heroUnit: { fontSize: 30, color: "#332E29" },
+  meta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  metaText: { fontSize: 10, fontWeight: "800", color: "#78845C" },
   boops: { fontSize: 11, color: "#9A9187", marginTop: 10 },
   rule: { height: 6, marginVertical: 13 },
   section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.5, color: "#78845C", marginBottom: 10, textTransform: "uppercase" },
