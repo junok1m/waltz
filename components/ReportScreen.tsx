@@ -11,9 +11,7 @@ import type { AppTab } from "./HubScreen";
 import {
   type ReportPeriod,
   buildBuckets,
-  comparisonCopy,
   formatDuration,
-  previousRange,
   rangeForPeriod,
   totals,
   walksForPeriod,
@@ -46,11 +44,6 @@ function activeDayCount(walks: Walk[]) {
     const date = new Date(walk.ended_at);
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   })).size;
-}
-
-function fallbackTitle(value: string) {
-  const hour = new Date(value).getHours();
-  return hour < 12 ? "Morning waltz" : hour < 18 ? "Afternoon waltz" : "Night waltz";
 }
 
 function wobblyPaperBorder(width: number, height: number) {
@@ -98,11 +91,6 @@ export function ReportScreen({
     () => badges.filter((badge) => (badge.badge_type === "monthly" || badge.badge_type === "mileage") && isInRange(badge.earned_at, rangeForPeriod(period, now))),
     [badges, period],
   );
-  const recent = useMemo(
-    () => [...selected].sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime()).slice(0, 3),
-    [selected],
-  );
-
   useEffect(() => {
     let active = true;
     fetchBoopCountsByWalkIds(selected.map((walk) => walk.id))
@@ -117,12 +105,9 @@ export function ReportScreen({
   }, [selected]);
 
   const summary = totals(selected);
-  const previous = previousRange(period, now);
-  const previousDistance = previous ? totals(walks.filter((walk) => isInRange(walk.ended_at, previous))).distance : 0;
   const activeDays = activeDayCount(selected);
   const buckets = useMemo(() => buildBuckets(walks, period, now), [walks, period]);
   const maxDistance = Math.max(...buckets.map((bucket) => bucket.distance), 0.01);
-  const dense = buckets.length > 14;
 
   return (
     <View style={styles.screen}>
@@ -130,7 +115,7 @@ export function ReportScreen({
         <Text style={styles.pageTitle}>Report</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View
           style={styles.paperShell}
           onLayout={({ nativeEvent: { layout } }) => {
@@ -177,23 +162,22 @@ export function ReportScreen({
               {" · "}
               {activeDays} day{activeDays === 1 ? "" : "s"} out
             </Text>
-            <Text style={styles.comparison}>{comparisonCopy(period, summary.distance, previousDistance)}</Text>
             {boopsReceived ? <Text style={styles.boops}>{boopsReceived} boop{boopsReceived === 1 ? "" : "s"} this period</Text> : null}
 
             <View style={styles.rule} />
 
             <Text style={styles.section}>This period</Text>
             {buckets.length ? (
-              <ScrollView horizontal={dense} showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.bars, dense && styles.barsDense]}>
+              <View style={styles.bars}>
                 {buckets.map((bucket) => (
-                  <View key={bucket.key} style={[styles.barCell, dense && styles.barCellDense]}>
+                  <View key={bucket.key} style={styles.barCell}>
                     <View style={styles.barArea}>
                       <View style={[styles.bar, { height: bucket.distance ? Math.max(4, bucket.distance / maxDistance * 72) : 2 }, !bucket.distance && styles.emptyBar]} />
                     </View>
                     <Text style={styles.barLabel}>{bucket.label}</Text>
                   </View>
                 ))}
-              </ScrollView>
+              </View>
             ) : (
               <Text style={styles.empty}>The first waltz will draw the days.</Text>
             )}
@@ -203,27 +187,8 @@ export function ReportScreen({
                 <View style={styles.rule} />
                 <Text style={styles.section}>Stamps</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badges}>
-                  {earned.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={44} />)}
+                  {earned.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={44} labelLines={2} />)}
                 </ScrollView>
-              </>
-            ) : null}
-
-            {recent.length ? (
-              <>
-                <View style={styles.rule} />
-                <Text style={styles.section}>Latest waltzes</Text>
-                {recent.map((walk) => (
-                  <View key={walk.id} style={styles.walkRow}>
-                    <Text style={styles.walkTitle}>{walk.title?.trim() || fallbackTitle(walk.ended_at)}</Text>
-                    <Text style={styles.walkMeta}>
-                      {new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
-                      {" · "}
-                      {walk.distance_km.toFixed(2)} km
-                      {" · "}
-                      {formatDuration(walk.duration_seconds)}
-                    </Text>
-                  </View>
-                ))}
               </>
             ) : null}
 
@@ -243,14 +208,19 @@ const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { alignItems: "center", marginBottom: 10 },
   pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  scroll: { paddingBottom: 10 },
+  scrollView: { flex: 1 },
+  scroll: { paddingBottom: 18 },
   paperShell: {
     position: "relative",
     backgroundColor: "transparent",
     minHeight: 420,
   },
   paperFallback: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: "#FFFDF8",
     borderRadius: 8,
   },
@@ -271,23 +241,17 @@ const styles = StyleSheet.create({
   dateLine: { fontSize: 12, color: "#82786E", marginTop: 2 },
   hero: { fontSize: 44, fontWeight: "900", color: "#1D1A17", marginTop: 14, letterSpacing: -0.8 },
   meta: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 6 },
-  comparison: { fontSize: 12, lineHeight: 17, color: "#655D54", marginTop: 10 },
-  boops: { fontSize: 11, color: "#9A9187", marginTop: 4 },
+  boops: { fontSize: 11, color: "#9A9187", marginTop: 10 },
   rule: { height: 1, backgroundColor: "#E4DDD3", marginVertical: 16 },
   section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.5, color: "#78845C", marginBottom: 10, textTransform: "uppercase" },
-  bars: { height: 98, minWidth: "100%", alignItems: "flex-end" },
-  barsDense: { minWidth: 310 },
-  barCell: { flex: 1, minWidth: 20, height: 98, alignItems: "center", justifyContent: "flex-end" },
-  barCellDense: { flex: 0, width: 12, minWidth: 12 },
+  bars: { height: 98, width: "100%", flexDirection: "row", alignItems: "flex-end" },
+  barCell: { flex: 1, minWidth: 0, height: 98, alignItems: "center", justifyContent: "flex-end" },
   barArea: { height: 76, width: "100%", alignItems: "center", justifyContent: "flex-end" },
   bar: { width: "54%", maxWidth: 16, minWidth: 3, backgroundColor: "#8C9670", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
   emptyBar: { opacity: 0.16 },
   barLabel: { height: 18, paddingTop: 4, fontSize: 8, color: "#9A9187" },
   badges: { gap: 8, paddingRight: 8 },
   empty: { fontSize: 12, lineHeight: 17, color: "#9A9187" },
-  walkRow: { paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#E9E2D8" },
-  walkTitle: { fontSize: 13, fontWeight: "800", color: "#332E29" },
-  walkMeta: { fontSize: 11, color: "#82786E", marginTop: 3 },
   footer: { alignItems: "center", marginTop: 18, paddingTop: 10 },
   footerCopy: { fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
 });
