@@ -119,11 +119,15 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <WobblyCard contentStyle={styles.profile}>
-          {avatarSource
-            ? <Image source={avatarSource} style={styles.avatar} />
-            : <View style={styles.avatarFallback}><DogIcon size={48} strokeWidth={1.8} color="#78845C" /></View>}
-          <Text style={styles.profileName}>{dog.name}</Text>
-          <Text style={styles.profileDetail}>{[dog.breed, ageLabel(profile)].filter(Boolean).join(" · ")}</Text>
+          <View style={styles.profileTop}>
+            <View style={styles.identity}>
+              <Text style={styles.profileName}>{dog.name}</Text>
+              <Text style={styles.profileDetail}>{[dog.breed, ageLabel(profile)].filter(Boolean).join(" · ")}</Text>
+            </View>
+            {avatarSource
+              ? <Image source={avatarSource} style={styles.avatar} />
+              : <View style={styles.avatarFallback}><DogIcon size={42} strokeWidth={1.8} color="#78845C" /></View>}
+          </View>
           <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
           <WobblyDivider style={styles.summaryDivider} />
           <View style={styles.summary}>
@@ -175,14 +179,16 @@ const styles = StyleSheet.create({
   backButton: { paddingVertical: 8, paddingRight: 12 },
   scroll: { flex: 1 },
   content: { paddingBottom: 24, gap: 22 },
-  profile: { alignItems: "center", paddingVertical: 22 },
-  avatar: { width: 112, height: 112, borderRadius: 56 },
-  avatarFallback: { width: 112, height: 112, borderRadius: 56, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
-  profileName: { marginTop: 10, fontFamily: "Schoolbell_400Regular", fontSize: 30, color: "#1D1A17" },
-  profileDetail: { marginTop: -2, fontSize: 11, color: "#82786E" },
-  profileLine: { marginTop: 10, fontFamily: "Schoolbell_400Regular", fontSize: 22, color: "#332E29", textAlign: "center" },
+  profile: { paddingHorizontal: 22, paddingVertical: 20 },
+  profileTop: { width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 18 },
+  identity: { flex: 1, alignSelf: "stretch", justifyContent: "center" },
+  avatar: { width: 96, height: 96, borderRadius: 48 },
+  avatarFallback: { width: 96, height: 96, borderRadius: 48, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
+  profileName: { fontFamily: "Schoolbell_400Regular", fontSize: 32, color: "#1D1A17" },
+  profileDetail: { marginTop: 1, fontSize: 11, color: "#82786E", lineHeight: 16 },
+  profileLine: { marginTop: 16, fontFamily: "Schoolbell_400Regular", fontSize: 21, color: "#332E29", textAlign: "left" },
   summaryDivider: { width: "100%", marginTop: 18 },
-  summary: { width: "100%", flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingTop: 12 },
+  summary: { width: "100%", flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 28, paddingTop: 12 },
   summaryItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   summaryValue: { fontSize: 14, fontWeight: "800", color: "#596442" },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17" },
