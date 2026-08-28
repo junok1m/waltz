@@ -77,7 +77,7 @@ export function AppRouter(props: Props) {
 
   let content: React.ReactNode;
   if (publicDogId) {
-    content = <PublicDogProfileScreen dogId={publicDogId} onBack={() => setPublicDogId(null)} onNavigate={(nextTab) => { setPublicDogId(null); onNavigate(nextTab); }} onStartWalk={() => { setPublicDogId(null); onStartWalk(); }} />;
+    content = <PublicDogProfileScreen dogId={publicDogId} viewerDog={activeDog} onBack={() => setPublicDogId(null)} onNavigate={(nextTab) => { setPublicDogId(null); onNavigate(nextTab); }} onStartWalk={() => { setPublicDogId(null); onStartWalk(); }} />;
   } else if (walkFinished) {
     content = (
       <WalkCompleteScreen
