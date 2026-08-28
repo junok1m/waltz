@@ -94,7 +94,10 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
   const content = <>
       <View style={styles.header}>
         <View style={styles.flex}>
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{title}</Text>
+            <WalkTagIcons tags={walk.tags} />
+          </View>
           <View style={styles.metaRow}>
             <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
             <Text style={styles.visibility}>{visibilityLabel}</Text>
@@ -105,7 +108,6 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
         </View>
         {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
       </View>
-      <WalkTagIcons tags={walk.tags} />
       {canShowMap ? (
         <Pressable style={styles.map} onPress={() => setMapOpen(true)} accessibilityRole="button" accessibilityLabel="Open route map">
           <WaltzMap points={points} interactive={false} overview />
@@ -155,7 +157,8 @@ const styles = StyleSheet.create({
   walkCardWobbly: { gap: 11 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
-  title: { fontSize: 16, fontWeight: "700", color: "#1D1A17" },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  title: { flex: 1, fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E" },
   metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7, marginTop: 6 },
   visibility: { fontSize: 9, fontWeight: "700", color: "#78845C" },
