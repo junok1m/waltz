@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
+import { Share as ShareIcon } from "@sketchyicons/react-native";
 import Svg, { Path } from "react-native-svg";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
@@ -125,10 +126,20 @@ export function ReportScreen({
   const buckets = useMemo(() => buildBuckets(walks, period, now), [walks, period]);
   const maxDistance = Math.max(...buckets.map((bucket) => bucket.distance), 0.01);
 
+  function shareReport() {
+    void NativeShare.share({
+      title: `${dog.name}'s Waltz report`,
+      message: `${dog.name}'s ${reportDate(period, now)} Waltz report\n${summary.distance.toFixed(1)} km · ${summary.count} waltz${summary.count === 1 ? "" : "es"} · ${formatDuration(summary.seconds)} · ${activeDays} day${activeDays === 1 ? "" : "s"} out`,
+    });
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.pageTitle}>Report</Text>
+        <Pressable style={styles.shareButton} onPress={shareReport} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share report">
+          <ShareIcon size={22} strokeWidth={2} color="#78845C" />
+        </Pressable>
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -222,8 +233,9 @@ export function ReportScreen({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { alignItems: "center", marginBottom: 10 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
   pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
+  shareButton: { paddingVertical: 8 },
   scrollView: { flex: 1 },
   scroll: { paddingBottom: 18 },
   paperShell: {
