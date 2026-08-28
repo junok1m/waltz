@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, X } from "@sketchyicons/react-native";
+import Svg, { Path } from "react-native-svg";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
 import { BottomNav } from "./BottomNav";
@@ -19,6 +20,47 @@ type Props = {
   onNavigate: (tab: AppTab) => void;
   onStartWalk: () => void;
 };
+
+function wobblyCardBorder(width: number, height: number) {
+  const inset = 4;
+  const right = width - inset;
+  const bottom = height - inset;
+  const corner = Math.min(14, width / 10, height / 6);
+
+  return [
+    `M ${inset + corner} ${inset + 0.5}`,
+    `C ${width * 0.28} ${inset - 1.8}, ${width * 0.48} ${inset + 2.2}, ${width * 0.68} ${inset - 0.8}`,
+    `C ${width * 0.82} ${inset + 1.8}, ${right - corner * 0.4} ${inset - 1.5}, ${right - corner} ${inset + 0.8}`,
+    `C ${right - 2} ${inset + corner * 0.35}, ${right + 0.7} ${height * 0.32}, ${right - 1.7} ${height * 0.54}`,
+    `C ${right + 1.8} ${height * 0.72}, ${right - 1.1} ${bottom - corner * 0.35}, ${right - corner} ${bottom - 0.4}`,
+    `C ${width * 0.74} ${bottom + 1.9}, ${width * 0.52} ${bottom - 2.1}, ${width * 0.31} ${bottom + 1.0}`,
+    `C ${width * 0.18} ${bottom - 1.7}, ${inset + corner * 0.4} ${bottom + 1.4}, ${inset + corner} ${bottom - 0.5}`,
+    `C ${inset + 1.8} ${bottom - corner * 0.35}, ${inset - 1.2} ${height * 0.68}, ${inset + 1.5} ${height * 0.46}`,
+    `C ${inset - 1.7} ${height * 0.27}, ${inset + 1.1} ${inset + corner * 0.4}, ${inset + corner} ${inset + 0.5} Z`,
+  ].join(" ");
+}
+
+function WobblyCard({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  return (
+    <View
+      style={s.wobblyCard}
+      onLayout={({ nativeEvent: { layout } }) => {
+        if (layout.width > 0 && layout.height > 0 && (layout.width !== size.width || layout.height !== size.height)) {
+          setSize({ width: layout.width, height: layout.height });
+        }
+      }}
+    >
+      {size.width > 0 && size.height > 0 ? (
+        <Svg pointerEvents="none" width={size.width} height={size.height} style={s.cardBorder} viewBox={`0 0 ${size.width} ${size.height}`}>
+          <Path d={wobblyCardBorder(size.width, size.height)} fill="#FFFDF8" stroke="#D8D1C7" strokeWidth={1.05} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      ) : null}
+      <View style={[s.cardContent, compact && s.badgeCardContent]}>{children}</View>
+    </View>
+  );
+}
 
 export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props) {
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -133,7 +175,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
           const walk = item;
           const busy = busyWalkIds.has(walk.id);
           return (
-            <View key={walk.id} style={s.card}>
+            <WobblyCard key={walk.id}>
               <View style={s.cardHeader}>
                 <View style={s.avatar}><DogIcon size={25} strokeWidth={1.8} color="#78845C" /></View>
                 <View style={s.cardHeaderCopy}>
@@ -179,7 +221,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
                   <Text style={[s.boopText, walk.booped_by_me && s.boopTextActive]}>{walk.boop_count}</Text>
                 </Pressable>
               </View>
-            </View>
+            </WobblyCard>
           );
         })}
 
@@ -219,13 +261,13 @@ function badgeMessage(event: FeedBadgeEvent) {
 }
 
 function BadgeEventCard({ event }: { event: FeedBadgeEvent }) {
-  return <View style={s.badgeCard}>
+  return <WobblyCard compact>
     <BadgeIcon badgeId={event.badge_id} size={52} showLabel={false} />
     <View style={s.badgeCopy}>
       <Text style={s.badgeMessage}>{badgeMessage(event)}</Text>
       <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
     </View>
-  </View>;
+  </WobblyCard>;
 }
 
 const s = StyleSheet.create({
@@ -239,8 +281,10 @@ const s = StyleSheet.create({
   emptyDogs: { fontSize: 34 },
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1D1A17", marginTop: 10 },
   emptyText: { fontSize: 12, color: "#756B60", marginTop: 5 },
-  card: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16 },
-  badgeCard: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
+  wobblyCard: { position: "relative" },
+  cardBorder: { position: "absolute", top: 0, left: 0 },
+  cardContent: { position: "relative", zIndex: 1, padding: 16 },
+  badgeCardContent: { flexDirection: "row", alignItems: "center", gap: 12 },
   badgeCopy: { flex: 1 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   cardHeader: { flexDirection: "row", alignItems: "center" },
