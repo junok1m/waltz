@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
 import { Point, RoutePrivacy, Walk, WalkTag } from "../types/walk";
@@ -7,6 +8,7 @@ import { HomeScreen } from "./HomeScreen";
 import { AppTab, HubScreen } from "./HubScreen";
 import { ReportScreen } from "./ReportScreen";
 import { MeScreen } from "./MeScreen";
+import { PublicDogProfileScreen } from "./PublicDogProfileScreen";
 import { WalkCompleteScreen } from "./WalkCompleteScreen";
 import { WalkingScreen } from "./WalkingScreen";
 
@@ -48,6 +50,7 @@ type Props = {
 };
 
 export function AppRouter(props: Props) {
+  const [publicDogId, setPublicDogId] = useState<string | null>(null);
   const {
     tab,
     userId,
@@ -73,7 +76,9 @@ export function AppRouter(props: Props) {
   } = props;
 
   let content: React.ReactNode;
-  if (walkFinished) {
+  if (publicDogId) {
+    content = <PublicDogProfileScreen dogId={publicDogId} onBack={() => setPublicDogId(null)} onNavigate={(nextTab) => { setPublicDogId(null); onNavigate(nextTab); }} onStartWalk={() => { setPublicDogId(null); onStartWalk(); }} />;
+  } else if (walkFinished) {
     content = (
       <WalkCompleteScreen
         seconds={seconds}
@@ -99,7 +104,7 @@ export function AppRouter(props: Props) {
   } else if (tab === "map") {
     content = <ReportScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "community") {
-    content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
+    content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={onNavigate} onStartWalk={onStartWalk} onOpenDogProfile={setPublicDogId} />;
   } else if (tab !== "home") {
     content = <HubScreen tab={tab} walks={walks} dog={activeDog} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else {
