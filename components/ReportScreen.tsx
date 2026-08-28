@@ -186,9 +186,9 @@ export function ReportScreen({
               <>
                 <View style={styles.rule} />
                 <Text style={styles.section}>Stamps</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badges}>
+                <View style={styles.badges}>
                   {earned.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={44} labelLines={2} />)}
-                </ScrollView>
+                </View>
               </>
             ) : null}
 
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   periodMark: { height: 2, marginTop: 4, backgroundColor: "transparent" },
   periodMarkActive: { backgroundColor: "#78845C" },
   identity: { fontFamily: "Schoolbell_400Regular", fontSize: 28, color: "#332E29" },
-  dateLine: { fontSize: 12, color: "#82786E", marginTop: 2 },
+  dateLine: { fontSize: 12, color: "#82786E", marginTop: 8 },
   hero: { fontSize: 44, fontWeight: "900", color: "#1D1A17", marginTop: 14, letterSpacing: -0.8 },
   meta: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 6 },
   boops: { fontSize: 11, color: "#9A9187", marginTop: 10 },
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   bar: { width: "54%", maxWidth: 16, minWidth: 3, backgroundColor: "#8C9670", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
   emptyBar: { opacity: 0.16 },
   barLabel: { height: 18, paddingTop: 4, fontSize: 8, color: "#9A9187" },
-  badges: { gap: 8, paddingRight: 8 },
+  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12 },
   empty: { fontSize: 12, lineHeight: 17, color: "#9A9187" },
   footer: { alignItems: "center", marginTop: 18, paddingTop: 10 },
   footerCopy: { fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
