@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useEffect, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, X } from "@sketchyicons/react-native";
 import Svg, { Path } from "react-native-svg";
 import { AppTab } from "./HubScreen";
@@ -29,14 +29,14 @@ function wobblyCardBorder(width: number, height: number) {
 
   return [
     `M ${inset + corner} ${inset + 0.5}`,
-    `C ${width * 0.28} ${inset - 1.8}, ${width * 0.48} ${inset + 2.2}, ${width * 0.68} ${inset - 0.8}`,
-    `C ${width * 0.82} ${inset + 1.8}, ${right - corner * 0.4} ${inset - 1.5}, ${right - corner} ${inset + 0.8}`,
-    `C ${right - 2} ${inset + corner * 0.35}, ${right + 0.7} ${height * 0.32}, ${right - 1.7} ${height * 0.54}`,
-    `C ${right + 1.8} ${height * 0.72}, ${right - 1.1} ${bottom - corner * 0.35}, ${right - corner} ${bottom - 0.4}`,
-    `C ${width * 0.74} ${bottom + 1.9}, ${width * 0.52} ${bottom - 2.1}, ${width * 0.31} ${bottom + 1.0}`,
-    `C ${width * 0.18} ${bottom - 1.7}, ${inset + corner * 0.4} ${bottom + 1.4}, ${inset + corner} ${bottom - 0.5}`,
-    `C ${inset + 1.8} ${bottom - corner * 0.35}, ${inset - 1.2} ${height * 0.68}, ${inset + 1.5} ${height * 0.46}`,
-    `C ${inset - 1.7} ${height * 0.27}, ${inset + 1.1} ${inset + corner * 0.4}, ${inset + corner} ${inset + 0.5} Z`,
+    `C ${width * 0.28} ${inset - 1.3}, ${width * 0.48} ${inset + 1.6}, ${width * 0.68} ${inset - 0.6}`,
+    `C ${width * 0.82} ${inset + 1.3}, ${right - corner * 0.4} ${inset - 1.1}, ${right - corner} ${inset + 0.6}`,
+    `C ${right - 1.4} ${inset + corner * 0.35}, ${right + 0.5} ${height * 0.32}, ${right - 1.2} ${height * 0.54}`,
+    `C ${right + 1.3} ${height * 0.72}, ${right - 0.8} ${bottom - corner * 0.35}, ${right - corner} ${bottom - 0.3}`,
+    `C ${width * 0.74} ${bottom + 1.4}, ${width * 0.52} ${bottom - 1.5}, ${width * 0.31} ${bottom + 0.7}`,
+    `C ${width * 0.18} ${bottom - 1.2}, ${inset + corner * 0.4} ${bottom + 1.0}, ${inset + corner} ${bottom - 0.4}`,
+    `C ${inset + 1.3} ${bottom - corner * 0.35}, ${inset - 0.9} ${height * 0.68}, ${inset + 1.1} ${height * 0.46}`,
+    `C ${inset - 1.2} ${height * 0.27}, ${inset + 0.8} ${inset + corner * 0.4}, ${inset + corner} ${inset + 0.5} Z`,
   ].join(" ");
 }
 
@@ -177,7 +177,11 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
           return (
             <WobblyCard key={walk.id}>
               <View style={s.cardHeader}>
-                <View style={s.avatar}><DogIcon size={25} strokeWidth={1.8} color="#78845C" /></View>
+                <View style={s.avatar}>
+                  {walk.dog_avatar_url
+                    ? <Image source={{ uri: walk.dog_avatar_url }} style={s.avatarImage} />
+                    : <DogIcon size={29} strokeWidth={1.8} color="#78845C" />}
+                </View>
                 <View style={s.cardHeaderCopy}>
                   <Text style={s.dogName}>{walk.dog_name}</Text>
                   <Text style={s.date}>
@@ -191,7 +195,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
               </View>
 
               <Text style={s.walkTitle}>{walk.title || `${walk.dog_name}'s waltz`}</Text>
-              <WalkTagIcons tags={walk.tags} />
+              {walk.tags.length ? <View style={s.walkTags}><WalkTagIcons tags={walk.tags} /></View> : null}
               {walk.route_points.length ? (
                 <Pressable style={s.map} onPress={() => setExpandedWalk(walk)} accessibilityRole="button" accessibilityLabel={`Open ${walk.dog_name}'s route map`}>
                   <WaltzMap points={walk.route_points} dogName={walk.dog_name} interactive={false} overview />
@@ -288,11 +292,13 @@ const s = StyleSheet.create({
   badgeCopy: { flex: 1 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   cardHeader: { flexDirection: "row", alignItems: "center" },
-  avatar: { width: 34, height: 34, alignItems: "center", justifyContent: "center" },
+  avatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  avatarImage: { width: 42, height: 42, borderRadius: 21 },
   cardHeaderCopy: { flex: 1, marginLeft: 8 },
   dogName: { fontSize: 15, fontWeight: "800", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E", marginTop: 2 },
   walkTitle: { fontSize: 17, fontWeight: "700", color: "#332E29", marginTop: 16 },
+  walkTags: { marginTop: 9 },
   map: { height: 138, borderRadius: 4, overflow: "hidden", marginTop: 12 },
   expandIcon: { position: "absolute", top: 8, right: 8, width: 29, height: 29, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,253,248,.88)", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 4 },
   metric: { fontSize: 12, fontWeight: "700", color: "#655D54" },
