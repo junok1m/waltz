@@ -233,7 +233,7 @@ function BadgeEventCard({ event }: { event: FeedBadgeEvent }) {
 
 const s = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   refresh: { fontSize: 11, fontWeight: "800", color: "#78845C" },
   feedMode: { fontSize: 9, color: "#82786E", marginTop: -2 },
