@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Bone, Dog as DogIcon, Maximize2, Ruler, Timer, X } from "@sketchyicons/react-native";
+import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, X } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
 import { BottomNav } from "./BottomNav";
@@ -8,7 +8,7 @@ import { fetchFeedPage, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
 import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
 import { Walk } from "../types/walk";
-import { hasFeedLocationAnchor, rankFeedItemsForViewer } from "../utils/feedRanking";
+import { rankFeedItemsForViewer } from "../utils/feedRanking";
 import { formatTime } from "../utils/time";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 import { WalkTagIcons } from "./WalkTagIcons";
@@ -113,12 +113,9 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk }: Props)
   return (
     <View style={s.screen}>
       <View style={s.header}>
-        <View>
-          <Text style={s.title}>Feed</Text>
-          {hasFeedLocationAnchor(viewerWalks) ? <Text style={s.feedMode}>Nearby first · from your recent waltzes</Text> : null}
-        </View>
-        <Pressable onPress={loadFeed} disabled={loading}>
-          <Text style={s.refresh}>{loading ? "Loading…" : "Refresh"}</Text>
+        <Text style={s.title}>Feed</Text>
+        <Pressable style={[s.headerAction, loading && s.headerActionDisabled]} onPress={loadFeed} disabled={loading} hitSlop={8} accessibilityRole="button" accessibilityLabel="Refresh feed">
+          <RefreshCw size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
       </View>
 
@@ -235,8 +232,8 @@ const s = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  refresh: { fontSize: 11, fontWeight: "800", color: "#78845C" },
-  feedMode: { fontSize: 9, color: "#82786E", marginTop: -2 },
+  headerAction: { paddingVertical: 8 },
+  headerActionDisabled: { opacity: 0.4 },
   feed: { gap: 14, paddingBottom: 20 },
   empty: { alignItems: "center", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 28 },
   emptyDogs: { fontSize: 34 },
