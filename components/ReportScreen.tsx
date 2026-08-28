@@ -1,58 +1,46 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { Balloon, Bird, Bone, CalendarDays, Coffee, Fish, Flag, Flame, Footprints, Gauge, Mountain, MoonStar, Timer } from "@sketchyicons/react-native";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
 import type { Walk } from "../types/walk";
-import { calculateWalkStreak } from "../utils/streak";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
+import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
+import {
+  type ReportPeriod,
+  buildBuckets,
+  comparisonCopy,
+  formatDuration,
+  previousRange,
+  rangeForPeriod,
+  totals,
+  walksForPeriod,
+} from "./ReportEssentials";
 
-type ReportPeriod = "today" | "week" | "month" | "year";
-type Range = { start: Date; end: Date };
-
-const PERIODS: Array<{ value: ReportPeriod; label: string }> = [
+const PERIODS: Array<{ value: Exclude<ReportPeriod, "all">; label: string }> = [
   { value: "today", label: "Today" },
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
-  { value: "year", label: "Year to date" },
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+  { value: "year", label: "Year" },
 ];
 
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-function startOfWeek(date: Date) {
-  const start = startOfDay(date);
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-  return start;
-}
-function rangeFor(period: ReportPeriod, now: Date): Range {
-  const end = new Date(startOfDay(now));
-  end.setDate(end.getDate() + 1);
-  if (period === "today") return { start: startOfDay(now), end };
-  if (period === "week") return { start: startOfWeek(now), end };
-  if (period === "month") return { start: new Date(now.getFullYear(), now.getMonth(), 1), end };
-  return { start: new Date(now.getFullYear(), 0, 1), end };
-}
-function isInRange(value: string, range: Range) {
+function isInRange(value: string, range: { start: Date | null; end: Date }) {
   const time = new Date(value).getTime();
-  return time >= range.start.getTime() && time < range.end.getTime();
+  return (!range.start || time >= range.start.getTime()) && time < range.end.getTime();
 }
-function formatDuration(seconds: number) {
-  const minutes = Math.round(seconds / 60);
-  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
-function reportDate(period: ReportPeriod, now: Date) {
-  if (period === "today") return now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+
+function reportDate(period: Exclude<ReportPeriod, "all">, now: Date) {
+  if (period === "today") return now.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "short" });
   if (period === "week") {
-    const start = startOfWeek(now);
-    return `${start.toLocaleDateString("en-AU", { day: "numeric", month: "short" })} – ${now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}`;
+    const start = rangeForPeriod("week", now).start!;
+    return `${start.toLocaleDateString("en-AU", { day: "numeric", month: "short" })} – ${now.toLocaleDateString("en-AU", { day: "numeric", month: "short" })}`;
   }
   if (period === "month") return now.toLocaleDateString("en-AU", { month: "long", year: "numeric" });
   return `1 Jan – ${now.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}`;
 }
+
 function activeDayCount(walks: Walk[]) {
   return new Set(walks.map((walk) => {
     const date = new Date(walk.ended_at);
@@ -60,8 +48,13 @@ function activeDayCount(walks: Walk[]) {
   })).size;
 }
 
+function fallbackTitle(value: string) {
+  const hour = new Date(value).getHours();
+  return hour < 12 ? "Morning waltz" : hour < 18 ? "Afternoon waltz" : "Night waltz";
+}
+
 function wobblyPaperBorder(width: number, height: number) {
-  const inset = 2;
+  const inset = 3;
   const corner = Math.min(18, width / 12, height / 12);
   const right = width - inset;
   const bottom = height - inset;
@@ -96,16 +89,18 @@ export function ReportScreen({
   onNavigate: (tab: AppTab) => void;
   onStartWalk: () => void;
 }) {
-  const [period, setPeriod] = useState<ReportPeriod>("month");
-  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [period, setPeriod] = useState<Exclude<ReportPeriod, "all">>("month");
   const [paperSize, setPaperSize] = useState({ width: 0, height: 0 });
   const [boopsReceived, setBoopsReceived] = useState(0);
   const now = new Date();
-  const range = rangeFor(period, now);
-  const selected = useMemo(() => walks.filter((walk) => isInRange(walk.ended_at, range)), [walks, period]);
+  const selected = useMemo(() => walksForPeriod(walks, period), [walks, period]);
   const earned = useMemo(
-    () => badges.filter((badge) => (badge.badge_type === "monthly" || badge.badge_type === "mileage") && isInRange(badge.earned_at, range)),
+    () => badges.filter((badge) => (badge.badge_type === "monthly" || badge.badge_type === "mileage") && isInRange(badge.earned_at, rangeForPeriod(period, now))),
     [badges, period],
+  );
+  const recent = useMemo(
+    () => [...selected].sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime()).slice(0, 3),
+    [selected],
   );
 
   useEffect(() => {
@@ -121,44 +116,18 @@ export function ReportScreen({
     return () => { active = false; };
   }, [selected]);
 
-  const distance = selected.reduce((sum, walk) => sum + walk.distance_km, 0);
-  const seconds = selected.reduce((sum, walk) => sum + walk.duration_seconds, 0);
+  const summary = totals(selected);
+  const previous = previousRange(period, now);
+  const previousDistance = previous ? totals(walks.filter((walk) => isInRange(walk.ended_at, previous))).distance : 0;
   const activeDays = activeDayCount(selected);
-  const streak = calculateWalkStreak(walks, now);
-  const periodLabel = PERIODS.find((item) => item.value === period)?.label ?? "This month";
+  const buckets = useMemo(() => buildBuckets(walks, period, now), [walks, period]);
+  const maxDistance = Math.max(...buckets.map((bucket) => bucket.distance), 0.01);
+  const dense = buckets.length > 14;
 
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.pageTitle}>Report</Text>
-        <View style={styles.periodControl}>
-          <Pressable
-            style={styles.headerSelector}
-            onPress={() => setSelectorOpen((open) => !open)}
-            accessibilityRole="button"
-            accessibilityLabel="Change reporting period"
-          >
-            <Text style={styles.headerSelectorText}>{periodLabel}</Text>
-            <Text style={styles.headerChevron}>{selectorOpen ? "⌃" : "⌄"}</Text>
-          </Pressable>
-          {selectorOpen ? (
-            <View style={styles.headerMenu}>
-              {PERIODS.map((item) => (
-                <Pressable
-                  key={item.value}
-                  style={[styles.headerMenuRow, item.value === period && styles.headerMenuRowActive]}
-                  onPress={() => {
-                    setPeriod(item.value);
-                    setSelectorOpen(false);
-                  }}
-                >
-                  <Text style={[styles.headerMenuText, item.value === period && styles.headerMenuTextActive]}>{item.label}</Text>
-                  {item.value === period ? <Text style={styles.check}>✓</Text> : null}
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -182,57 +151,86 @@ export function ReportScreen({
               style={styles.paperBorderOverlay}
               viewBox={`0 0 ${paperSize.width} ${paperSize.height}`}
             >
-              <Path
-                d={wobblyPaperBorder(paperSize.width, paperSize.height)}
-                fill="none"
-                stroke="#D8D0C4"
-                strokeWidth={1.05}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <Path d={wobblyPaperBorder(paperSize.width, paperSize.height)} fill="#FFFDF8" stroke="#D2CBBF" strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
-          ) : null}
-          <View style={styles.paper}>
-          <View style={styles.identityRow}>
-            <View style={styles.dogIdentity}>
-              <Text style={styles.identity}>{dog.name}</Text>
-            </View>
-            <View style={styles.identityRight}>
-              <Text style={styles.micro}>REPORT DATE</Text>
-              <Text style={styles.identitySmall}>{reportDate(period, now)}</Text>
-            </View>
-          </View>
-
-          <Rule />
-
-          <View style={styles.summarySection}><SectionTitle>SUMMARY</SectionTitle></View>
-          <LedgerRow icon={<Footprints size={17} strokeWidth={2} color="#78845C" />} label="Waltzes" value={String(selected.length)} />
-          <LedgerRow icon={<Gauge size={17} strokeWidth={2} color="#78845C" />} label="Distance" value={`${distance.toFixed(1)} km`} />
-          <LedgerRow icon={<Timer size={17} strokeWidth={2} color="#78845C" />} label="Waltz time" value={formatDuration(seconds)} />
-          <LedgerRow icon={<CalendarDays size={17} strokeWidth={2} color="#78845C" />} label="Active days" value={`${activeDays} day${activeDays === 1 ? "" : "s"}`} />
-
-          <Rule />
-
-          <SectionTitle>HIGHLIGHTS</SectionTitle>
-          <LedgerRow icon={<Bone size={17} strokeWidth={2} color="#78845C" />} label="Boops received" value={String(boopsReceived)} />
-          <LedgerRow icon={<Flame size={17} strokeWidth={2} color="#78845C" />} label="Current streak" value={streak ? `${streak} day${streak === 1 ? "" : "s"}` : "—"} />
-
-          <Rule />
-
-          <SectionTitle>EARNED</SectionTitle>
-          {earned.length ? (
-            <View style={styles.badges}>
-              {earned.map((badge) => <BadgeStamp key={badge.id} id={badge.badge_id} />)}
-            </View>
           ) : (
-            <Text style={styles.empty}>No new stamps yet. Tiny paws are still clocking in.</Text>
+            <View style={styles.paperFallback} />
           )}
 
-          <View style={styles.footer}>
-            <Text style={styles.footerCopy}>Waltz · {now.getFullYear()}</Text>
-          </View>
-          </View>
+          <View style={styles.paper}>
+            <View style={styles.periodRow}>
+              {PERIODS.map((item) => (
+                <Pressable key={item.value} onPress={() => setPeriod(item.value)} hitSlop={8}>
+                  <Text style={[styles.periodText, item.value === period && styles.periodTextActive]}>{item.label}</Text>
+                  <View style={[styles.periodMark, item.value === period && styles.periodMarkActive]} />
+                </Pressable>
+              ))}
+            </View>
 
+            <Text style={styles.identity}>{dog.name}</Text>
+            <Text style={styles.dateLine}>{reportDate(period, now)}</Text>
+            <Text style={styles.hero}>{summary.distance.toFixed(1)} km</Text>
+            <Text style={styles.meta}>
+              {summary.count} waltz{summary.count === 1 ? "" : "es"}
+              {" · "}
+              {formatDuration(summary.seconds)}
+              {" · "}
+              {activeDays} day{activeDays === 1 ? "" : "s"} out
+            </Text>
+            <Text style={styles.comparison}>{comparisonCopy(period, summary.distance, previousDistance)}</Text>
+            {boopsReceived ? <Text style={styles.boops}>{boopsReceived} boop{boopsReceived === 1 ? "" : "s"} this period</Text> : null}
+
+            <View style={styles.rule} />
+
+            <Text style={styles.section}>This period</Text>
+            {buckets.length ? (
+              <ScrollView horizontal={dense} showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.bars, dense && styles.barsDense]}>
+                {buckets.map((bucket) => (
+                  <View key={bucket.key} style={[styles.barCell, dense && styles.barCellDense]}>
+                    <View style={styles.barArea}>
+                      <View style={[styles.bar, { height: bucket.distance ? Math.max(4, bucket.distance / maxDistance * 72) : 2 }, !bucket.distance && styles.emptyBar]} />
+                    </View>
+                    <Text style={styles.barLabel}>{bucket.label}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={styles.empty}>The first waltz will draw the days.</Text>
+            )}
+
+            {earned.length ? (
+              <>
+                <View style={styles.rule} />
+                <Text style={styles.section}>Stamps</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badges}>
+                  {earned.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={44} />)}
+                </ScrollView>
+              </>
+            ) : null}
+
+            {recent.length ? (
+              <>
+                <View style={styles.rule} />
+                <Text style={styles.section}>Latest waltzes</Text>
+                {recent.map((walk) => (
+                  <View key={walk.id} style={styles.walkRow}>
+                    <Text style={styles.walkTitle}>{walk.title?.trim() || fallbackTitle(walk.ended_at)}</Text>
+                    <Text style={styles.walkMeta}>
+                      {new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}
+                      {" · "}
+                      {walk.distance_km.toFixed(2)} km
+                      {" · "}
+                      {formatDuration(walk.duration_seconds)}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            ) : null}
+
+            <View style={styles.footer}>
+              <Text style={styles.footerCopy}>Waltz · {now.getFullYear()}</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -241,168 +239,55 @@ export function ReportScreen({
   );
 }
 
-function Rule() {
-  return <View style={styles.rule} />;
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <Text style={styles.section}>{children}</Text>;
-}
-
-function LedgerRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <View style={styles.ledger}>
-      <View style={styles.ledgerLabelRow}>
-        <View style={styles.ledgerIcon}>{icon}</View>
-        <Text style={styles.ledgerLabel}>{label}</Text>
-      </View>
-      <Text style={styles.ledgerValue}>{value}</Text>
-    </View>
-  );
-}
-
-function BadgeStamp({ id }: { id: string }) {
-  const iconProps = { size: 18, strokeWidth: 2, color: "#687455" };
-  const mileage = id.match(/^mileage-(\d+)$/)?.[1];
-  const icon =
-    id === "keep-flame" ? <Flame {...iconProps} /> :
-    id === "tiny-adventures" ? <Balloon {...iconProps} /> :
-    id === "trail" ? <Mountain {...iconProps} /> :
-    id === "gone-fishing" ? <Fish {...iconProps} /> :
-    id === "coffee-stop" ? <Coffee {...iconProps} /> :
-    id === "early-bird" ? <Bird {...iconProps} /> :
-    id === "night-shift" ? <MoonStar {...iconProps} /> :
-    mileage ? (
-      <View style={styles.mileageIcon}>
-        <Flag {...iconProps} />
-        <Text
-          pointerEvents="none"
-          style={[styles.mileageNumber, mileage.length >= 4 && styles.mileageNumberSmall]}
-        >
-          {mileage}
-        </Text>
-      </View>
-    ) :
-    null;
-
-  return <View style={styles.badge}>{icon}</View>;
-}
-
-
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: {
-    position: "relative",
-    zIndex: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
+  header: { alignItems: "center", marginBottom: 10 },
   pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  periodControl: { position: "relative", alignItems: "flex-end" },
-  headerSelector: {
-    minWidth: 112,
-    height: 36,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "#D8D1C7",
-    borderRadius: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 10,
-    backgroundColor: "#FCF8F1",
-  },
-  headerSelectorText: { fontSize: 11, fontWeight: "800", color: "#332E29" },
-  headerChevron: { fontSize: 14, color: "#78845C" },
-  headerMenu: {
-    position: "absolute",
-    top: 40,
-    right: 0,
-    width: 148,
-    zIndex: 30,
-    borderWidth: 1,
-    borderColor: "#D8D1C7",
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#FFFDF8",
-  },
-  headerMenuRow: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFDF8",
-  },
-  headerMenuRowActive: { backgroundColor: "#F1E7D7" },
-  headerMenuText: { fontSize: 11, color: "#655D54" },
-  headerMenuTextActive: { fontWeight: "900", color: "#596442" },
-  scroll: { paddingBottom: 8 },
+  scroll: { paddingBottom: 10 },
   paperShell: {
     position: "relative",
     backgroundColor: "transparent",
-    marginHorizontal: 0,
+    minHeight: 420,
+  },
+  paperFallback: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#FFFDF8",
+    borderRadius: 8,
   },
   paper: {
     position: "relative",
     zIndex: 1,
-    paddingHorizontal: 30,
-    paddingTop: 24,
-    paddingBottom: 18,
+    paddingHorizontal: 26,
+    paddingTop: 22,
+    paddingBottom: 16,
   },
-  paperBorderOverlay: { position: "absolute", top: 0, left: 0, zIndex: 2 },
-  identityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 14, marginBottom: 2 },
-  dogIdentity: { justifyContent: "center" },
-  identityRight: { alignItems: "flex-end", flex: 1 },
-  micro: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187" },
-  identity: { fontFamily: "Schoolbell_400Regular", fontSize: 26, color: "#332E29" },
-  identitySmall: { fontSize: 11, fontWeight: "800", color: "#655D54", marginTop: 4, textAlign: "right" },
-  rule: { height: 1, backgroundColor: "#DED6CA", marginVertical: 16 },
-  summarySection: { marginTop: 24 },
-  section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.6, color: "#78845C", marginBottom: 9 },
-  ledger: {
-    minHeight: 32,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E9E2D8",
-  },
-  ledgerLabelRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  ledgerIcon: { width: 18, alignItems: "center", justifyContent: "center" },
-  ledgerLabel: { fontSize: 12, color: "#756B60" },
-  ledgerValue: { fontSize: 13, fontWeight: "900", color: "#28231F", textAlign: "right" },
-  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 10, rowGap: 8, alignItems: "center" },
-  badge: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#CCD2BF",
-    backgroundColor: "#F4F5ED",
-    borderRadius: 17,
-  },
-  mileageIcon: { width: 18, height: 18, alignItems: "center", justifyContent: "center" },
-  mileageNumber: {
-    position: "absolute",
-    top: 5,
-    left: 7,
-    fontSize: 5.5,
-    lineHeight: 6,
-    fontWeight: "900",
-    color: "#687455",
-  },
-  mileageNumberSmall: { fontSize: 4.6, left: 6.2 },
-  empty: { fontSize: 11, lineHeight: 16, color: "#9A9187", fontStyle: "italic" },
-  footer: {
-    alignItems: "center",
-    marginTop: 18,
-    paddingTop: 10,
-    paddingBottom: 0,
-    borderTopWidth: 1,
-    borderTopColor: "#DED6CA",
-  },
+  paperBorderOverlay: { position: "absolute", top: 0, left: 0, zIndex: 0 },
+  periodRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 18, paddingHorizontal: 2 },
+  periodText: { fontSize: 12, fontWeight: "700", color: "#9A9187" },
+  periodTextActive: { color: "#596442", fontWeight: "900" },
+  periodMark: { height: 2, marginTop: 4, backgroundColor: "transparent" },
+  periodMarkActive: { backgroundColor: "#78845C" },
+  identity: { fontFamily: "Schoolbell_400Regular", fontSize: 28, color: "#332E29" },
+  dateLine: { fontSize: 12, color: "#82786E", marginTop: 2 },
+  hero: { fontSize: 44, fontWeight: "900", color: "#1D1A17", marginTop: 14, letterSpacing: -0.8 },
+  meta: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 6 },
+  comparison: { fontSize: 12, lineHeight: 17, color: "#655D54", marginTop: 10 },
+  boops: { fontSize: 11, color: "#9A9187", marginTop: 4 },
+  rule: { height: 1, backgroundColor: "#E4DDD3", marginVertical: 16 },
+  section: { fontSize: 9, fontWeight: "900", letterSpacing: 1.5, color: "#78845C", marginBottom: 10, textTransform: "uppercase" },
+  bars: { height: 98, minWidth: "100%", alignItems: "flex-end" },
+  barsDense: { minWidth: 310 },
+  barCell: { flex: 1, minWidth: 20, height: 98, alignItems: "center", justifyContent: "flex-end" },
+  barCellDense: { flex: 0, width: 12, minWidth: 12 },
+  barArea: { height: 76, width: "100%", alignItems: "center", justifyContent: "flex-end" },
+  bar: { width: "54%", maxWidth: 16, minWidth: 3, backgroundColor: "#8C9670", borderTopLeftRadius: 3, borderTopRightRadius: 3 },
+  emptyBar: { opacity: 0.16 },
+  barLabel: { height: 18, paddingTop: 4, fontSize: 8, color: "#9A9187" },
+  badges: { gap: 8, paddingRight: 8 },
+  empty: { fontSize: 12, lineHeight: 17, color: "#9A9187" },
+  walkRow: { paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#E9E2D8" },
+  walkTitle: { fontSize: 13, fontWeight: "800", color: "#332E29" },
+  walkMeta: { fontSize: 11, color: "#82786E", marginTop: 3 },
+  footer: { alignItems: "center", marginTop: 18, paddingTop: 10 },
   footerCopy: { fontSize: 8, letterSpacing: 1, color: "#AAA196", textTransform: "uppercase" },
 });

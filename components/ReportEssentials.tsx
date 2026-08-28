@@ -5,7 +5,7 @@ import { Walk } from "../types/walk";
 export type ReportPeriod = "today" | "week" | "month" | "year" | "all";
 type Metric = "distance" | "time";
 type Range = { start: Date | null; end: Date };
-type Bucket = { key: string; label: string; distance: number; seconds: number; count: number };
+export type Bucket = { key: string; label: string; distance: number; seconds: number; count: number };
 
 const PERIODS: Array<{ value: ReportPeriod; label: string }> = [
   { value: "today", label: "Today" },
@@ -32,7 +32,7 @@ export function rangeForPeriod(period: ReportPeriod, now = new Date()): Range {
   return { start: null, end };
 }
 
-function previousRange(period: ReportPeriod, now = new Date()): Range | null {
+export function previousRange(period: ReportPeriod, now = new Date()): Range | null {
   const current = rangeForPeriod(period, now);
   if (!current.start) return null;
   const elapsed = current.end.getTime() - current.start.getTime();
@@ -55,7 +55,7 @@ export function walksForPeriod(walks: Walk[], period: ReportPeriod) {
   return walks.filter((walk) => inRange(walk, range));
 }
 
-function totals(walks: Walk[]) {
+export function totals(walks: Walk[]) {
   return {
     distance: walks.reduce((sum, walk) => sum + walk.distance_km, 0),
     seconds: walks.reduce((sum, walk) => sum + walk.duration_seconds, 0),
@@ -63,21 +63,21 @@ function totals(walks: Walk[]) {
   };
 }
 
-function formatDuration(seconds: number) {
+export function formatDuration(seconds: number) {
   const minutes = Math.round(seconds / 60);
   return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-function comparisonCopy(period: ReportPeriod, current: number, previous: number) {
+export function comparisonCopy(period: ReportPeriod, current: number, previous: number) {
   if (period === "all") return "Every waltz since the beginning.";
   const name = period === "today" ? "yesterday" : period === "week" ? "the same point last week" : period === "month" ? "the same point last month" : "the same point last year";
-  if (previous === 0) return current === 0 ? `No distance yet. ${name[0].toUpperCase() + name.slice(1)} was quiet too.` : `First distance on the board compared with ${name}.`;
+  if (previous === 0) return current === 0 ? `Quiet so far. ${name[0].toUpperCase() + name.slice(1)} was quiet too.` : `First distance on the board compared with ${name}.`;
   const delta = ((current - previous) / previous) * 100;
   if (Math.abs(delta) < 1) return `Almost exactly the same as ${name}.`;
   return `${Math.abs(delta).toFixed(0)}% ${delta > 0 ? "more" : "less"} distance than ${name}.`;
 }
 
-function buildBuckets(walks: Walk[], period: ReportPeriod, now = new Date()): Bucket[] {
+export function buildBuckets(walks: Walk[], period: ReportPeriod, now = new Date()): Bucket[] {
   const selected = walksForPeriod(walks, period);
   if (period === "today") return selected.sort((a, b) => new Date(a.ended_at).getTime() - new Date(b.ended_at).getTime()).map((walk) => ({
     key: String(walk.id),
