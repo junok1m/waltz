@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { CalendarDays, Footprints, Medal, Trophy } from "@sketchyicons/react-native";
+import { CalendarDays, MapPinned, Medal, Trophy } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
 
@@ -37,7 +37,7 @@ export function ClubScreen({ onNavigate, onStartWalk }: Props) {
           onPress={() => onNavigate("achievements")}
         />
         <ClubRow
-          icon={<Footprints size={24} strokeWidth={2} color="#78845C" />}
+          icon={<MapPinned size={24} strokeWidth={2} color="#78845C" />}
           title="Places"
           copy="Everywhere you've wandered together, kept for good."
           onPress={() => onNavigate("places")}
