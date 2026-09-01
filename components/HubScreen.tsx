@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SquareArrowLeft } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import { ChallengeInfo, HubChallenges, HubLeaderboard, HubStats } from "./HubSections";
 import { Dog } from "../types/dog";
@@ -15,7 +16,13 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}><Text style={styles.title}>{title}</Text></View>
+      <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
+          <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
+        </Pressable>
+        <Text style={styles.title}>{title}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {tab === "stats" ? <HubStats walks={walks} /> : null}
         {tab === "leaderboard" ? <HubLeaderboard walks={walks} dog={dog} /> : null}
@@ -42,7 +49,9 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { alignItems: "center", marginBottom: 18 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 },
+  backButton: { width: 34, paddingVertical: 6 },
+  headerSpacer: { width: 34 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   content: { paddingBottom: 24, gap: 12 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,.3)", alignItems: "center", justifyContent: "center", padding: 28 },
