@@ -185,9 +185,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingVertical: 18,
+    paddingBottom: 12,
   },
   highlightBlock: {
     marginBottom: 18,
