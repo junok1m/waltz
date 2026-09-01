@@ -16,9 +16,13 @@ function formatDuration(seconds: number) {
 }
 
 export function fallbackWalkTitle(dateString: string) {
-  const hour = new Date(dateString).getHours();
-  if (hour < 12) return "Morning waltz";
-  if (hour < 18) return "Afternoon waltz";
+  const hour = Number(new Intl.DateTimeFormat("en-AU", {
+    hour: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Australia/Sydney",
+  }).format(new Date(dateString)));
+  if (hour >= 5 && hour < 12) return "Morning waltz";
+  if (hour >= 12 && hour < 18) return "Afternoon waltz";
   return "Night waltz";
 }
 
@@ -46,7 +50,7 @@ export function MeBadgeActivityCard({ dogName, badge, wobbly = false }: { dogNam
       <BadgeIcon badgeId={badge.badge_id} size={52} showLabel={false} />
       <View style={styles.flex}>
         <Text style={styles.badgeMessage}>{badgeActivityMessage(dogName, badge.badge_id)}</Text>
-        <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
+        <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
       </View>
     </>;
   return wobbly
@@ -78,7 +82,7 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
     full: "Full route",
   }[visibility];
   const walkWeather = walk.weather_temperature_c != null && walk.weather_condition
-    ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? -1 })
+    ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? null })
     : null;
 
   useEffect(() => {
@@ -99,7 +103,8 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
             <WalkTagIcons tags={walk.tags} />
           </View>
           <View style={styles.metaRow}>
-            <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
+            <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
+            {walk.suburb_name ? <Text style={styles.location}>📍 {walk.suburb_name}</Text> : null}
             <Text style={styles.visibility}>{visibilityLabel}</Text>
             {walk.weather_temperature_c != null && walk.weather_condition
               ? <WeatherMeta condition={walk.weather_condition} temperatureC={walk.weather_temperature_c} />
@@ -132,7 +137,7 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
       <Modal visible={mapOpen && canShowMap} animationType="slide" onRequestClose={() => setMapOpen(false)}>
         <View style={styles.mapModal}>
           <View style={styles.mapModalHeader}>
-            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
+            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.suburb_name ? `📍 ${walk.suburb_name} · ` : ""}{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
             <Pressable style={styles.closeMap} onPress={() => setMapOpen(false)} accessibilityLabel="Close route map"><X size={25} strokeWidth={2} color="#332E29" /></Pressable>
           </View>
           <View style={styles.fullMap}><WaltzMap points={points} interactive /></View>
@@ -161,6 +166,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E" },
   metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7, marginTop: 6 },
+  location: { fontSize: 9, fontWeight: "700", color: "#78845C" },
   visibility: { fontSize: 9, fontWeight: "700", color: "#78845C" },
   weatherMeta: { flexDirection: "row", alignItems: "center", gap: 3 },
   weather: { fontSize: 9, fontWeight: "700", color: "#5E6F80" },
