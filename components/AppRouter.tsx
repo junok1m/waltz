@@ -2,12 +2,14 @@ import { useState } from "react";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
 import { Point, RoutePrivacy, Walk, WalkTag } from "../types/walk";
+import { ClubScreen } from "./ClubScreen";
 import { DogManagerModal } from "./DogManagerModal";
 import { FeedScreen } from "./FeedScreen";
 import { HomeScreen } from "./HomeScreen";
 import { AppTab, HubScreen } from "./HubScreen";
 import { ReportScreen } from "./ReportScreen";
 import { MeScreen } from "./MeScreen";
+import { PlacesScreen } from "./PlacesScreen";
 import { PublicDogProfileScreen } from "./PublicDogProfileScreen";
 import { WalkCompleteScreen } from "./WalkCompleteScreen";
 import { WalkingScreen } from "./WalkingScreen";
@@ -101,8 +103,12 @@ export function AppRouter(props: Props) {
     content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} tags={walkTags} routePrivacy={routePrivacy} onTagsChange={props.onTagsChange} onRoutePrivacyChange={props.onRoutePrivacyChange} onStopWalk={props.onStopWalk} />;
   } else if (tab === "me") {
     content = <MeScreen dog={activeDog} walks={walks} badges={badges} isSigningOut={isSigningOut} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} onSignOut={props.onSignOut} />;
-  } else if (tab === "map") {
+  } else if (tab === "club") {
+    content = <ClubScreen onNavigate={onNavigate} onStartWalk={onStartWalk} />;
+  } else if (tab === "report") {
     content = <ReportScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
+  } else if (tab === "places") {
+    content = <PlacesScreen onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "community") {
     content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={onNavigate} onStartWalk={onStartWalk} onOpenDogProfile={setPublicDogId} />;
   } else if (tab !== "home") {

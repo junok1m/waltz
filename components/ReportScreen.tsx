@@ -246,7 +246,7 @@ export function ReportScreen({
         </View>
       </ScrollView>
 
-      <BottomNav active="map" onNavigate={onNavigate} onStartPress={onStartWalk} />
+      <BottomNav active="club" onNavigate={onNavigate} onStartPress={onStartWalk} />
     </View>
   );
 }

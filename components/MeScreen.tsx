@@ -139,7 +139,7 @@ export function MeScreen({
         )}
 
         {timeline.length > 8 ? (
-          <Pressable style={styles.historyButton} onPress={() => onNavigate("map")}><Text style={styles.historyButtonText}>See full report ›</Text></Pressable>
+          <Pressable style={styles.historyButton} onPress={() => onNavigate("report")}><Text style={styles.historyButtonText}>See full report ›</Text></Pressable>
         ) : null}
         <Pressable style={[styles.signOut, isSigningOut && styles.disabled]} onPress={onSignOut} disabled={isSigningOut}>
           <Text style={styles.signOutText}>{isSigningOut ? "Signing out…" : "Sign out"}</Text>

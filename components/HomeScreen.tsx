@@ -63,7 +63,7 @@ export function HomeScreen({
 }: Props) {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const streak = calculateWalkStreak(walks);
-  const completedChallenges = earnedBadgeIds(walks).length;
+  const completedAchievements = earnedBadgeIds(walks).length;
 
   useEffect(() => {
     let active = true;
@@ -123,13 +123,13 @@ export function HomeScreen({
           />
           <HighlightRow
             icon={<Medal size={18} strokeWidth={2} color="#78845C" />}
-            label="CHALLENGES"
-            text={`${completedChallenges} completed · See all challenges`}
-            onPress={() => onNavigate("challenges")}
+            label="ACHIEVEMENTS"
+            text={`${completedAchievements} completed · See this month\'s achievements`}
+            onPress={() => onNavigate("achievements")}
           />
           <HighlightRow
             icon={<Trophy size={18} strokeWidth={2} color="#78845C" />}
-            label="LEADERBOARD"
+            label="RANKING"
             text={`See where ${dog.name} ranks`}
             onPress={() => onNavigate("leaderboard")}
           />

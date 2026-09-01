@@ -5,12 +5,13 @@ import { ChallengeInfo, HubChallenges, HubLeaderboard, HubStats } from "./HubSec
 import { Dog } from "../types/dog";
 import { Walk } from "../types/walk";
 
-export type AppTab = "home" | "map" | "community" | "me" | "leaderboard" | "stats" | "challenges";
-type HubTab = Extract<AppTab, "leaderboard" | "stats" | "challenges">;
+export type AppTab = "home" | "club" | "community" | "me" | "report" | "leaderboard" | "stats" | "achievements" | "places";
+type HubTab = Extract<AppTab, "leaderboard" | "stats" | "achievements">;
 type Props = { tab: HubTab; walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: () => void };
+
 export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeInfo | null>(null);
-  const title = { leaderboard: "Leaderboard", stats: "Stats", challenges: "Challenges" }[tab];
+  const title = { leaderboard: "Ranking", stats: "Stats", achievements: "Achievements" }[tab];
 
   return (
     <View style={styles.screen}>
@@ -18,9 +19,9 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {tab === "stats" ? <HubStats walks={walks} /> : null}
         {tab === "leaderboard" ? <HubLeaderboard walks={walks} dog={dog} /> : null}
-        {tab === "challenges" ? <HubChallenges walks={walks} dog={dog} onSelect={setSelectedChallenge} /> : null}
+        {tab === "achievements" ? <HubChallenges walks={walks} dog={dog} onSelect={setSelectedChallenge} /> : null}
       </ScrollView>
-      <BottomNav onNavigate={onNavigate} onStartPress={onStartWalk} />
+      <BottomNav active="club" onNavigate={onNavigate} onStartPress={onStartWalk} />
       <Modal visible={!!selectedChallenge} transparent animationType="fade" onRequestClose={() => setSelectedChallenge(null)}>
         <Pressable style={styles.modalOverlay} onPress={() => setSelectedChallenge(null)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
