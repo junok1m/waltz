@@ -12,6 +12,15 @@ export type WalkWeather = {
   code: number | null;
 };
 
+export type WalkLocation = {
+  suburbName: string | null;
+  region: string | null;
+  postcode: string | null;
+  countryCode: string | null;
+  latitude: number;
+  longitude: number;
+};
+
 export type Walk = {
   id: number;
   dog_id?: string | null;
@@ -28,5 +37,11 @@ export type Walk = {
   weather_temperature_c?: number | null;
   weather_condition?: WeatherCondition | null;
   weather_code?: number | null;
+  suburb_name?: string | null;
+  location_region?: string | null;
+  location_postcode?: string | null;
+  location_country_code?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
   is_mock?: boolean;
 };
