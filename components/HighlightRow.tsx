@@ -6,11 +6,12 @@ type Props = {
   label: string;
   text: string | string[];
   onPress?: () => void;
+  showDivider?: boolean;
 };
 
-export function HighlightRow({ icon, label, text, onPress }: Props) {
+export function HighlightRow({ icon, label, text, onPress, showDivider = true }: Props) {
   return (
-    <Pressable style={s.row} onPress={onPress}>
+    <Pressable style={[s.row, !showDivider && s.noDivider]} onPress={onPress}>
       <View style={s.icon}>{icon}</View>
       <View style={s.copy}>
         <Text style={s.label}>{label}</Text>
@@ -36,6 +37,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#E6DED1",
   },
+  noDivider: { borderBottomWidth: 0 },
   icon: {
     width: 22,
     alignItems: "center",
