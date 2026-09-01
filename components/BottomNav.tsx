@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Dog, House, Medal, PawPrint, Rss } from "@sketchyicons/react-native";
+import { Dog, Gamepad2, House, PawPrint, Rss } from "@sketchyicons/react-native";
 
 export type MainTab = "home" | "club" | "community" | "me";
 
@@ -13,7 +13,7 @@ export function BottomNav({ active, onNavigate, onStartPress }: Props) {
   return (
     <View style={styles.nav}>
       <Nav icon={<House size={22} strokeWidth={2} color={color(active === "home")} />} label="Home" active={active === "home"} onPress={() => onNavigate("home")} />
-      <Nav icon={<Medal size={22} strokeWidth={2} color={color(active === "club")} />} label="Club" active={active === "club"} onPress={() => onNavigate("club")} />
+      <Nav icon={<Gamepad2 size={22} strokeWidth={2} color={color(active === "club")} />} label="Club" active={active === "club"} onPress={() => onNavigate("club")} />
       <Pressable style={styles.pawButton} onPress={onStartPress} accessibilityRole="button" accessibilityLabel="Start a walk"><PawPrint size={27} strokeWidth={2} color="#FFFDF8" /></Pressable>
       <Nav icon={<Rss size={22} strokeWidth={2} color={color(active === "community")} />} label="Feed" active={active === "community"} onPress={() => onNavigate("community")} />
       <Nav icon={<Dog size={22} strokeWidth={2} color={color(active === "me")} />} label="Me" active={active === "me"} onPress={() => onNavigate("me")} />
