@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { defaultWalkTitle } from "../components/WalkCompleteScreen";
 import { syncDogBadges } from "../services/badges";
+import { fetchWalkLocation, representativeWalkPoint } from "../services/location";
 import { fetchWalkWeather } from "../services/weather";
 import { createWalk } from "../services/walks";
 import { Dog } from "../types/dog";
@@ -77,12 +78,21 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     setSaveFailed(false);
     let saved = false;
     try {
-      let weather = null;
-      try {
-        const approximateStartedAt = new Date(Date.now() - seconds * 1000);
-        weather = await fetchWalkWeather(points[0], approximateStartedAt);
-      } catch (error) {
-        console.warn("Couldn't attach weather to walk:", error);
+      const representativePoint = representativeWalkPoint(points);
+      const approximateStartedAt = new Date(Date.now() - seconds * 1000);
+      const [weatherResult, locationResult] = await Promise.allSettled([
+        fetchWalkWeather(representativePoint, approximateStartedAt),
+        fetchWalkLocation(representativePoint),
+      ]);
+
+      const weather = weatherResult.status === "fulfilled" ? weatherResult.value : null;
+      const location = locationResult.status === "fulfilled" ? locationResult.value : null;
+
+      if (weatherResult.status === "rejected") {
+        console.warn("Couldn't attach weather to walk:", weatherResult.reason);
+      }
+      if (locationResult.status === "rejected") {
+        console.warn("Couldn't attach location to walk:", locationResult.reason);
       }
 
       await createWalk({
@@ -94,6 +104,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
         routePrivacy,
         tags: walkTags,
         weather,
+        location,
       });
       saved = true;
       await resetWalk();
