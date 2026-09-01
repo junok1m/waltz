@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { MapPinned, SquareArrowLeft } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
+import { PlacesMap } from "./PlacesMap";
 import type { Walk } from "../types/walk";
 
 type Props = {
@@ -11,12 +12,16 @@ type Props = {
 };
 
 type PlaceSummary = {
+  key: string;
   name: string;
   region: string | null;
   postcode: string | null;
   walkCount: number;
   firstVisited: string;
   lastVisited: string;
+  latitudeSum: number;
+  longitudeSum: number;
+  coordinateCount: number;
 };
 
 function placeSummaries(walks: Walk[]): PlaceSummary[] {
@@ -25,21 +30,35 @@ function placeSummaries(walks: Walk[]): PlaceSummary[] {
   for (const walk of walks) {
     const name = walk.suburb_name?.trim();
     if (!name) continue;
+
     const key = `${name.toLowerCase()}|${walk.location_region ?? ""}|${walk.location_postcode ?? ""}`;
+    const hasCoordinate = Number.isFinite(walk.location_latitude) && Number.isFinite(walk.location_longitude);
+    const latitude = hasCoordinate ? (walk.location_latitude as number) : 0;
+    const longitude = hasCoordinate ? (walk.location_longitude as number) : 0;
     const existing = places.get(key);
+
     if (!existing) {
       places.set(key, {
+        key,
         name,
         region: walk.location_region ?? null,
         postcode: walk.location_postcode ?? null,
         walkCount: 1,
         firstVisited: walk.ended_at,
         lastVisited: walk.ended_at,
+        latitudeSum: latitude,
+        longitudeSum: longitude,
+        coordinateCount: hasCoordinate ? 1 : 0,
       });
       continue;
     }
 
     existing.walkCount += 1;
+    if (hasCoordinate) {
+      existing.latitudeSum += latitude;
+      existing.longitudeSum += longitude;
+      existing.coordinateCount += 1;
+    }
     if (new Date(walk.ended_at).getTime() < new Date(existing.firstVisited).getTime()) existing.firstVisited = walk.ended_at;
     if (new Date(walk.ended_at).getTime() > new Date(existing.lastVisited).getTime()) existing.lastVisited = walk.ended_at;
   }
@@ -53,6 +72,13 @@ function shortDate(value: string) {
 
 export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
   const places = placeSummaries(walks);
+  const mapPlaces = places
+    .filter((place) => place.coordinateCount > 0)
+    .map((place) => ({
+      key: place.key,
+      latitude: place.latitudeSum / place.coordinateCount,
+      longitude: place.longitudeSum / place.coordinateCount,
+    }));
 
   return (
     <View style={styles.screen}>
@@ -68,17 +94,16 @@ export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {places.length ? (
             <>
+              <PlacesMap places={mapPlaces} />
               <Text style={styles.summary}>{places.length} place{places.length === 1 ? "" : "s"} discovered</Text>
               {places.map((place) => (
-                <View key={`${place.name}-${place.postcode ?? ""}`} style={styles.placeCard}>
+                <View key={place.key} style={styles.placeCard}>
                   <View style={styles.icon}>
                     <MapPinned size={24} strokeWidth={2} color="#78845C" />
                   </View>
                   <View style={styles.placeCopy}>
                     <Text style={styles.placeName}>{place.name}</Text>
-                    <Text style={styles.placeMeta}>
-                      {[place.region, place.postcode].filter(Boolean).join(" · ")}
-                    </Text>
+                    <Text style={styles.placeMeta}>{[place.region, place.postcode].filter(Boolean).join(" · ")}</Text>
                     <Text style={styles.placeHistory}>
                       {place.walkCount} walk{place.walkCount === 1 ? "" : "s"} · First {shortDate(place.firstVisited)} · Last {shortDate(place.lastVisited)}
                     </Text>
@@ -111,7 +136,7 @@ const styles = StyleSheet.create({
   headerSpacer: { width: 34 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   content: { paddingTop: 18, paddingBottom: 24, gap: 12 },
-  summary: { fontSize: 11, fontWeight: "800", color: "#78845C", marginHorizontal: 4, marginBottom: 2 },
+  summary: { fontSize: 11, fontWeight: "800", color: "#78845C", marginHorizontal: 4, marginTop: 2 },
   placeCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 20, padding: 16 },
   icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: "#F2EEE4", alignItems: "center", justifyContent: "center", marginRight: 13 },
   placeCopy: { flex: 1 },
