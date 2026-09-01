@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Footprints, SquareArrowLeft } from "@sketchyicons/react-native";
+import { MapPinned, SquareArrowLeft } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
 
@@ -22,7 +22,7 @@ export function PlacesScreen({ onNavigate, onStartWalk }: Props) {
 
         <View style={styles.emptyCard}>
           <View style={styles.icon}>
-            <Footprints size={30} strokeWidth={2} color="#78845C" />
+            <MapPinned size={30} strokeWidth={2} color="#78845C" />
           </View>
           <Text style={styles.emptyTitle}>Your map starts with the next waltz.</Text>
           <Text style={styles.emptyCopy}>
