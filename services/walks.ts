@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { Point, RoutePrivacy, Walk, WalkTag, WalkWeather } from "../types/walk";
+import { Point, RoutePrivacy, Walk, WalkLocation, WalkTag, WalkWeather } from "../types/walk";
 import { publicRouteForPrivacy } from "../utils/routePrivacy";
 
 type RawWalk = Omit<Walk, "dog_id"> & {
@@ -49,6 +49,7 @@ export async function createWalk(input: {
   routePrivacy: RoutePrivacy;
   tags: WalkTag[];
   weather: WalkWeather | null;
+  location: WalkLocation | null;
 }) {
   const publicRoute = publicRouteForPrivacy(input.routePoints, input.routePrivacy);
   const privateRoute = input.routePrivacy === "stats_only" ? [] : input.routePoints;
@@ -65,6 +66,12 @@ export async function createWalk(input: {
     p_weather_temperature_c: input.weather?.temperatureC ?? null,
     p_weather_condition: input.weather?.condition ?? null,
     p_weather_code: input.weather?.code ?? null,
+    p_suburb_name: input.location?.suburbName ?? null,
+    p_location_region: input.location?.region ?? null,
+    p_location_postcode: input.location?.postcode ?? null,
+    p_location_country_code: input.location?.countryCode ?? null,
+    p_location_latitude: input.location?.latitude ?? null,
+    p_location_longitude: input.location?.longitude ?? null,
   });
 
   if (error) throw error;
