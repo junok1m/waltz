@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
-import { Footprints } from "@sketchyicons/react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Footprints, SquareArrowLeft } from "@sketchyicons/react-native";
 import { BottomNav } from "./BottomNav";
 import type { AppTab } from "./HubScreen";
 
@@ -12,8 +12,13 @@ export function PlacesScreen({ onNavigate, onStartWalk }: Props) {
   return (
     <View style={styles.screen}>
       <View>
-        <Text style={styles.title}>Places</Text>
-        <Text style={styles.kicker}>LIFETIME COLLECTION</Text>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
+            <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
+          </Pressable>
+          <Text style={styles.title}>Places</Text>
+          <View style={styles.headerSpacer} />
+        </View>
 
         <View style={styles.emptyCard}>
           <View style={styles.icon}>
@@ -33,8 +38,10 @@ export function PlacesScreen({ onNavigate, onStartWalk }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  backButton: { width: 34, paddingVertical: 6 },
+  headerSpacer: { width: 34 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  kicker: { fontSize: 8, fontWeight: "900", letterSpacing: 1.5, color: "#9A9187", marginTop: 2 },
   emptyCard: {
     marginTop: 22,
     backgroundColor: "#FFFDF8",
