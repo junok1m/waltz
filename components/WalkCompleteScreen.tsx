@@ -6,7 +6,16 @@ import { hiddenEndsWillShowMap } from "../utils/routePrivacy";
 import { formatTime } from "../utils/time";
 import { WaltzMap } from "./WaltzMap";
 
-export function defaultWalkTitle(date:Date){const h=date.getHours();if(h<12)return"Morning waltz";if(h<18)return"Afternoon waltz";return"Night waltz";}
+export function defaultWalkTitle(date: Date) {
+  const hour = Number(new Intl.DateTimeFormat("en-AU", {
+    hour: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Australia/Sydney",
+  }).format(date));
+  if (hour >= 5 && hour < 12) return "Morning waltz";
+  if (hour >= 12 && hour < 18) return "Afternoon waltz";
+  return "Night waltz";
+}
 type Props = { seconds:number; distance:number; points:Point[]; dogName:string; title:string; routePrivacy:RoutePrivacy; tags:WalkTag[]; isSaving:boolean; saveFailed:boolean; onTitleChange:(title:string)=>void; onTagsChange:(tags:WalkTag[])=>void; onRoutePrivacyChange:(privacy:RoutePrivacy)=>void; onSave:()=>void; onDiscard:()=>void };
 
 export function WalkCompleteScreen({ seconds,distance,points,dogName,title,routePrivacy,tags,isSaving,saveFailed,onTitleChange,onTagsChange,onRoutePrivacyChange,onSave,onDiscard }: Props) {
