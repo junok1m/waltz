@@ -103,15 +103,18 @@ export function HomeScreen({
         contentContainerStyle={s.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <HighlightRow
+        <View style={s.highlightBlock}>
+          <HighlightRow
           icon={<Megaphone size={18} strokeWidth={2} color="#78845C" />}
           label="HIGHLIGHTS"
+          showDivider={false}
           text={
             activities.length
               ? eventText(activities[0], dog.name)
               : `${dog.name}'s latest events will appear here.`
           }
-        />
+          />
+        </View>
 
         <WaltzCalendar walks={walks} />
 
@@ -182,9 +185,14 @@ const s = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingBottom: 12,
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingVertical: 18,
+  },
+  highlightBlock: {
+    marginBottom: 18,
   },
   summaryRows: {
-    marginTop: 2,
+    marginTop: 20,
   },
 });
