@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
-import { CalendarDays, Download, Footprints, Share as ShareIcon, Timer } from "@sketchyicons/react-native";
+import { CalendarDays, Download, Footprints, Share as ShareIcon, SquareArrowLeft, Timer } from "@sketchyicons/react-native";
 import Svg, { Path } from "react-native-svg";
 import type { DogBadge } from "../types/badge";
 import type { Dog } from "../types/dog";
@@ -140,7 +140,12 @@ export function ReportScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.pageTitle}>Report</Text>
+        <View style={styles.headerTitleRow}>
+          <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
+            <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
+          </Pressable>
+          <Text style={styles.pageTitle}>Report</Text>
+        </View>
         <View style={styles.headerActions}>
           <Pressable style={styles.headerButton} onPress={shareReport} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share report">
             <ShareIcon size={22} strokeWidth={2} color="#78845C" />
@@ -254,6 +259,8 @@ export function ReportScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
+  headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
+  backButton: { paddingVertical: 6 },
   pageTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 14 },
   headerButton: { paddingVertical: 8 },
