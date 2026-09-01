@@ -8,13 +8,8 @@ type Props = {
   onStartWalk: () => void;
 };
 
-function monthLabel() {
-  return new Date().toLocaleDateString("en-AU", { month: "long" });
-}
 
 export function ClubScreen({ onNavigate, onStartWalk }: Props) {
-  const month = monthLabel();
-
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
@@ -25,28 +20,24 @@ export function ClubScreen({ onNavigate, onStartWalk }: Props) {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ClubRow
           icon={<CalendarDays size={24} strokeWidth={2} color="#78845C" />}
-          eyebrow={month.toUpperCase()}
-          title={month + " Report"}
-          copy="Your walks, distance, time and little stories from this month."
+          title="Report"
+          copy="Your walks, distance, time and little stories."
           onPress={() => onNavigate("report")}
         />
         <ClubRow
           icon={<Trophy size={24} strokeWidth={2} color="#78845C" />}
-          eyebrow={month.toUpperCase()}
           title="Ranking"
           copy="See where your dog sits in this month's pack."
           onPress={() => onNavigate("leaderboard")}
         />
         <ClubRow
           icon={<Medal size={24} strokeWidth={2} color="#78845C" />}
-          eyebrow={month.toUpperCase()}
           title="Achievements"
-          copy="Monthly goals, stamps and things worth bragging about."
+          copy="Goals, milestones and things worth bragging about."
           onPress={() => onNavigate("achievements")}
         />
         <ClubRow
           icon={<Footprints size={24} strokeWidth={2} color="#78845C" />}
-          eyebrow="LIFETIME"
           title="Places"
           copy="Everywhere you've wandered together, kept for good."
           onPress={() => onNavigate("places")}
@@ -60,13 +51,11 @@ export function ClubScreen({ onNavigate, onStartWalk }: Props) {
 
 function ClubRow({
   icon,
-  eyebrow,
   title,
   copy,
   onPress,
 }: {
   icon: React.ReactNode;
-  eyebrow: string;
   title: string;
   copy: string;
   onPress: () => void;
@@ -75,7 +64,6 @@ function ClubRow({
     <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
       <View style={styles.icon}>{icon}</View>
       <View style={styles.rowCopy}>
-        <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.rowTitle}>{title}</Text>
         <Text style={styles.copy}>{copy}</Text>
       </View>
@@ -109,7 +97,6 @@ const styles = StyleSheet.create({
     marginRight: 13,
   },
   rowCopy: { flex: 1 },
-  eyebrow: { fontSize: 8, fontWeight: "900", letterSpacing: 1.4, color: "#9A9187", marginBottom: 3 },
   rowTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 24, lineHeight: 27, color: "#332E29" },
   copy: { fontSize: 10, lineHeight: 14, color: "#82786E", marginTop: 2, maxWidth: 240 },
   chevron: { fontSize: 28, color: "#AAA196", marginLeft: 8, marginTop: -2 },
