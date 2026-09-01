@@ -9,7 +9,7 @@ export type WeatherCondition = "clear" | "cloudy" | "fog" | "drizzle" | "rain" |
 export type WalkWeather = {
   temperatureC: number;
   condition: WeatherCondition;
-  code: number;
+  code: number | null;
 };
 
 export type Walk = {
