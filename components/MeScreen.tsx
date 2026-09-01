@@ -132,7 +132,7 @@ export function MeScreen({
         <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
         {recentActivity.length ? recentActivity.map((item) => (
           item.kind === "walk"
-            ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} />
+            ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} wobbly />
             : <MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge} />
         )) : (
           <View style={styles.empty}><Text style={styles.emptyText}>No activity yet. Your first waltz or badge will appear here.</Text></View>
