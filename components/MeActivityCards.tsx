@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { Bone, Cloudy, Maximize2, Ruler, Sun, Timer, Umbrella, X } from "@sketchyicons/react-native";
+import { Bone, Cloudy, MapPin, Maximize2, Ruler, Sun, Timer, Umbrella, X } from "@sketchyicons/react-native";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
 import { weatherLabel } from "../services/weather";
 import { DogBadge } from "../types/badge";
@@ -15,12 +15,16 @@ function formatDuration(seconds: number) {
   return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
-export function fallbackWalkTitle(dateString: string) {
-  const hour = Number(new Intl.DateTimeFormat("en-AU", {
+function sydneyHour(dateString: string) {
+  return Number(new Intl.DateTimeFormat("en-AU", {
     hour: "2-digit",
-    hourCycle: "h23",
+    hour12: false,
     timeZone: "Australia/Sydney",
   }).format(new Date(dateString)));
+}
+
+export function fallbackWalkTitle(dateString: string) {
+  const hour = sydneyHour(dateString);
   if (hour >= 5 && hour < 12) return "Morning waltz";
   if (hour >= 12 && hour < 18) return "Afternoon waltz";
   return "Night waltz";
@@ -50,7 +54,7 @@ export function MeBadgeActivityCard({ dogName, badge, wobbly = false }: { dogNam
       <BadgeIcon badgeId={badge.badge_id} size={52} showLabel={false} />
       <View style={styles.flex}>
         <Text style={styles.badgeMessage}>{badgeActivityMessage(dogName, badge.badge_id)}</Text>
-        <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
+        <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
       </View>
     </>;
   return wobbly
@@ -75,6 +79,7 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
   const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
   const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
   const canShowMap = visibility !== "stats_only" && points.length > 0;
+  const canShowLocation = visibility !== "stats_only" && !!walk.suburb_name;
   const visibilityLabel = {
     private: "Only me",
     stats_only: "Stats only",
@@ -104,8 +109,8 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
           </View>
           <View style={styles.metaRow}>
             <Text style={styles.date}>{new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
-            {walk.suburb_name ? <Text style={styles.location}>📍 {walk.suburb_name}</Text> : null}
             <Text style={styles.visibility}>{visibilityLabel}</Text>
+            {canShowLocation ? <View style={styles.locationMeta}><MapPin size={12} strokeWidth={2} color="#78845C" /><Text style={styles.location}>{walk.suburb_name}</Text></View> : null}
             {walk.weather_temperature_c != null && walk.weather_condition
               ? <WeatherMeta condition={walk.weather_condition} temperatureC={walk.weather_temperature_c} />
               : null}
@@ -137,7 +142,7 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
       <Modal visible={mapOpen && canShowMap} animationType="slide" onRequestClose={() => setMapOpen(false)}>
         <View style={styles.mapModal}>
           <View style={styles.mapModalHeader}>
-            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.suburb_name ? `📍 ${walk.suburb_name} · ` : ""}{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
+            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
             <Pressable style={styles.closeMap} onPress={() => setMapOpen(false)} accessibilityLabel="Close route map"><X size={25} strokeWidth={2} color="#332E29" /></Pressable>
           </View>
           <View style={styles.fullMap}><WaltzMap points={points} interactive /></View>
@@ -166,8 +171,9 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E" },
   metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7, marginTop: 6 },
-  location: { fontSize: 9, fontWeight: "700", color: "#78845C" },
   visibility: { fontSize: 9, fontWeight: "700", color: "#78845C" },
+  locationMeta: { flexDirection: "row", alignItems: "center", gap: 2 },
+  location: { fontSize: 9, fontWeight: "700", color: "#78845C" },
   weatherMeta: { flexDirection: "row", alignItems: "center", gap: 3 },
   weather: { fontSize: 9, fontWeight: "700", color: "#5E6F80" },
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
