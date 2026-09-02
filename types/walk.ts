@@ -21,6 +21,24 @@ export type WalkLocation = {
   longitude: number;
 };
 
+export type WalkPlace = WalkLocation & {
+  key: string;
+  distanceMeters: number;
+  visitOrder: number;
+};
+
+export type StoredWalkPlace = {
+  place_key: string;
+  place_name: string;
+  region: string | null;
+  postcode: string | null;
+  country_code: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  distance_meters: number;
+  visit_order: number;
+};
+
 export type Walk = {
   id: number;
   dog_id?: string | null;
@@ -43,5 +61,6 @@ export type Walk = {
   location_country_code?: string | null;
   location_latitude?: number | null;
   location_longitude?: number | null;
+  walk_places?: StoredWalkPlace[] | null;
   is_mock?: boolean;
 };

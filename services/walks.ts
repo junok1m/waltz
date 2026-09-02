@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { Point, RoutePrivacy, Walk, WalkLocation, WalkTag, WalkWeather } from "../types/walk";
+import { Point, RoutePrivacy, Walk, WalkLocation, WalkPlace, WalkTag, WalkWeather } from "../types/walk";
 import { publicRouteForPrivacy } from "../utils/routePrivacy";
 
 type RawWalk = Omit<Walk, "dog_id"> & {
@@ -13,7 +13,7 @@ export async function fetchWalks(): Promise<Walk[]> {
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await supabase
       .from("walks")
-      .select("*,walk_dogs!inner(dog_id)")
+      .select("*,walk_dogs!inner(dog_id),walk_places(place_key,place_name,region,postcode,country_code,latitude,longitude,distance_meters,visit_order)")
       .order("ended_at", { ascending: false })
       .range(from, from + pageSize - 1);
 
@@ -50,6 +50,7 @@ export async function createWalk(input: {
   tags: WalkTag[];
   weather: WalkWeather | null;
   location: WalkLocation | null;
+  places: WalkPlace[];
 }) {
   const publicRoute = publicRouteForPrivacy(input.routePoints, input.routePrivacy);
   const privateRoute = input.routePrivacy === "stats_only" ? [] : input.routePoints;
@@ -72,6 +73,17 @@ export async function createWalk(input: {
     p_location_country_code: input.location?.countryCode ?? null,
     p_location_latitude: input.location?.latitude ?? null,
     p_location_longitude: input.location?.longitude ?? null,
+    p_walk_places: input.places.map((place) => ({
+      place_key: place.key,
+      place_name: place.suburbName,
+      region: place.region,
+      postcode: place.postcode,
+      country_code: place.countryCode,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      distance_meters: place.distanceMeters,
+      visit_order: place.visitOrder,
+    })),
   });
 
   if (error) throw error;

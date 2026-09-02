@@ -28,39 +28,59 @@ function placeSummaries(walks: Walk[]): PlaceSummary[] {
   const places = new Map<string, PlaceSummary>();
 
   for (const walk of walks) {
-    const name = walk.suburb_name?.trim();
-    if (!name) continue;
+    const savedPlaces = walk.walk_places?.length
+      ? walk.walk_places
+      : walk.suburb_name?.trim()
+        ? [{
+            place_key: `${walk.suburb_name.trim().toLowerCase()}|${walk.location_region ?? ""}|${walk.location_postcode ?? ""}`,
+            place_name: walk.suburb_name.trim(),
+            region: walk.location_region ?? null,
+            postcode: walk.location_postcode ?? null,
+            country_code: walk.location_country_code ?? null,
+            latitude: walk.location_latitude ?? null,
+            longitude: walk.location_longitude ?? null,
+            distance_meters: 0,
+            visit_order: 0,
+          }]
+        : [];
 
-    const key = `${name.toLowerCase()}|${walk.location_region ?? ""}|${walk.location_postcode ?? ""}`;
-    const hasCoordinate = Number.isFinite(walk.location_latitude) && Number.isFinite(walk.location_longitude);
-    const latitude = hasCoordinate ? (walk.location_latitude as number) : 0;
-    const longitude = hasCoordinate ? (walk.location_longitude as number) : 0;
-    const existing = places.get(key);
+    const seenOnWalk = new Set<string>();
+    for (const savedPlace of savedPlaces) {
+      const name = savedPlace.place_name.trim();
+      const key = savedPlace.place_key;
+      if (!name || seenOnWalk.has(key)) continue;
+      seenOnWalk.add(key);
 
-    if (!existing) {
-      places.set(key, {
-        key,
-        name,
-        region: walk.location_region ?? null,
-        postcode: walk.location_postcode ?? null,
-        walkCount: 1,
-        firstVisited: walk.ended_at,
-        lastVisited: walk.ended_at,
-        latitudeSum: latitude,
-        longitudeSum: longitude,
-        coordinateCount: hasCoordinate ? 1 : 0,
-      });
-      continue;
+      const hasCoordinate = Number.isFinite(savedPlace.latitude) && Number.isFinite(savedPlace.longitude);
+      const latitude = hasCoordinate ? (savedPlace.latitude as number) : 0;
+      const longitude = hasCoordinate ? (savedPlace.longitude as number) : 0;
+      const existing = places.get(key);
+
+      if (!existing) {
+        places.set(key, {
+          key,
+          name,
+          region: savedPlace.region,
+          postcode: savedPlace.postcode,
+          walkCount: 1,
+          firstVisited: walk.ended_at,
+          lastVisited: walk.ended_at,
+          latitudeSum: latitude,
+          longitudeSum: longitude,
+          coordinateCount: hasCoordinate ? 1 : 0,
+        });
+        continue;
+      }
+
+      existing.walkCount += 1;
+      if (hasCoordinate) {
+        existing.latitudeSum += latitude;
+        existing.longitudeSum += longitude;
+        existing.coordinateCount += 1;
+      }
+      if (new Date(walk.ended_at).getTime() < new Date(existing.firstVisited).getTime()) existing.firstVisited = walk.ended_at;
+      if (new Date(walk.ended_at).getTime() > new Date(existing.lastVisited).getTime()) existing.lastVisited = walk.ended_at;
     }
-
-    existing.walkCount += 1;
-    if (hasCoordinate) {
-      existing.latitudeSum += latitude;
-      existing.longitudeSum += longitude;
-      existing.coordinateCount += 1;
-    }
-    if (new Date(walk.ended_at).getTime() < new Date(existing.firstVisited).getTime()) existing.firstVisited = walk.ended_at;
-    if (new Date(walk.ended_at).getTime() > new Date(existing.lastVisited).getTime()) existing.lastVisited = walk.ended_at;
   }
 
   return [...places.values()].sort((a, b) => new Date(b.lastVisited).getTime() - new Date(a.lastVisited).getTime());
