@@ -18,6 +18,7 @@
     "utils/distance.ts",
     "utils/locationFilter.ts",
     "utils/routePrivacy.ts",
+    "utils/walkPlaces.ts",
     "utils/streak.ts",
     "utils/weatherCondition.ts"
   ]

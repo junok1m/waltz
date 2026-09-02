@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
-import type { Point, WalkLocation } from "../types/walk";
+import type { Point, WalkLocation, WalkPlace } from "../types/walk";
+import { sampleRouteForPlaces, summarizeRoutePlaces } from "../utils/walkPlaces";
 
 function clean(value: string | null | undefined) {
   const trimmed = value?.trim();
@@ -27,4 +28,22 @@ export async function fetchWalkLocation(point: Point | undefined): Promise<WalkL
     latitude: point.latitude,
     longitude: point.longitude,
   };
+}
+
+export async function fetchWalkPlaces(points: Point[]): Promise<WalkPlace[]> {
+  const routeSamples = sampleRouteForPlaces(points);
+  const located = [];
+
+  // Expo warns that geocoding too many coordinates concurrently can fail. Keep this
+  // intentionally sequential; a typical 4 km walk needs about 15 lookups at most.
+  for (const sample of routeSamples) {
+    try {
+      const location = await fetchWalkLocation(sample.point);
+      if (location?.suburbName) located.push({ ...sample, location });
+    } catch (error) {
+      console.warn("Couldn't identify one place along the walk:", error);
+    }
+  }
+
+  return summarizeRoutePlaces(located);
 }

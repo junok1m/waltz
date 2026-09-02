@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Alert } from "react-native";
 import { defaultWalkTitle } from "../components/WalkCompleteScreen";
 import { syncDogBadges } from "../services/badges";
-import { fetchWalkLocation, representativeWalkPoint } from "../services/location";
+import { fetchWalkPlaces, representativeWalkPoint } from "../services/location";
 import { fetchWalkWeather } from "../services/weather";
 import { createWalk } from "../services/walks";
 import { Dog } from "../types/dog";
@@ -80,19 +80,22 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
     try {
       const representativePoint = representativeWalkPoint(points);
       const approximateStartedAt = new Date(Date.now() - seconds * 1000);
-      const [weatherResult, locationResult] = await Promise.allSettled([
+      const [weatherResult, placesResult] = await Promise.allSettled([
         fetchWalkWeather(representativePoint, approximateStartedAt),
-        fetchWalkLocation(representativePoint),
+        fetchWalkPlaces(points),
       ]);
 
       const weather = weatherResult.status === "fulfilled" ? weatherResult.value : null;
-      const location = locationResult.status === "fulfilled" ? locationResult.value : null;
+      const places = placesResult.status === "fulfilled" ? placesResult.value : [];
+      const location = places.length
+        ? [...places].sort((a, b) => b.distanceMeters - a.distanceMeters)[0]
+        : null;
 
       if (weatherResult.status === "rejected") {
         console.warn("Couldn't attach weather to walk:", weatherResult.reason);
       }
-      if (locationResult.status === "rejected") {
-        console.warn("Couldn't attach location to walk:", locationResult.reason);
+      if (placesResult.status === "rejected") {
+        console.warn("Couldn't attach places to walk:", placesResult.reason);
       }
 
       await createWalk({
@@ -105,6 +108,7 @@ export function useWalkCompletion({ userId, activeDog, refreshWalks, refreshBadg
         tags: walkTags,
         weather,
         location,
+        places,
       });
       saved = true;
       await resetWalk();

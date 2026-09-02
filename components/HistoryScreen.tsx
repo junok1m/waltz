@@ -29,7 +29,7 @@ export function HistoryScreen({ dog, walks, onNavigate, onStartWalk }: Props) {
       <WaltzTimePattern walks={walks} />
       <RoutePrivacyPersonality walks={walks} />
     </ScrollView>
-    <BottomNav active="map" onNavigate={onNavigate} onStartPress={onStartWalk} />
+    <BottomNav onNavigate={onNavigate} onStartPress={onStartWalk} />
   </View>;
 }
 
