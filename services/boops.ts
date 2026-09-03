@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
+import { FeedBadgeEvent, FeedItem, FeedRankingEvent, FeedWalk } from "../types/feed";
 
 type RawFeedDog = {
   id: string;
@@ -141,7 +141,42 @@ export async function fetchFeedPage(
     }];
   });
 
-  const candidates = [...feedWalks, ...badgeEvents].sort((a, b) => {
+  let rankingQuery = supabase
+    .from("activity_events")
+    .select("id,dog_id,metadata,created_at,dog:dogs!activity_events_dog_id_fkey(name,owner_id,avatar_url)")
+    .eq("event_type", "ranking_climbed")
+    .eq("metadata->>feed_visible", "true")
+    .neq("dog.owner_id", activeOwnerId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(FEED_PAGE_SIZE + 1);
+
+  if (before) rankingQuery = rankingQuery.lt("created_at", before);
+
+  const { data: rankingData, error: rankingError } = await rankingQuery;
+  if (rankingError) throw rankingError;
+  const rankingEvents = (rankingData ?? []).flatMap<FeedRankingEvent>((event) => {
+    const dogValue = event.dog as { name: string; owner_id: string; avatar_url: string | null } | { name: string; owner_id: string; avatar_url: string | null }[] | null;
+    const dog = Array.isArray(dogValue) ? dogValue[0] : dogValue;
+    const metadata = event.metadata as Record<string, unknown> | null;
+    const newRank = Number(metadata?.new_rank);
+    if (!dog || dog.owner_id === activeOwnerId || !Number.isFinite(newRank)) return [];
+    const oldRank = metadata?.old_rank == null ? null : Number(metadata.old_rank);
+    return [{
+      kind: "ranking" as const,
+      id: event.id,
+      dog_id: event.dog_id,
+      dog_name: dog.name,
+      dog_avatar_url: dog.avatar_url,
+      owner_id: dog.owner_id,
+      old_rank: oldRank,
+      new_rank: newRank,
+      distance_km: Number(metadata?.distance_km ?? 0),
+      created_at: event.created_at,
+    }];
+  });
+
+  const candidates = [...feedWalks, ...badgeEvents, ...rankingEvents].sort((a, b) => {
     const byDate = new Date(itemDate(b)).getTime() - new Date(itemDate(a)).getTime();
     return byDate || itemKey(b).localeCompare(itemKey(a));
   });
