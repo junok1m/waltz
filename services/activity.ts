@@ -75,3 +75,20 @@ export async function setActivityEventHiddenFromProfile(eventId: number, hidden:
     .eq("id", eventId);
   if (error) throw error;
 }
+
+export async function fetchWalkOutcomeEvents(walkId: number): Promise<ActivityEvent[]> {
+  const { data, error } = await supabase
+    .from("activity_events")
+    .select("id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at,hidden_from_profile")
+    .eq("walk_id", walkId)
+    .in("event_type", ["places_discovered", "badge_earned", "ranking_climbed"])
+    .eq("hidden_from_profile", false)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []).map((event) => ({
+    ...event,
+    actor_name: null,
+    metadata: event.metadata ?? {},
+  })) as ActivityEvent[];
+}

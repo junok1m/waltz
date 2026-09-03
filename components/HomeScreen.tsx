@@ -59,6 +59,10 @@ function eventText(event: ActivityEvent, dogName: string) {
         ? `${dogName} took 1st place in ${league}!`
         : `${dogName} climbed to #${rank ?? "?"} in ${league}!`;
     }
+    case "places_discovered": {
+      const count = numberValue("place_count") ?? 1;
+      return `${dogName} discovered ${count} new ${count === 1 ? "place" : "places"}.`;
+    }
   }
 }
 
