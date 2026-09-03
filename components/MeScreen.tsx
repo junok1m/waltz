@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Pencil } from "@sketchyicons/react-native";
+import { ActivityIndicator, Alert, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, View } from "react-native";
+import { Pencil, Share2 } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
@@ -135,12 +135,24 @@ export function MeScreen({
     ]);
   }
 
+  function shareProfile() {
+    void NativeShare.share({
+      title: `${dog.name} on Waltz`,
+      message: `This is ${dog.name}'s Waltz profile 🐾\n${walks.length} waltzes · ${totalDistance.toFixed(1)} km\nFollow our waltzes on Waltz!`,
+    });
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Pressable style={styles.editButton} onPress={onEditDog} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit profile">
-          <Pencil size={22} strokeWidth={2} color="#78845C" />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.headerButton} onPress={shareProfile} hitSlop={8} accessibilityRole="button" accessibilityLabel="Share profile">
+            <Share2 size={22} strokeWidth={2} color="#78845C" />
+          </Pressable>
+          <Pressable style={styles.headerButton} onPress={onEditDog} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit profile">
+            <Pencil size={22} strokeWidth={2} color="#78845C" />
+          </Pressable>
+        </View>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={loadMore} scrollEventThrottle={160}>
         <DogProfileHero dog={dog} totalWaltzes={walks.length} totalDistance={totalDistance} totalBoops={totalBoops} />
@@ -179,7 +191,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 42, marginBottom: 14 },
   content: { paddingBottom: 24, gap: 14 },
-  editButton: { paddingVertical: 8 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  headerButton: { paddingVertical: 8 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
   badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12, marginTop: 12 },
   empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
