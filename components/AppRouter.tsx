@@ -102,7 +102,7 @@ export function AppRouter(props: Props) {
   } else if (isWalking) {
     content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} tags={walkTags} routePrivacy={routePrivacy} onTagsChange={props.onTagsChange} onRoutePrivacyChange={props.onRoutePrivacyChange} onStopWalk={props.onStopWalk} />;
   } else if (tab === "me") {
-    content = <MeScreen dog={activeDog} walks={walks} badges={badges} isSigningOut={isSigningOut} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} onSignOut={props.onSignOut} />;
+    content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} />;
   } else if (tab === "club") {
     content = <ClubScreen onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "report") {
@@ -129,6 +129,8 @@ export function AppRouter(props: Props) {
         onClose={props.onCloseDogs}
         onChanged={props.onDogsChanged}
         onSelect={props.onSelectDog}
+        isSigningOut={isSigningOut}
+        onSignOut={props.onSignOut}
       />
     </>
   );

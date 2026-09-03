@@ -50,13 +50,14 @@ function WeatherMeta({ condition, temperatureC }: { condition: NonNullable<Walk[
   return <View style={styles.weatherMeta}>{icon}<Text style={styles.weather}>{Math.round(temperatureC)}°</Text></View>;
 }
 
-export function MeBadgeActivityCard({ dogName, badge, wobbly = false }: { dogName: string; badge: DogBadge; wobbly?: boolean }) {
+export function MeBadgeActivityCard({ dogName, badge, wobbly = false, onMenu }: { dogName: string; badge: DogBadge; wobbly?: boolean; onMenu?: () => void }) {
   const content = <>
       <BadgeIcon badgeId={badge.badge_id} size={52} showLabel={false} />
       <View style={styles.flex}>
         <Text style={styles.badgeMessage}>{badgeActivityMessage(dogName, badge.badge_id)}</Text>
         <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
       </View>
+      {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
     </>;
   return wobbly
     ? <WobblyCard contentStyle={styles.badgeCardWobbly}>{content}</WobblyCard>
@@ -68,7 +69,7 @@ function ordinal(rank: number) {
   return `${rank}${({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[rank % 10] ?? "th"}`;
 }
 
-export function RankingActivityCard({ dogName, event, wobbly = false }: { dogName: string; event: ActivityEvent; wobbly?: boolean }) {
+export function RankingActivityCard({ dogName, event, wobbly = false, onMenu }: { dogName: string; event: ActivityEvent; wobbly?: boolean; onMenu?: () => void }) {
   const newRank = Number(event.metadata.new_rank);
   const category = event.metadata.category === "waltzes" || event.metadata.category === "places" ? event.metadata.category : "distance";
   const league = category === "distance" ? "Distance" : category === "waltzes" ? "Most Waltzes" : "New Places";
@@ -81,6 +82,7 @@ export function RankingActivityCard({ dogName, event, wobbly = false }: { dogNam
       <Text style={styles.badgeMessage}>{message}</Text>
       <Text style={styles.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
     </View>
+    {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
   </>;
   return wobbly
     ? <WobblyCard contentStyle={styles.badgeCardWobbly}>{content}</WobblyCard>

@@ -1,6 +1,7 @@
 import * as Location from "expo-location";
 import type { Point, WalkLocation, WalkPlace } from "../types/walk";
 import { sampleRouteForPlaces, summarizeRoutePlaces } from "../utils/walkPlaces";
+import type { LocatedRoutePlaceSample } from "../utils/walkPlaces";
 
 const GEOCODE_GAP_MS = 175;
 const GEOCODE_RETRY_DELAY_MS = 450;
@@ -59,7 +60,7 @@ async function fetchWalkLocationWithRetry(point: Point) {
 
 export async function fetchWalkPlaces(points: Point[]): Promise<WalkPlace[]> {
   const routeSamples = sampleRouteForPlaces(points);
-  const located = [];
+  const located: LocatedRoutePlaceSample[] = [];
 
   // Expo warns that geocoding too many coordinates can fail. Sequential calls alone
   // can still arrive as a burst on iOS, so pace them and retry transient failures.

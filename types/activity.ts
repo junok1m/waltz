@@ -17,4 +17,5 @@ export type ActivityEvent = {
   badge_id: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
+  hidden_from_profile: boolean;
 };

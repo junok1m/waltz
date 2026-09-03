@@ -8,7 +8,7 @@ export async function fetchLatestActivityEvents(
   const { data, error } = await supabase
     .from("activity_events")
     .select(
-      "id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at,actor:dogs!activity_events_actor_dog_id_fkey(name)",
+      "id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at,hidden_from_profile,actor:dogs!activity_events_actor_dog_id_fkey(name)",
     )
     .eq("dog_id", dogId)
     .order("created_at", { ascending: false })
@@ -28,6 +28,7 @@ export async function fetchLatestActivityEvents(
       badge_id: event.badge_id,
       metadata: event.metadata ?? {},
       created_at: event.created_at,
+      hidden_from_profile: event.hidden_from_profile,
     } as ActivityEvent;
   });
 }
@@ -35,7 +36,7 @@ export async function fetchLatestActivityEvents(
 export async function fetchDogRankingEvents(dogId: string): Promise<ActivityEvent[]> {
   const { data, error } = await supabase
     .from("activity_events")
-    .select("id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at")
+    .select("id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at,hidden_from_profile")
     .eq("dog_id", dogId)
     .eq("event_type", "ranking_climbed")
     .order("created_at", { ascending: false })
@@ -47,4 +48,30 @@ export async function fetchDogRankingEvents(dogId: string): Promise<ActivityEven
     actor_name: null,
     metadata: event.metadata ?? {},
   })) as ActivityEvent[];
+}
+
+export async function fetchDogProfileEvents(dogId: string): Promise<ActivityEvent[]> {
+  const { data, error } = await supabase
+    .from("activity_events")
+    .select("id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at,hidden_from_profile")
+    .eq("dog_id", dogId)
+    .in("event_type", ["badge_earned", "ranking_climbed"])
+    .eq("hidden_from_profile", false)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) throw error;
+  return (data ?? []).map((event) => ({
+    ...event,
+    actor_name: null,
+    metadata: event.metadata ?? {},
+  })) as ActivityEvent[];
+}
+
+export async function setActivityEventHiddenFromProfile(eventId: number, hidden: boolean) {
+  const { error } = await supabase
+    .from("activity_events")
+    .update({ hidden_from_profile: hidden })
+    .eq("id", eventId);
+  if (error) throw error;
 }

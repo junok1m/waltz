@@ -18,7 +18,7 @@ export async function fetchMonthlyDogRanking(): Promise<MonthlyDogRank[]> {
   const { data, error } = await supabase.rpc("get_monthly_dog_ranking");
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map((row: Record<string, unknown>) => ({
     dog_id: String(row.dog_id),
     dog_name: String(row.dog_name),
     avatar_url: row.avatar_url ? String(row.avatar_url) : null,

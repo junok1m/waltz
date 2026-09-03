@@ -35,6 +35,7 @@ export async function fetchPublicDogProfile(dogId: string, viewerDogId: string):
       .select("id,dog_id,badge_id,created_at")
       .eq("dog_id", dogId)
       .eq("event_type", "badge_earned")
+      .eq("hidden_from_profile", false)
       .not("badge_id", "is", null)
       .order("created_at", { ascending: false }),
   ]);

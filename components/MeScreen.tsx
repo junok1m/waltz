@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Image, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Dog as DogIcon, Pencil } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
 import { DogBadge } from "../types/badge";
@@ -10,40 +10,38 @@ import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
 import { AppTab } from "./HubScreen";
 import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard, RankingActivityCard } from "./MeActivityCards";
-import { fetchDogRankingEvents } from "../services/activity";
+import { fetchDogProfileEvents, setActivityEventHiddenFromProfile } from "../services/activity";
 import type { ActivityEvent } from "../types/activity";
 
 type Props = {
   dog: Dog;
   walks: Walk[];
   badges: DogBadge[];
-  isSigningOut: boolean;
   onNavigate: (tab: AppTab) => void;
   onStartWalk: () => void;
   onEditDog: () => void;
   onHideWalk: (id: number) => Promise<void>;
   onDeleteWalk: (id: number) => Promise<void>;
-  onSignOut: () => void;
 };
 
 type TimelineItem =
   | { kind: "walk"; date: string; walk: Walk }
-  | { kind: "badge"; date: string; badge: DogBadge }
-  | { kind: "ranking"; date: string; event: ActivityEvent };
+  | { kind: "event"; date: string; event: ActivityEvent };
 
 export function MeScreen({
   dog,
   walks,
   badges,
-  isSigningOut,
   onNavigate,
   onStartWalk,
   onEditDog,
   onHideWalk,
   onDeleteWalk,
-  onSignOut,
 }: Props) {
-  const [rankingEvents, setRankingEvents] = useState<ActivityEvent[]>([]);
+  const [profileEvents, setProfileEvents] = useState<ActivityEvent[]>([]);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
   const streak = calculateWalkStreak(walks);
   const activePeriod = monthKey();
@@ -55,10 +53,9 @@ export function MeScreen({
     .sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime());
   const timeline: TimelineItem[] = [
     ...profileWalks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
-    ...badges.map((badge) => ({ kind: "badge" as const, date: badge.earned_at, badge })),
-    ...rankingEvents.map((event) => ({ kind: "ranking" as const, date: event.created_at, event })),
+    ...profileEvents.map((event) => ({ kind: "event" as const, date: event.created_at, event })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const recentActivity = timeline.slice(0, 8);
+  const visibleActivity = timeline.slice(0, visibleCount);
   const monthTitle = new Date().toLocaleDateString("en-AU", {
     month: "long",
     timeZone: "Australia/Sydney",
@@ -66,11 +63,29 @@ export function MeScreen({
 
   useEffect(() => {
     let active = true;
-    fetchDogRankingEvents(dog.id)
-      .then((events) => { if (active) setRankingEvents(events); })
-      .catch((error) => console.error("Load ranking activity error:", error));
+    setVisibleCount(10);
+    setProfileEvents([]);
+    fetchDogProfileEvents(dog.id)
+      .then((events) => { if (active) setProfileEvents(events); })
+      .catch((error) => console.error("Load profile activity error:", error));
     return () => { active = false; };
   }, [dog.id]);
+
+  useEffect(() => () => {
+    if (loadMoreTimer.current) clearTimeout(loadMoreTimer.current);
+  }, []);
+
+  function loadMore(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const nearBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 240;
+    if (!nearBottom || loadingMore || visibleCount >= timeline.length) return;
+    setLoadingMore(true);
+    loadMoreTimer.current = setTimeout(() => {
+      setVisibleCount((count) => Math.min(count + 10, timeline.length));
+      setLoadingMore(false);
+      loadMoreTimer.current = null;
+    }, 250);
+  }
 
   function openWalkMenu(walk: Walk) {
     const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
@@ -103,6 +118,18 @@ export function MeScreen({
     ]);
   }
 
+  function openEventMenu(event: ActivityEvent) {
+    Alert.alert("Activity", "What would you like to do?", [
+      {
+        text: "Hide from profile",
+        onPress: () => setActivityEventHiddenFromProfile(event.id, true)
+          .then(() => setProfileEvents((current) => current.filter((item) => item.id !== event.id)))
+          .catch((error) => Alert.alert("Couldn't hide activity", error instanceof Error ? error.message : "Unknown error")),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
@@ -111,7 +138,7 @@ export function MeScreen({
           <Pencil size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
       </View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={loadMore} scrollEventThrottle={160}>
         <View style={styles.profile}>
           {dog.avatar_url
             ? <Image source={{ uri: dog.avatar_url }} style={styles.avatarImage} />
@@ -144,22 +171,22 @@ export function MeScreen({
 
         <Text style={styles.sectionTitle}>Recent activity</Text>
         <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
-        {recentActivity.length ? recentActivity.map((item) => (
+        {visibleActivity.length ? visibleActivity.map((item) => (
           item.kind === "walk"
             ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} wobbly />
-            : item.kind === "badge"
-              ? <MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge} />
-              : <RankingActivityCard key={`ranking-${item.event.id}`} dogName={dog.name} event={item.event} />
+            : item.event.event_type === "badge_earned" && item.event.badge_id
+              ? <MeBadgeActivityCard
+                  key={`event-${item.event.id}`}
+                  dogName={dog.name}
+                  badge={{ id: item.event.id, dog_id: dog.id, badge_id: item.event.badge_id, badge_type: item.event.badge_id.startsWith("mileage-") ? "mileage" : "monthly", period_key: activePeriod, earned_at: item.event.created_at }}
+                  wobbly
+                  onMenu={() => openEventMenu(item.event)}
+                />
+              : <RankingActivityCard key={`event-${item.event.id}`} dogName={dog.name} event={item.event} wobbly onMenu={() => openEventMenu(item.event)} />
         )) : (
           <View style={styles.empty}><Text style={styles.emptyText}>No activity yet. Your first waltz or badge will appear here.</Text></View>
         )}
-
-        {timeline.length > 8 ? (
-          <Pressable style={styles.historyButton} onPress={() => onNavigate("report")}><Text style={styles.historyButtonText}>See full report ›</Text></Pressable>
-        ) : null}
-        <Pressable style={[styles.signOut, isSigningOut && styles.disabled]} onPress={onSignOut} disabled={isSigningOut}>
-          <Text style={styles.signOutText}>{isSigningOut ? "Signing out…" : "Sign out"}</Text>
-        </Pressable>
+        {loadingMore ? <ActivityIndicator style={styles.loadingMore} color="#78845C" /> : null}
       </ScrollView>
       <BottomNav active="me" onNavigate={onNavigate} onStartPress={onStartWalk} />
     </View>
@@ -190,9 +217,5 @@ const styles = StyleSheet.create({
   badgeRow: { gap: 10, paddingVertical: 3, paddingRight: 10 },
   empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
   emptyText: { color: "#655D54", lineHeight: 19 },
-  historyButton: { alignItems: "center", paddingVertical: 12 },
-  historyButtonText: { fontSize: 12, fontWeight: "800", color: "#78845C" },
-  signOut: { padding: 16, alignItems: "center" },
-  disabled: { opacity: 0.5 },
-  signOutText: { color: "#B85F4A", fontWeight: "700" },
+  loadingMore: { paddingVertical: 12 },
 });
