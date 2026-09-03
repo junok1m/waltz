@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Dog as DogIcon, Pencil } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
@@ -8,7 +9,9 @@ import { calculateWalkStreak } from "../utils/streak";
 import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
 import { AppTab } from "./HubScreen";
-import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard } from "./MeActivityCards";
+import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard, RankingActivityCard } from "./MeActivityCards";
+import { fetchDogRankingEvents } from "../services/activity";
+import type { ActivityEvent } from "../types/activity";
 
 type Props = {
   dog: Dog;
@@ -25,7 +28,8 @@ type Props = {
 
 type TimelineItem =
   | { kind: "walk"; date: string; walk: Walk }
-  | { kind: "badge"; date: string; badge: DogBadge };
+  | { kind: "badge"; date: string; badge: DogBadge }
+  | { kind: "ranking"; date: string; event: ActivityEvent };
 
 export function MeScreen({
   dog,
@@ -39,6 +43,7 @@ export function MeScreen({
   onDeleteWalk,
   onSignOut,
 }: Props) {
+  const [rankingEvents, setRankingEvents] = useState<ActivityEvent[]>([]);
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
   const streak = calculateWalkStreak(walks);
   const activePeriod = monthKey();
@@ -51,12 +56,21 @@ export function MeScreen({
   const timeline: TimelineItem[] = [
     ...profileWalks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
     ...badges.map((badge) => ({ kind: "badge" as const, date: badge.earned_at, badge })),
+    ...rankingEvents.map((event) => ({ kind: "ranking" as const, date: event.created_at, event })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const recentActivity = timeline.slice(0, 8);
   const monthTitle = new Date().toLocaleDateString("en-AU", {
     month: "long",
     timeZone: "Australia/Sydney",
   });
+
+  useEffect(() => {
+    let active = true;
+    fetchDogRankingEvents(dog.id)
+      .then((events) => { if (active) setRankingEvents(events); })
+      .catch((error) => console.error("Load ranking activity error:", error));
+    return () => { active = false; };
+  }, [dog.id]);
 
   function openWalkMenu(walk: Walk) {
     const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
@@ -133,7 +147,9 @@ export function MeScreen({
         {recentActivity.length ? recentActivity.map((item) => (
           item.kind === "walk"
             ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} wobbly />
-            : <MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge} />
+            : item.kind === "badge"
+              ? <MeBadgeActivityCard key={`badge-${item.badge.id}`} dogName={dog.name} badge={item.badge} />
+              : <RankingActivityCard key={`ranking-${item.event.id}`} dogName={dog.name} event={item.event} />
         )) : (
           <View style={styles.empty}><Text style={styles.emptyText}>No activity yet. Your first waltz or badge will appear here.</Text></View>
         )}
