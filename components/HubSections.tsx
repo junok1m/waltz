@@ -1,9 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Balloon, Bird, Coffee, Fish, Flag, Flame, Footprints, MoonStar, Mountain, Route, Ruler, Timer, Umbrella } from "@sketchyicons/react-native";
 import { Dog } from "../types/dog";
 import { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
 import { monthKey } from "../utils/badgeLogic";
+import { dogAvatarSource } from "../utils/mockDogAvatars";
+import { fetchMonthlyDogRanking } from "../services/ranking";
+import type { MonthlyDogRank } from "../services/ranking";
 
 export type ChallengeInfo = {
   id: string;
@@ -34,17 +38,69 @@ export function HubStats({ walks }: { walks: Walk[] }) {
   );
 }
 
-export function HubLeaderboard({ walks, dog }: { walks: Walk[]; dog: Dog }) {
-  const distance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
+export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
+  const [ranking, setRanking] = useState<MonthlyDogRank[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const month = new Date().toLocaleDateString("en-AU", {
+    month: "long",
+    timeZone: "Australia/Sydney",
+  });
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setFailed(false);
+    fetchMonthlyDogRanking()
+      .then((rows) => {
+        if (active) setRanking(rows);
+      })
+      .catch((error) => {
+        console.error("Load monthly ranking error:", error);
+        if (active) setFailed(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading) {
+    return <View style={styles.rankingStatus}><ActivityIndicator color="#78845C" /><Text style={styles.muted}>Counting paws and kilometres…</Text></View>;
+  }
+
+  if (failed) {
+    return <View style={styles.empty}><Text style={styles.emptyText}>Couldn’t load the league right now. Try opening Ranking again.</Text></View>;
+  }
+
   return (
     <>
-      <Text style={styles.kicker}>FRIENDS LEAGUE · PREVIEW</Text>
-      <View style={styles.podium}>
-        <Text style={styles.podiumEmoji}>🏆</Text>
-        <Text style={styles.big}>{dog.name}</Text>
-        <Text style={styles.muted}>{distance.toFixed(1)} km total</Text>
+      <Text style={styles.kicker}>{month.toUpperCase()} LEAGUE · GLOBAL</Text>
+      <Text style={styles.rankingCopy}>Every waltz counts. Rankings reset on the first of each month.</Text>
+      <View style={styles.rankingList}>
+        {ranking.map((entry) => {
+          const isCurrentDog = entry.dog_id === dog.id;
+          const avatarSource = dogAvatarSource(entry.dog_id, entry.avatar_url);
+          const rankLabel = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`;
+          return (
+            <View key={entry.dog_id} style={[styles.rankingRow, isCurrentDog && styles.currentDogRow]}>
+              <Text style={styles.rank}>{rankLabel}</Text>
+              <View style={styles.rankingAvatar}>
+                {avatarSource
+                  ? <Image source={avatarSource} style={styles.rankingAvatarImage} />
+                  : <Text style={styles.avatarInitial}>{entry.dog_name.slice(0, 1)}</Text>}
+              </View>
+              <View style={styles.rankingDog}>
+                <Text style={styles.rankingName}>{entry.dog_name}{isCurrentDog ? " · You" : ""}</Text>
+                <Text style={styles.rankingWalks}>{entry.walk_count} waltz{entry.walk_count === 1 ? "" : "es"}</Text>
+              </View>
+              <Text style={styles.rankingDistance}>{entry.distance_km.toFixed(1)} km</Text>
+            </View>
+          );
+        })}
       </View>
-      <View style={styles.empty}><Text style={styles.emptyText}>Friend rankings land here once community profiles are connected.</Text></View>
     </>
   );
 }
@@ -107,8 +163,19 @@ const styles = StyleSheet.create({
   stat: { width: "48%", minHeight: 140, backgroundColor: "#FFFDF8", borderRadius: 24, padding: 18, justifyContent: "center" },
   statIcon: { height: 32, justifyContent: "center", marginBottom: 8 },
   statValue: { fontSize: 22, fontWeight: "800", color: "#1D1A17", marginTop: 5 },
-  podium: { alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 28, padding: 28 },
-  podiumEmoji: { fontSize: 46 },
+  rankingCopy: { fontSize: 12, lineHeight: 18, color: "#756B60", marginBottom: 4 },
+  rankingStatus: { minHeight: 180, alignItems: "center", justifyContent: "center", gap: 10 },
+  rankingList: { gap: 8 },
+  rankingRow: { minHeight: 70, flexDirection: "row", alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 18, paddingHorizontal: 13, paddingVertical: 10, borderWidth: 1, borderColor: "#E5E0D8" },
+  currentDogRow: { backgroundColor: "#EEF1E6", borderColor: "#AAB48D" },
+  rank: { width: 36, fontSize: 16, fontWeight: "800", color: "#655D54", textAlign: "center" },
+  rankingAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#E9E3D8", alignItems: "center", justifyContent: "center", overflow: "hidden", marginHorizontal: 9 },
+  rankingAvatarImage: { width: 44, height: 44, borderRadius: 22 },
+  avatarInitial: { fontFamily: "Schoolbell_400Regular", fontSize: 24, color: "#655D54" },
+  rankingDog: { flex: 1 },
+  rankingName: { fontSize: 14, fontWeight: "800", color: "#332E29" },
+  rankingWalks: { fontSize: 10, color: "#82786E", marginTop: 3 },
+  rankingDistance: { fontSize: 14, fontWeight: "800", color: "#596442" },
   sectionHeader: { marginTop: 4, marginBottom: 4 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
   sectionCopy: { fontSize: 11, color: "#756B60", marginTop: 1 },
