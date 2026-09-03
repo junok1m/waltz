@@ -111,7 +111,10 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
   return (
     <View style={styles.screen}>
       <View style={styles.topBar}>
-        <Pressable style={styles.iconButton} onPress={onBack} hitSlop={8} accessibilityLabel="Back"><ArrowLeft size={27} strokeWidth={2} color="#332E29" /></Pressable>
+        <View style={styles.topTitleRow}>
+          <Pressable style={styles.iconButton} onPress={onBack} hitSlop={8} accessibilityLabel="Back"><ArrowLeft size={27} strokeWidth={2} color="#332E29" /></Pressable>
+          <Text style={styles.topTitle} numberOfLines={1}>{title}</Text>
+        </View>
         <View style={styles.topActions}>
           <Pressable style={styles.iconButton} onPress={() => { void shareWalk(); }} hitSlop={8} accessibilityLabel="Share waltz"><Share size={24} strokeWidth={2} color="#78845C" /></Pressable>
           <Pressable style={styles.iconButton} onPress={openMenu} hitSlop={8} accessibilityLabel="Waltz options"><Ellipsis size={27} strokeWidth={2} color="#655D54" /></Pressable>
@@ -126,11 +129,8 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
           <View pointerEvents="none" style={styles.routePill}><Text style={styles.routePillText}>{visibilityLabel}</Text></View>
         </WobblyFrame>
 
-        <View style={styles.headingRow}>
-          <View style={styles.headingCopy}>
-            <Text style={styles.title}>{title}</Text>
-            <View style={styles.dateRow}><Calendar size={15} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
-          </View>
+        <View style={styles.dateAndTags}>
+          <View style={styles.dateRow}><Calendar size={18} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
           <WalkTagIcons tags={walk.tags} />
         </View>
 
@@ -172,6 +172,8 @@ function Stat({ icon, value }: { icon: React.ReactNode; value: string }) {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   topBar: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  topTitleRow: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 5 },
+  topTitle: { flex: 1, fontFamily: "Schoolbell_400Regular", fontSize: 25, color: "#1D1A17" },
   topActions: { flexDirection: "row", alignItems: "center", gap: 5 },
   iconButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   content: { paddingBottom: 34, gap: 18 },
@@ -181,11 +183,9 @@ const styles = StyleSheet.create({
   noMapCopy: { color: "#82786E", fontSize: 12 },
   routePill: { position: "absolute", left: 13, bottom: 13, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(255,253,248,.92)", borderWidth: 1, borderColor: "#D8D1C7" },
   routePillText: { fontSize: 10, fontWeight: "800", color: "#78845C" },
-  headingRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingHorizontal: 3 },
-  headingCopy: { flex: 1 },
-  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  dateRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 5 },
-  date: { fontSize: 11, color: "#82786E" },
+  dateAndTags: { minHeight: 30, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 7 },
+  dateRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  date: { fontSize: 13, color: "#82786E" },
   statsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingVertical: 3 },
   stat: { minWidth: 88, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   statIcon: { justifyContent: "center" },
