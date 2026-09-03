@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
-import { ArrowLeft, Calendar, Cloudy, Coffee, Ellipsis, Fish, Flag, MapPin, MapPlus, Mountain, Ruler, Share, Sun, Timer, Trophy, Umbrella } from "@sketchyicons/react-native";
-import { fetchWalkOutcomeEvents } from "../services/activity";
-import { weatherLabel } from "../services/weather";
-import { ActivityEvent } from "../types/activity";
+import { ArrowLeft, Calendar, Cloudy, Coffee, Ellipsis, Fish, MapPin, Mountain, Ruler, Share, Sun, Timer, Umbrella } from "@sketchyicons/react-native";
 import { Walk, WalkTag } from "../types/walk";
-import { BADGE_META } from "./BadgeIcon";
 import { fallbackWalkTitle } from "./MeActivityCards";
 import { WaltzMap } from "./WaltzMap";
 import { WalkTagIcons } from "./WalkTagIcons";
@@ -44,28 +40,17 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
   const [draftTitle, setDraftTitle] = useState(walk.title?.trim() || fallbackWalkTitle(walk.ended_at));
   const [draftTags, setDraftTags] = useState<WalkTag[]>(walk.tags ?? []);
   const [saving, setSaving] = useState(false);
-  const [outcomes, setOutcomes] = useState<ActivityEvent[]>([]);
   const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
   const points = walk.route_points ?? [];
   const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
   const visibilityLabel = { private: "Only me", stats_only: "Stats only", hidden_ends: "Start & finish hidden", full: "Full route" }[visibility];
   const date = new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Australia/Sydney" });
-  const weather = walk.weather_temperature_c != null && walk.weather_condition
-    ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? null })
-    : null;
+  const temperature = walk.weather_temperature_c != null ? `${Math.round(walk.weather_temperature_c)}°` : null;
 
   useEffect(() => {
     setDraftTitle(title);
     setDraftTags(walk.tags ?? []);
   }, [title, walk.tags]);
-
-  useEffect(() => {
-    let active = true;
-    fetchWalkOutcomeEvents(walk.id)
-      .then((events) => { if (active) setOutcomes(events); })
-      .catch((error) => console.error("Load walk outcomes error:", error));
-    return () => { active = false; };
-  }, [walk.id]);
 
   function openMenu() {
     Alert.alert(title, "What would you like to do?", [
@@ -128,6 +113,11 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.dateAndTags}>
+          <View style={styles.dateRow}><Calendar size={21} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
+          <WalkTagIcons tags={walk.tags} />
+        </View>
+
         <WobblyFrame style={[styles.map, { height: Math.max(280, Math.min(390, height * 0.43)) }]}>
           {points.length && visibility !== "stats_only"
             ? <WaltzMap points={points} dogName={dogName} interactive />
@@ -135,20 +125,13 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
           <View pointerEvents="none" style={styles.routePill}><Text style={styles.routePillText}>{visibilityLabel}</Text></View>
         </WobblyFrame>
 
-        <View style={styles.dateAndTags}>
-          <View style={styles.dateRow}><Calendar size={18} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
-          <WalkTagIcons tags={walk.tags} />
-        </View>
-
         <View style={styles.statsRow}>
           <Stat icon={<Ruler size={25} strokeWidth={2} color="#78845C" />} value={`${walk.distance_km.toFixed(2)} km`} />
           <Stat icon={<Timer size={25} strokeWidth={2} color="#78845C" />} value={formatDuration(walk.duration_seconds)} />
-          {weather && walk.weather_condition
-            ? <Stat icon={<WeatherIcon condition={walk.weather_condition} />} value={weather} />
+          {temperature && walk.weather_condition
+            ? <Stat icon={<WeatherIcon condition={walk.weather_condition} />} value={temperature} />
             : null}
         </View>
-
-        {outcomes.length ? <View style={styles.outcomes}>{outcomes.map((event) => <OutcomeRow key={event.id} event={event} dogName={dogName} />)}</View> : null}
       </ScrollView>
 
       <Modal visible={editing} transparent animationType="slide" onRequestClose={() => setEditing(false)}>
@@ -175,30 +158,6 @@ function Stat({ icon, value }: { icon: React.ReactNode; value: string }) {
   return <View style={styles.stat}><View style={styles.statIcon}>{icon}</View><Text style={styles.statValue} numberOfLines={1}>{value}</Text></View>;
 }
 
-function ordinal(rank: number) {
-  if (rank % 100 >= 11 && rank % 100 <= 13) return `${rank}th`;
-  return `${rank}${({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[rank % 10] ?? "th"}`;
-}
-
-function OutcomeRow({ event, dogName }: { event: ActivityEvent; dogName: string }) {
-  if (event.event_type === "places_discovered") {
-    const count = Number(event.metadata.place_count) || 1;
-    return <View style={styles.outcomeRow}><MapPlus size={22} strokeWidth={2} color="#78845C" /><Text style={styles.outcomeText}>{dogName} discovered {count} new {count === 1 ? "place" : "places"}</Text></View>;
-  }
-  if (event.event_type === "badge_earned") {
-    const badgeId = event.badge_id ?? String(event.metadata.badge_id ?? "");
-    const match = badgeId.match(/^mileage-(\d+)$/);
-    const month = new Date(event.created_at).toLocaleDateString("en-AU", { month: "long", timeZone: "Australia/Sydney" });
-    const message = match
-      ? `${dogName} joined the ${month} ${Number(match[1]).toLocaleString()} km Club`
-      : `${dogName} earned the ${BADGE_META[badgeId]?.title ?? badgeId.replaceAll("-", " ")} badge`;
-    return <View style={styles.outcomeRow}><Flag size={22} strokeWidth={2} color="#78845C" /><Text style={styles.outcomeText}>{message}</Text></View>;
-  }
-  const rank = Number(event.metadata.new_rank) || 1;
-  const category = event.metadata.category === "waltzes" ? "Most Waltzes" : event.metadata.category === "places" ? "New Places" : "Distance";
-  return <View style={styles.outcomeRow}><Trophy size={22} strokeWidth={2} color="#8A7440" /><Text style={styles.outcomeText}>{dogName} climbed to {ordinal(rank)} place in {category}</Text></View>;
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   topBar: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
@@ -213,16 +172,13 @@ const styles = StyleSheet.create({
   noMapCopy: { color: "#82786E", fontSize: 12 },
   routePill: { position: "absolute", left: 13, bottom: 13, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(255,253,248,.92)", borderWidth: 1, borderColor: "#D8D1C7" },
   routePillText: { fontSize: 10, fontWeight: "800", color: "#78845C" },
-  dateAndTags: { minHeight: 30, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 7 },
+  dateAndTags: { minHeight: 30, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 7, marginBottom: -5 },
   dateRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  date: { fontSize: 13, color: "#82786E" },
+  date: { fontSize: 14, fontWeight: "700", color: "#655D54" },
   statsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingVertical: 3 },
   stat: { minWidth: 88, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   statIcon: { justifyContent: "center" },
   statValue: { fontSize: 14, fontWeight: "800", color: "#655D54" },
-  outcomes: { gap: 12, borderTopWidth: 1, borderTopColor: "#DED8CF", paddingHorizontal: 8, paddingTop: 17 },
-  outcomeRow: { flexDirection: "row", alignItems: "center", gap: 11 },
-  outcomeText: { flex: 1, fontSize: 14, lineHeight: 20, fontWeight: "700", color: "#332E29" },
   scrim: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(29,26,23,.25)" },
   sheet: { backgroundColor: "#F8F3E9", borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 23, paddingBottom: 34, gap: 11 },
   sheetTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 31, color: "#1D1A17", marginBottom: 3 },
