@@ -17,7 +17,8 @@ test("badge types and period keys stay separated", () => {
   assert.equal(badgeType("trail"), "monthly");
   assert.equal(badgeType("mileage-100"), "mileage");
   assert.equal(badgeType("limited-summer"), "limited");
-  assert.equal(badgePeriodKey("mileage-100", new Date("2026-08-15T12:00:00")), "permanent");
+  assert.equal(badgePeriodKey("mileage-10", new Date("2026-08-15T12:00:00")), "2026-08");
+  assert.equal(badgePeriodKey("limited-summer", new Date("2026-08-15T12:00:00")), "permanent");
 });
 
 test("badge calculation awards monthly and mileage milestones", () => {
@@ -34,5 +35,20 @@ test("badge calculation awards monthly and mileage milestones", () => {
   assert.ok(ids.includes("trail"));
   assert.ok(ids.includes("early-bird"));
   assert.ok(ids.includes("mileage-10"));
-  assert.equal(ids.includes("mileage-100"), false);
+  assert.equal(ids.includes("mileage-30"), false);
+});
+
+test("previous-month walks do not count toward monthly badges or mileage", () => {
+  const now = new Date("2026-09-03T12:00:00+10:00");
+  const walks = [
+    ...Array.from({ length: 10 }, (_, i) => walk({
+      endedAt: `2026-08-${String(20 + i).padStart(2, "0")}T06:30:00+10:00`,
+      distance: 5,
+      tags: ["trail"],
+    })),
+    walk({ endedAt: "2026-09-02T09:00:00+10:00", distance: 0.8 }),
+  ];
+
+  const ids = earnedBadgeIds(walks, now);
+  assert.deepEqual(ids, []);
 });

@@ -53,7 +53,11 @@ export async function fetchPublicDogProfile(dogId: string, viewerDogId: string):
     dog_id: event.dog_id,
     badge_id: String(event.badge_id),
     badge_type: String(event.badge_id).startsWith("mileage-") ? "mileage" as const : "monthly" as const,
-    period_key: String(event.badge_id).startsWith("mileage-") ? "permanent" : new Date(event.created_at).toISOString().slice(0, 7),
+    period_key: new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+    }).format(new Date(event.created_at)),
     earned_at: event.created_at,
   }));
 

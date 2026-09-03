@@ -43,7 +43,7 @@ export function MeScreen({
   const streak = calculateWalkStreak(walks);
   const activePeriod = monthKey();
   const monthlyBadges = badges.filter((badge) => badge.badge_type === "monthly" && badge.period_key === activePeriod);
-  const mileageBadges = badges.filter((badge) => badge.badge_type === "mileage");
+  const mileageBadges = badges.filter((badge) => badge.badge_type === "mileage" && badge.period_key === activePeriod);
   const limitedBadges = badges.filter((badge) => badge.badge_type === "limited");
   const profileWalks = walks
     .filter((walk) => !walk.is_mock && !walk.hidden_from_profile)
@@ -114,8 +114,8 @@ export function MeScreen({
 
         {mileageBadges.length ? (
           <>
-            <Text style={styles.sectionTitle}>Mileage Clubs</Text>
-            <Text style={styles.sectionCopy}>Permanent milestones from all your waltzes.</Text>
+            <Text style={styles.sectionTitle}>{monthTitle} Mileage Clubs</Text>
+            <Text style={styles.sectionCopy}>Monthly distance milestones. A fresh start next month.</Text>
             <BadgeRow badges={mileageBadges} />
           </>
         ) : null}
