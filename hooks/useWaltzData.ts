@@ -68,6 +68,12 @@ export function useWaltzData(userId: string | null) {
     setAllWalks((current) => current.filter((walk) => walk.id !== walkId));
   }, []);
 
+  const updateWalkLocally = useCallback((walkId: number, updates: Pick<Walk, "title" | "tags">) => {
+    setAllWalks((current) => current.map((walk) =>
+      walk.id === walkId ? { ...walk, ...updates } : walk
+    ));
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       setDogs([]);
@@ -107,5 +113,6 @@ export function useWaltzData(userId: string | null) {
     refreshBadges,
     hideWalkLocally,
     removeWalkLocally,
+    updateWalkLocally,
   };
 }

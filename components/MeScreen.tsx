@@ -20,6 +20,7 @@ type Props = {
   onNavigate: (tab: AppTab) => void;
   onStartWalk: () => void;
   onEditDog: () => void;
+  onOpenWalk: (id: number) => void;
   onHideWalk: (id: number) => Promise<void>;
   onDeleteWalk: (id: number) => Promise<void>;
 };
@@ -35,6 +36,7 @@ export function MeScreen({
   onNavigate,
   onStartWalk,
   onEditDog,
+  onOpenWalk,
   onHideWalk,
   onDeleteWalk,
 }: Props) {
@@ -173,7 +175,7 @@ export function MeScreen({
         <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
         {visibleActivity.length ? visibleActivity.map((item) => (
           item.kind === "walk"
-            ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onMenu={() => openWalkMenu(item.walk)} wobbly />
+            ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onPress={() => onOpenWalk(item.walk.id)} onMenu={() => openWalkMenu(item.walk)} wobbly />
             : item.event.event_type === "badge_earned" && item.event.badge_id
               ? <MeBadgeActivityCard
                   key={`event-${item.event.id}`}

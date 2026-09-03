@@ -13,7 +13,8 @@ import { useAuthSession } from "./hooks/useAuthSession";
 import { useWaltzData } from "./hooks/useWaltzData";
 import { useWalkCompletion } from "./hooks/useWalkCompletion";
 import { useWalkTracker } from "./hooks/useWalkTracker";
-import { deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
+import { deleteWalk, setWalkHiddenFromProfile, updateWalkDetails } from "./services/walks";
+import { WalkTag } from "./types/walk";
 
 void SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ duration: 350, fade: true });
@@ -38,6 +39,7 @@ export default function App() {
     refreshBadges,
     hideWalkLocally,
     removeWalkLocally,
+    updateWalkLocally,
   } = useWaltzData(session?.user.id ?? null);
   const {
     routePrivacy,
@@ -106,6 +108,11 @@ export default function App() {
     void refreshWalks();
     if (activeDog?.id) void refreshBadges(activeDog.id);
   }
+  async function editWalk(walkId: number, title: string, tags: WalkTag[]) {
+    await updateWalkDetails(walkId, { title, tags });
+    updateWalkLocally(walkId, { title: title.trim(), tags });
+    void refreshWalks();
+  }
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 
@@ -167,6 +174,7 @@ export default function App() {
         onSelectDog={setActiveDogId}
         onHideWalk={hideWalkFromProfile}
         onDeleteWalk={removeWalk}
+        onEditWalk={editWalk}
         onSignOut={signOut}
       />
       <StatusBar style="dark" />

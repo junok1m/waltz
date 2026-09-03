@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { Bone, Cloudy, MapPin, Maximize2, Ruler, Sun, Timer, Trophy, Umbrella, X } from "@sketchyicons/react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Bone, Cloudy, MapPin, Ruler, Sun, Timer, Trophy, Umbrella } from "@sketchyicons/react-native";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
-import { weatherLabel } from "../services/weather";
 import { DogBadge } from "../types/badge";
 import { Walk } from "../types/walk";
 import { BADGE_META, BadgeIcon } from "./BadgeIcon";
@@ -97,12 +96,12 @@ type WalkCardProps = {
   booped?: boolean;
   boopBusy?: boolean;
   onBoop?: () => void;
+  onPress?: () => void;
 };
 
-export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, booped = false, boopBusy = false, onBoop }: WalkCardProps) {
+export function MeWalkActivityCard({ walk, onMenu, onPress, wobbly = false, boopCount, booped = false, boopBusy = false, onBoop }: WalkCardProps) {
   const points = walk.route_points ?? [];
   const [loadedBoopCount, setLoadedBoopCount] = useState(0);
-  const [mapOpen, setMapOpen] = useState(false);
   const title = walk.title?.trim() || fallbackWalkTitle(walk.ended_at);
   const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
   const canShowMap = visibility !== "stats_only" && points.length > 0;
@@ -113,9 +112,6 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
     hidden_ends: "Start & finish hidden",
     full: "Full route",
   }[visibility];
-  const walkWeather = walk.weather_temperature_c != null && walk.weather_condition
-    ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? null })
-    : null;
 
   useEffect(() => {
     if (boopCount !== undefined) return;
@@ -146,10 +142,9 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
         {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
       </View>
       {canShowMap ? (
-        <Pressable style={styles.map} onPress={() => setMapOpen(true)} accessibilityRole="button" accessibilityLabel="Open route map">
+        <View style={styles.map}>
           <WaltzMap points={points} interactive={false} overview />
-          <View style={styles.expandIcon}><Maximize2 size={16} strokeWidth={2} color="#655D54" /></View>
-        </Pressable>
+        </View>
       ) : null}
       {wobbly ? <WobblyDivider /> : null}
       <View style={[styles.metrics, wobbly && styles.metricsWobbly]}>
@@ -166,20 +161,14 @@ export function MeWalkActivityCard({ walk, onMenu, wobbly = false, boopCount, bo
           <Text style={[styles.metricValue, booped && styles.boopValueActive]}>{shownBoopCount}</Text>
         </Pressable>
       </View>
-      <Modal visible={mapOpen && canShowMap} animationType="slide" onRequestClose={() => setMapOpen(false)}>
-        <View style={styles.mapModal}>
-          <View style={styles.mapModalHeader}>
-            <View><Text style={styles.mapModalTitle}>{title}</Text><Text style={styles.mapModalMeta}>{walk.distance_km.toFixed(2)} km · {formatDuration(walk.duration_seconds)}{walkWeather ? ` · ${walkWeather}` : ""}</Text></View>
-            <Pressable style={styles.closeMap} onPress={() => setMapOpen(false)} accessibilityLabel="Close route map"><X size={25} strokeWidth={2} color="#332E29" /></Pressable>
-          </View>
-          <View style={styles.fullMap}><WaltzMap points={points} interactive /></View>
-        </View>
-      </Modal>
     </>;
 
-  return wobbly
+  const card = wobbly
     ? <WobblyCard contentStyle={styles.walkCardWobbly}>{content}</WobblyCard>
     : <View style={styles.walkCard}>{content}</View>;
+  return onPress
+    ? <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Open ${title}`}>{card}</Pressable>
+    : card;
 }
 
 function Metric({ icon, value }: { icon: React.ReactNode; value: string }) {
@@ -208,7 +197,6 @@ const styles = StyleSheet.create({
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
   moreText: { fontSize: 15, fontWeight: "800", color: "#82786E", letterSpacing: 1 },
   map: { height: 128, borderRadius: 4, overflow: "hidden", backgroundColor: "#EFE8DC" },
-  expandIcon: { position: "absolute", top: 8, right: 8, width: 29, height: 29, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,253,248,.88)", borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 4 },
   metrics: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 22, borderTopWidth: 1, borderTopColor: "#E5E0D8", paddingTop: 11 },
   metricsWobbly: { borderTopWidth: 0, paddingTop: 6 },
   metric: { flexDirection: "row", alignItems: "center", gap: 5 },
@@ -216,10 +204,4 @@ const styles = StyleSheet.create({
   boopActive: { opacity: 0.7 },
   boopBusy: { opacity: 0.45 },
   boopValueActive: { color: "#596442" },
-  mapModal: { flex: 1, backgroundColor: "#F8F3E9", paddingTop: 62, paddingHorizontal: 18, paddingBottom: 24 },
-  mapModalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
-  mapModalTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 29, color: "#1D1A17" },
-  mapModalMeta: { fontSize: 11, fontWeight: "700", color: "#756B60", marginTop: 2 },
-  closeMap: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
-  fullMap: { flex: 1, borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, overflow: "hidden" },
 });

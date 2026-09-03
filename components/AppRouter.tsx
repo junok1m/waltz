@@ -13,6 +13,7 @@ import { PlacesScreen } from "./PlacesScreen";
 import { PublicDogProfileScreen } from "./PublicDogProfileScreen";
 import { WalkCompleteScreen } from "./WalkCompleteScreen";
 import { WalkingScreen } from "./WalkingScreen";
+import { WalkDetailScreen } from "./WalkDetailScreen";
 
 type Props = {
   tab: AppTab;
@@ -48,11 +49,13 @@ type Props = {
   onSelectDog: (dogId: string) => void;
   onHideWalk: (walkId: number) => Promise<void>;
   onDeleteWalk: (walkId: number) => Promise<void>;
+  onEditWalk: (walkId: number, title: string, tags: WalkTag[]) => Promise<void>;
   onSignOut: () => void;
 };
 
 export function AppRouter(props: Props) {
   const [publicDogId, setPublicDogId] = useState<string | null>(null);
+  const [selectedWalkId, setSelectedWalkId] = useState<number | null>(null);
   const {
     tab,
     userId,
@@ -78,7 +81,17 @@ export function AppRouter(props: Props) {
   } = props;
 
   let content: React.ReactNode;
-  if (publicDogId) {
+  const selectedWalk = walks.find((walk) => walk.id === selectedWalkId);
+  if (selectedWalk) {
+    content = <WalkDetailScreen
+      walk={selectedWalk}
+      dogName={activeDog.name}
+      onBack={() => setSelectedWalkId(null)}
+      onEdit={props.onEditWalk}
+      onHide={async (walkId) => { await props.onHideWalk(walkId); setSelectedWalkId(null); }}
+      onDelete={async (walkId) => { await props.onDeleteWalk(walkId); setSelectedWalkId(null); }}
+    />;
+  } else if (publicDogId) {
     content = <PublicDogProfileScreen dogId={publicDogId} viewerDog={activeDog} onBack={() => setPublicDogId(null)} onNavigate={(nextTab) => { setPublicDogId(null); onNavigate(nextTab); }} onStartWalk={() => { setPublicDogId(null); onStartWalk(); }} />;
   } else if (walkFinished) {
     content = (
@@ -102,7 +115,7 @@ export function AppRouter(props: Props) {
   } else if (isWalking) {
     content = <WalkingScreen seconds={seconds} distance={distance} points={points} dogName={activeDog.name} tags={walkTags} routePrivacy={routePrivacy} onTagsChange={props.onTagsChange} onRoutePrivacyChange={props.onRoutePrivacyChange} onStopWalk={props.onStopWalk} />;
   } else if (tab === "me") {
-    content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} />;
+    content = <MeScreen dog={activeDog} walks={walks} badges={badges} onNavigate={onNavigate} onStartWalk={onStartWalk} onEditDog={() => props.onOpenDogs(activeDog.id)} onOpenWalk={setSelectedWalkId} onHideWalk={props.onHideWalk} onDeleteWalk={props.onDeleteWalk} />;
   } else if (tab === "club") {
     content = <ClubScreen onNavigate={onNavigate} onStartWalk={onStartWalk} />;
   } else if (tab === "report") {

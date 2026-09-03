@@ -95,6 +95,17 @@ export async function setWalkHiddenFromProfile(walkId:number, hidden:boolean){
   if(error) throw error;
 }
 
+export async function updateWalkDetails(walkId: number, input: { title: string; tags: WalkTag[] }) {
+  const { data, error } = await supabase
+    .from("walks")
+    .update({ title: input.title.trim(), tags: input.tags })
+    .eq("id", walkId)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteWalk(walkId:number){
   const { error } = await supabase.from("walks").delete().eq("id",walkId);
   if(error) throw error;
