@@ -10,6 +10,7 @@ export function useWaltzData(userId: string | null) {
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [dogsLoading, setDogsLoading] = useState(false);
   const [dogsError, setDogsError] = useState(false);
+  const [dogsReadyUserId, setDogsReadyUserId] = useState<string | null>(null);
   const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [allWalks, setAllWalks] = useState<Walk[]>([]);
   const [badges, setBadges] = useState<DogBadge[]>([]);
@@ -31,6 +32,7 @@ export function useWaltzData(userId: string | null) {
       setDogsError(true);
     } finally {
       setDogsLoading(false);
+      setDogsReadyUserId(userId);
     }
   }, [userId]);
 
@@ -73,6 +75,7 @@ export function useWaltzData(userId: string | null) {
       setBadges([]);
       setActiveDogId(null);
       setDogsError(false);
+      setDogsReadyUserId(null);
       return;
     }
     void refreshDogs();
@@ -93,6 +96,7 @@ export function useWaltzData(userId: string | null) {
     dogs,
     dogsLoading,
     dogsError,
+    dogsReady: !!userId && dogsReadyUserId === userId,
     activeDogId,
     activeDog,
     walks,

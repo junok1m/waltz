@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
 import { Schoolbell_400Regular, useFonts } from "@expo-google-fonts/schoolbell";
 import { AppRouter } from "./components/AppRouter";
 import { AuthScreen } from "./components/AuthScreen";
@@ -14,6 +15,9 @@ import { useWalkCompletion } from "./hooks/useWalkCompletion";
 import { useWalkTracker } from "./hooks/useWalkTracker";
 import { deleteWalk, setWalkHiddenFromProfile } from "./services/walks";
 
+void SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({ duration: 350, fade: true });
+
 export default function App() {
   const [fontsLoaded] = useFonts({ Schoolbell_400Regular });
   const { authReady, authError, session, isSigningOut, retryAuth, signOut } = useAuthSession();
@@ -24,6 +28,7 @@ export default function App() {
     dogs,
     dogsLoading,
     dogsError,
+    dogsReady,
     activeDog,
     walks,
     badges,
@@ -67,6 +72,14 @@ export default function App() {
     }
   }, [session?.user.id]);
 
+  const startupReady = fontsLoaded
+    && authReady
+    && (!session || (trackerReady && dogsReady));
+
+  useEffect(() => {
+    if (startupReady) void SplashScreen.hideAsync();
+  }, [startupReady]);
+
   function beginWalk() {
     if (!activeDog) return;
     prepareWalk(true);
@@ -96,7 +109,7 @@ export default function App() {
   function openDogManager(editId: string | null = null) { setDogManagerEditId(editId); setDogManagerOpen(true); }
   function closeDogManager() { setDogManagerOpen(false); setDogManagerEditId(null); }
 
-  if (!fontsLoaded || !authReady || (session && !trackerReady)) return <WaltzLoadingScreen showWordmark={fontsLoaded} />;
+  if (!startupReady) return null;
   if (authError) return (
     <WaltzErrorScreen
       title="Lost the trail"
