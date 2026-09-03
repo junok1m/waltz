@@ -70,9 +70,11 @@ function ordinal(rank: number) {
 
 export function RankingActivityCard({ dogName, event, wobbly = false }: { dogName: string; event: ActivityEvent; wobbly?: boolean }) {
   const newRank = Number(event.metadata.new_rank);
+  const category = event.metadata.category === "waltzes" || event.metadata.category === "places" ? event.metadata.category : "distance";
+  const league = category === "distance" ? "Distance" : category === "waltzes" ? "Most Waltzes" : "New Places";
   const message = newRank === 1
-    ? `${dogName} took 1st place in distance!`
-    : `${dogName} climbed to ${ordinal(newRank)} place!`;
+    ? `${dogName} took 1st place in ${league}!`
+    : `${dogName} climbed to ${ordinal(newRank)} place in ${league}!`;
   const content = <>
     <View style={styles.rankingIcon}><Trophy size={27} strokeWidth={2} color="#8A7440" /></View>
     <View style={styles.flex}>

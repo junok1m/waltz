@@ -171,7 +171,10 @@ export async function fetchFeedPage(
       owner_id: dog.owner_id,
       old_rank: oldRank,
       new_rank: newRank,
+      category: metadata?.category === "waltzes" || metadata?.category === "places" ? metadata.category : "distance",
       distance_km: Number(metadata?.distance_km ?? 0),
+      walk_count: Number(metadata?.walk_count ?? 0),
+      places_count: Number(metadata?.places_count ?? 0),
       created_at: event.created_at,
     }];
   });

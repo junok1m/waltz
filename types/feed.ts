@@ -38,7 +38,10 @@ export type FeedRankingEvent = {
   owner_id: string;
   old_rank: number | null;
   new_rank: number;
+  category: "distance" | "waltzes" | "places";
   distance_km: number;
+  walk_count: number;
+  places_count: number;
   created_at: string;
 };
 

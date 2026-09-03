@@ -7,7 +7,7 @@ import { calculateWalkStreak } from "../utils/streak";
 import { monthKey } from "../utils/badgeLogic";
 import { dogAvatarSource } from "../utils/mockDogAvatars";
 import { fetchMonthlyDogRanking } from "../services/ranking";
-import type { MonthlyDogRank } from "../services/ranking";
+import type { MonthlyDogRank, RankingCategory } from "../services/ranking";
 
 export type ChallengeInfo = {
   id: string;
@@ -40,6 +40,7 @@ export function HubStats({ walks }: { walks: Walk[] }) {
 
 export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
   const [ranking, setRanking] = useState<MonthlyDogRank[]>([]);
+  const [category, setCategory] = useState<RankingCategory>("distance");
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const month = new Date().toLocaleDateString("en-AU", {
@@ -75,15 +76,52 @@ export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
     return <View style={styles.empty}><Text style={styles.emptyText}>Couldn’t load the league right now. Try opening Ranking again.</Text></View>;
   }
 
+  const categories: { id: RankingCategory; label: string }[] = [
+    { id: "distance", label: "Distance" },
+    { id: "waltzes", label: "Waltzes" },
+    { id: "places", label: "Places" },
+  ];
+  const rankFor = (entry: MonthlyDogRank) => category === "distance"
+    ? entry.distance_rank
+    : category === "waltzes"
+      ? entry.waltzes_rank
+      : entry.places_rank;
+  const sortedRanking = [...ranking].sort((a, b) => rankFor(a) - rankFor(b));
+  const metricFor = (entry: MonthlyDogRank) => {
+    if (category === "distance") return `${entry.distance_km.toFixed(1)} km`;
+    if (category === "waltzes") return `${entry.walk_count} waltz${entry.walk_count === 1 ? "" : "es"}`;
+    return `${entry.places_count} new place${entry.places_count === 1 ? "" : "s"}`;
+  };
+  const detailFor = (entry: MonthlyDogRank) => category === "distance"
+    ? `${entry.walk_count} waltz${entry.walk_count === 1 ? "" : "es"}`
+    : category === "waltzes"
+      ? `${entry.distance_km.toFixed(1)} km walked`
+      : `${entry.distance_km.toFixed(1)} km walked`;
+
   return (
     <>
       <Text style={styles.kicker}>{month.toUpperCase()} LEAGUE · GLOBAL</Text>
       <Text style={styles.rankingCopy}>Every waltz counts. Rankings reset on the first of each month.</Text>
+      <View style={styles.rankingTabs}>
+        {categories.map((item) => (
+          <Pressable
+            key={item.id}
+            style={[styles.rankingTab, category === item.id && styles.rankingTabActive]}
+            onPress={() => setCategory(item.id)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: category === item.id }}
+          >
+            <Text style={[styles.rankingTabText, category === item.id && styles.rankingTabTextActive]}>{item.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {category === "places" ? <Text style={styles.placesHint}>New places means first-ever discoveries made this month.</Text> : null}
       <View style={styles.rankingList}>
-        {ranking.map((entry) => {
+        {sortedRanking.map((entry) => {
           const isCurrentDog = entry.dog_id === dog.id;
           const avatarSource = dogAvatarSource(entry.dog_id, entry.avatar_url);
-          const rankLabel = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`;
+          const rank = rankFor(entry);
+          const rankLabel = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
           return (
             <View key={entry.dog_id} style={[styles.rankingRow, isCurrentDog && styles.currentDogRow]}>
               <Text style={styles.rank}>{rankLabel}</Text>
@@ -94,9 +132,9 @@ export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
               </View>
               <View style={styles.rankingDog}>
                 <Text style={styles.rankingName}>{entry.dog_name}{isCurrentDog ? " · You" : ""}</Text>
-                <Text style={styles.rankingWalks}>{entry.walk_count} waltz{entry.walk_count === 1 ? "" : "es"}</Text>
+                <Text style={styles.rankingWalks}>{detailFor(entry)}</Text>
               </View>
-              <Text style={styles.rankingDistance}>{entry.distance_km.toFixed(1)} km</Text>
+              <Text style={styles.rankingDistance}>{metricFor(entry)}</Text>
             </View>
           );
         })}
@@ -164,6 +202,12 @@ const styles = StyleSheet.create({
   statIcon: { height: 32, justifyContent: "center", marginBottom: 8 },
   statValue: { fontSize: 22, fontWeight: "800", color: "#1D1A17", marginTop: 5 },
   rankingCopy: { fontSize: 12, lineHeight: 18, color: "#756B60", marginBottom: 4 },
+  rankingTabs: { flexDirection: "row", backgroundColor: "#E9E3D8", borderRadius: 999, padding: 4, marginVertical: 10 },
+  rankingTab: { flex: 1, minHeight: 36, borderRadius: 999, alignItems: "center", justifyContent: "center" },
+  rankingTabActive: { backgroundColor: "#FFFDF8" },
+  rankingTabText: { fontSize: 11, fontWeight: "800", color: "#82786E" },
+  rankingTabTextActive: { color: "#596442" },
+  placesHint: { fontSize: 10, lineHeight: 15, color: "#756B60", marginBottom: 8 },
   rankingStatus: { minHeight: 180, alignItems: "center", justifyContent: "center", gap: 10 },
   rankingList: { gap: 8 },
   rankingRow: { minHeight: 70, flexDirection: "row", alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 18, paddingHorizontal: 13, paddingVertical: 10, borderWidth: 1, borderColor: "#E5E0D8" },

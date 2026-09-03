@@ -242,9 +242,15 @@ function BadgeEventCard({ event, onDogPress }: { event: FeedBadgeEvent; onDogPre
 
 function RankingEventCard({ event, onDogPress }: { event: FeedRankingEvent; onDogPress: () => void }) {
   const avatarSource = dogAvatarSource(event.dog_id, event.dog_avatar_url);
+  const league = event.category === "distance" ? "Distance" : event.category === "waltzes" ? "Most Waltzes" : "New Places";
   const message = event.new_rank === 1
-    ? `${event.dog_name} took 1st place in distance!`
-    : `${event.dog_name} raced into the Top 3!`;
+    ? `${event.dog_name} took 1st place in ${league}!`
+    : `${event.dog_name} raced into the Top 3 in ${league}!`;
+  const metric = event.category === "distance"
+    ? `${event.distance_km.toFixed(1)} km this month`
+    : event.category === "waltzes"
+      ? `${event.walk_count} waltzes this month`
+      : `${event.places_count} new places this month`;
   return <WobblyCard contentStyle={s.rankingCardContent}>
     <View style={s.rankingAvatarWrap}>
       {avatarSource
@@ -254,7 +260,7 @@ function RankingEventCard({ event, onDogPress }: { event: FeedRankingEvent; onDo
     </View>
     <Pressable style={s.badgeCopy} onPress={onDogPress} accessibilityRole="button" accessibilityLabel={`Open ${event.dog_name}'s profile`}>
       <Text style={s.badgeMessage}>{message}</Text>
-      <Text style={s.rankingMeta}>{event.distance_km.toFixed(1)} km this month · #{event.new_rank}</Text>
+      <Text style={s.rankingMeta}>{metric} · #{event.new_rank}</Text>
       <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
     </Pressable>
   </WobblyCard>;

@@ -53,9 +53,11 @@ function eventText(event: ActivityEvent, dogName: string) {
       return `${dogName} completed ${stringValue("challenge_name") ?? "a challenge"}.`;
     case "ranking_climbed": {
       const rank = numberValue("new_rank");
+      const category = stringValue("category");
+      const league = category === "waltzes" ? "Most Waltzes" : category === "places" ? "New Places" : "Distance";
       return rank === 1
-        ? `${dogName} took 1st place in distance!`
-        : `${dogName} climbed to #${rank ?? "?"} in distance!`;
+        ? `${dogName} took 1st place in ${league}!`
+        : `${dogName} climbed to #${rank ?? "?"} in ${league}!`;
     }
   }
 }
