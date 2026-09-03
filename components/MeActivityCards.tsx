@@ -55,7 +55,7 @@ export function MeBadgeActivityCard({ dogName, badge, wobbly = false, onMenu }: 
       <BadgeIcon badgeId={badge.badge_id} size={52} showLabel={false} />
       <View style={styles.flex}>
         <Text style={styles.badgeMessage}>{badgeActivityMessage(dogName, badge.badge_id)}</Text>
-        <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
+        <Text style={[styles.date, styles.eventDate]}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
       </View>
       {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
     </>;
@@ -80,7 +80,7 @@ export function RankingActivityCard({ dogName, event, wobbly = false, onMenu }: 
     <View style={styles.rankingIcon}><Trophy size={27} strokeWidth={2} color="#8A7440" /></View>
     <View style={styles.flex}>
       <Text style={styles.badgeMessage}>{message}</Text>
-      <Text style={styles.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
+      <Text style={[styles.date, styles.eventDate]}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
     </View>
     {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
   </>;
@@ -198,6 +198,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   title: { flex: 1, fontSize: 16, fontWeight: "700", color: "#1D1A17" },
   date: { fontSize: 10, color: "#82786E" },
+  eventDate: { marginTop: 6 },
   metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7, marginTop: 6 },
   visibility: { fontSize: 9, fontWeight: "700", color: "#78845C" },
   locationMeta: { flexDirection: "row", alignItems: "center", gap: 2 },
