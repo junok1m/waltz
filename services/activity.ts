@@ -31,3 +31,20 @@ export async function fetchLatestActivityEvents(
     } as ActivityEvent;
   });
 }
+
+export async function fetchDogRankingEvents(dogId: string): Promise<ActivityEvent[]> {
+  const { data, error } = await supabase
+    .from("activity_events")
+    .select("id,dog_id,event_type,actor_dog_id,walk_id,badge_id,metadata,created_at")
+    .eq("dog_id", dogId)
+    .eq("event_type", "ranking_climbed")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+  return (data ?? []).map((event) => ({
+    ...event,
+    actor_name: null,
+    metadata: event.metadata ?? {},
+  })) as ActivityEvent[];
+}
