@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, X } from "@sketchyicons/react-native";
+import { Bone, Dog as DogIcon, Maximize2, RefreshCw, Ruler, Timer, Trophy, X } from "@sketchyicons/react-native";
 import { AppTab } from "./HubScreen";
 import { WaltzMap } from "./WaltzMap";
 import { BottomNav } from "./BottomNav";
 import { fetchFeedPage, setWalkBoop } from "../services/boops";
 import { Dog } from "../types/dog";
-import { FeedBadgeEvent, FeedItem, FeedWalk } from "../types/feed";
+import { FeedBadgeEvent, FeedItem, FeedRankingEvent, FeedWalk } from "../types/feed";
 import { Walk } from "../types/walk";
 import { rankFeedItemsForViewer } from "../utils/feedRanking";
 import { dogAvatarSource } from "../utils/mockDogAvatars";
@@ -133,6 +133,7 @@ export function FeedScreen({ dog, viewerWalks, onNavigate, onStartWalk, onOpenDo
 
         {items.map((item) => {
           if (item.kind === "badge") return <BadgeEventCard key={`badge-${item.id}`} event={item} onDogPress={() => onOpenDogProfile(item.dog_id)} />;
+          if (item.kind === "ranking") return <RankingEventCard key={`ranking-${item.id}`} event={item} onDogPress={() => onOpenDogProfile(item.dog_id)} />;
           const walk = item;
           const busy = busyWalkIds.has(walk.id);
           const avatarSource = dogAvatarSource(walk.dog_id, walk.dog_avatar_url);
@@ -239,6 +240,26 @@ function BadgeEventCard({ event, onDogPress }: { event: FeedBadgeEvent; onDogPre
   </WobblyCard>;
 }
 
+function RankingEventCard({ event, onDogPress }: { event: FeedRankingEvent; onDogPress: () => void }) {
+  const avatarSource = dogAvatarSource(event.dog_id, event.dog_avatar_url);
+  const message = event.new_rank === 1
+    ? `${event.dog_name} took 1st place in distance!`
+    : `${event.dog_name} raced into the Top 3!`;
+  return <WobblyCard contentStyle={s.rankingCardContent}>
+    <View style={s.rankingAvatarWrap}>
+      {avatarSource
+        ? <Image source={avatarSource} style={s.rankingAvatarImage} />
+        : <DogIcon size={29} strokeWidth={1.8} color="#78845C" />}
+      <View style={s.trophyBubble}><Trophy size={15} strokeWidth={2} color="#8A7440" /></View>
+    </View>
+    <Pressable style={s.badgeCopy} onPress={onDogPress} accessibilityRole="button" accessibilityLabel={`Open ${event.dog_name}'s profile`}>
+      <Text style={s.badgeMessage}>{message}</Text>
+      <Text style={s.rankingMeta}>{event.distance_km.toFixed(1)} km this month · #{event.new_rank}</Text>
+      <Text style={s.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
+    </Pressable>
+  </WobblyCard>;
+}
+
 const s = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
@@ -251,6 +272,11 @@ const s = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: "800", color: "#1D1A17", marginTop: 10 },
   emptyText: { fontSize: 12, color: "#756B60", marginTop: 5 },
   badgeCardContent: { flexDirection: "row", alignItems: "center", gap: 12 },
+  rankingCardContent: { flexDirection: "row", alignItems: "center", gap: 13, backgroundColor: "#FFF9E9", borderRadius: 14 },
+  rankingAvatarWrap: { width: 56, height: 56 },
+  rankingAvatarImage: { width: 52, height: 52, borderRadius: 26 },
+  trophyBubble: { position: "absolute", right: 0, bottom: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: "#F5E7B8", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#FFFDF8" },
+  rankingMeta: { fontSize: 10, fontWeight: "700", color: "#8A7440", marginTop: 3 },
   badgeCopy: { flex: 1 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   cardHeader: { flexDirection: "row", alignItems: "center" },
