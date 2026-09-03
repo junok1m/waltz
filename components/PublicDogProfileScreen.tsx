@@ -12,6 +12,7 @@ import { DogProfileHero } from "./DogProfileHero";
 import { MeBadgeActivityCard, MeWalkActivityCard } from "./MeActivityCards";
 import { WaltzErrorScreen } from "./WaltzErrorScreen";
 import { WaltzLoadingScreen } from "./WaltzLoadingScreen";
+import { profileStamps } from "../utils/profileStamps";
 
 type Props = {
   dogId: string;
@@ -96,6 +97,7 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
     ...walks.map((walk) => ({ kind: "walk" as const, date: walk.ended_at, walk })),
     ...badges.map((badge) => ({ kind: "badge" as const, date: badge.earned_at, badge })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const stamps = profileStamps(badges);
 
   return (
     <View style={styles.screen}>
@@ -108,10 +110,10 @@ export function PublicDogProfileScreen({ dogId, viewerDog, onBack, onNavigate, o
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <DogProfileHero dog={dog} totalWaltzes={profile.totalWaltzes} totalDistance={totals.distance} totalBoops={totals.boops} />
 
-        {badges.length ? (
+        {stamps.length ? (
           <View>
             <Text style={styles.sectionTitle}>Stamps</Text>
-            <View style={styles.badges}>{badges.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
+            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
           </View>
         ) : null}
 

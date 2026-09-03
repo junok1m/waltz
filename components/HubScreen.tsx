@@ -17,11 +17,12 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
-          <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
-        </Pressable>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerTitleRow}>
+          <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
+            <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
+          </Pressable>
+          <Text style={styles.title}>{title}</Text>
+        </View>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {tab === "stats" ? <HubStats walks={walks} /> : null}
@@ -49,9 +50,9 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 },
-  backButton: { width: 34, paddingVertical: 6 },
-  headerSpacer: { width: 34 },
+  header: { flexDirection: "row", alignItems: "center", minHeight: 42, marginBottom: 14 },
+  headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
+  backButton: { paddingVertical: 6 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   content: { paddingBottom: 24, gap: 12 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,.3)", alignItems: "center", justifyContent: "center", padding: 28 },

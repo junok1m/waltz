@@ -104,11 +104,12 @@ export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
     <View style={styles.screen}>
       <View style={styles.body}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
-            <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
-          </Pressable>
-          <Text style={styles.title}>Places</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerTitleRow}>
+            <Pressable style={styles.backButton} onPress={() => onNavigate("club")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back to Club">
+              <SquareArrowLeft size={23} strokeWidth={2} color="#78845C" />
+            </Pressable>
+            <Text style={styles.title}>Places</Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -151,11 +152,11 @@ export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   body: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  backButton: { width: 34, paddingVertical: 6 },
-  headerSpacer: { width: 34 },
+  header: { flexDirection: "row", alignItems: "center", minHeight: 42, marginBottom: 14 },
+  headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
+  backButton: { paddingVertical: 6 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  content: { paddingTop: 18, paddingBottom: 24, gap: 12 },
+  content: { paddingBottom: 24, gap: 12 },
   summary: { fontSize: 11, fontWeight: "800", color: "#78845C", marginHorizontal: 4, marginTop: 2 },
   placeCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 20, padding: 16 },
   icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: "#F2EEE4", alignItems: "center", justifyContent: "center", marginRight: 13 },

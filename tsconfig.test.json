@@ -20,6 +20,7 @@
     "utils/routePrivacy.ts",
     "utils/walkPlaces.ts",
     "utils/streak.ts",
-    "utils/weatherCondition.ts"
+    "utils/weatherCondition.ts",
+    "utils/profileStamps.ts"
   ]
 }

@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { badgeType, badgePeriodKey, earnedBadgeIds } = require("../.test-build/utils/badgeLogic.js");
+const { profileStamps } = require("../.test-build/utils/profileStamps.js");
 
 function walk({ endedAt, distance = 1, tags = [] }) {
   return {
@@ -51,4 +52,13 @@ test("previous-month walks do not count toward monthly badges or mileage", () =>
 
   const ids = earnedBadgeIds(walks, now);
   assert.deepEqual(ids, []);
+});
+
+test("profile stamps show each lifetime design only once", () => {
+  const badges = [
+    { id: 2, badge_id: "night-shift", earned_at: "2026-09-03T00:00:00Z" },
+    { id: 1, badge_id: "night-shift", earned_at: "2026-08-03T00:00:00Z" },
+    { id: 3, badge_id: "early-bird", earned_at: "2026-08-02T00:00:00Z" },
+  ];
+  assert.deepEqual(profileStamps(badges).map((badge) => badge.id), [2, 3]);
 });

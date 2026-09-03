@@ -13,6 +13,7 @@ import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard, RankingActi
 import { fetchDogProfileEvents, setActivityEventHiddenFromProfile } from "../services/activity";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
 import type { ActivityEvent } from "../types/activity";
+import { profileStamps } from "../utils/profileStamps";
 
 type Props = {
   dog: Dog;
@@ -55,6 +56,7 @@ export function MeScreen({
     ...profileEvents.map((event) => ({ kind: "event" as const, date: event.created_at, event })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const visibleActivity = timeline.slice(0, visibleCount);
+  const stamps = profileStamps(badges);
 
   useEffect(() => {
     let active = true;
@@ -157,10 +159,10 @@ export function MeScreen({
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={loadMore} scrollEventThrottle={160}>
         <DogProfileHero dog={dog} totalWaltzes={walks.length} totalDistance={totalDistance} totalBoops={totalBoops} />
 
-        {badges.length ? (
+        {stamps.length ? (
           <View>
             <Text style={styles.sectionTitle}>Stamps</Text>
-            <View style={styles.badges}>{badges.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
+            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
           </View>
         ) : null}
 
