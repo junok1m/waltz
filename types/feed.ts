@@ -29,4 +29,17 @@ export type FeedBadgeEvent = {
   created_at: string;
 };
 
-export type FeedItem = FeedWalk | FeedBadgeEvent;
+export type FeedRankingEvent = {
+  kind: "ranking";
+  id: number;
+  dog_id: string;
+  dog_name: string;
+  dog_avatar_url: string | null;
+  owner_id: string;
+  old_rank: number | null;
+  new_rank: number;
+  distance_km: number;
+  created_at: string;
+};
+
+export type FeedItem = FeedWalk | FeedBadgeEvent | FeedRankingEvent;
