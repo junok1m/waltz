@@ -142,11 +142,11 @@ export function MeWalkActivityCard({ walk, onMenu, onPress, wobbly = false, boop
         {onMenu ? <Pressable style={styles.moreButton} onPress={onMenu} hitSlop={10}><Text style={styles.moreText}>•••</Text></Pressable> : null}
       </View>
       {canShowMap ? (
-        <View style={styles.map}>
+        <View style={[styles.map, wobbly && styles.mapWobbly]}>
           <WaltzMap points={points} interactive={false} overview />
         </View>
       ) : null}
-      {wobbly ? <WobblyDivider /> : null}
+      {wobbly ? <WobblyDivider style={styles.walkDividerWobbly} /> : null}
       <View style={[styles.metrics, wobbly && styles.metricsWobbly]}>
         <Metric icon={<Ruler size={17} strokeWidth={2} color="#78845C" />} value={`${walk.distance_km.toFixed(2)} km`} />
         <Metric icon={<Timer size={17} strokeWidth={2} color="#78845C" />} value={formatDuration(walk.duration_seconds)} />
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   badgeCard: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   badgeCardWobbly: { flexDirection: "row", alignItems: "center", gap: 12 },
   rankingIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#F5E7B8", alignItems: "center", justifyContent: "center" },
-  walkCardWobbly: { gap: 11 },
+  walkCardWobbly: {},
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
   titleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
@@ -197,8 +197,10 @@ const styles = StyleSheet.create({
   moreButton: { paddingHorizontal: 5, paddingVertical: 2 },
   moreText: { fontSize: 15, fontWeight: "800", color: "#82786E", letterSpacing: 1 },
   map: { height: 128, borderRadius: 4, overflow: "hidden", backgroundColor: "#EFE8DC" },
+  mapWobbly: { marginTop: 11 },
+  walkDividerWobbly: { marginTop: 11 },
   metrics: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 22, borderTopWidth: 1, borderTopColor: "#E5E0D8", paddingTop: 11 },
-  metricsWobbly: { borderTopWidth: 0, paddingTop: 6 },
+  metricsWobbly: { borderTopWidth: 0, paddingTop: 11, paddingBottom: 1 },
   metric: { flexDirection: "row", alignItems: "center", gap: 5 },
   metricValue: { fontSize: 12, fontWeight: "700", color: "#655D54" },
   boopActive: { opacity: 0.7 },
