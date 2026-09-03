@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { Bone, Cloudy, MapPin, Maximize2, Ruler, Sun, Timer, Umbrella, X } from "@sketchyicons/react-native";
+import { Bone, Cloudy, MapPin, Maximize2, Ruler, Sun, Timer, Trophy, Umbrella, X } from "@sketchyicons/react-native";
 import { fetchBoopCountsByWalkIds } from "../services/boops";
 import { weatherLabel } from "../services/weather";
 import { DogBadge } from "../types/badge";
@@ -9,6 +9,7 @@ import { BADGE_META, BadgeIcon } from "./BadgeIcon";
 import { WaltzMap } from "./WaltzMap";
 import { WalkTagIcons } from "./WalkTagIcons";
 import { WobblyCard, WobblyDivider } from "./WobblyCard";
+import type { ActivityEvent } from "../types/activity";
 
 function formatDuration(seconds: number) {
   const minutes = Math.round(seconds / 60);
@@ -57,6 +58,28 @@ export function MeBadgeActivityCard({ dogName, badge, wobbly = false }: { dogNam
         <Text style={styles.date}>{new Date(badge.earned_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })}</Text>
       </View>
     </>;
+  return wobbly
+    ? <WobblyCard contentStyle={styles.badgeCardWobbly}>{content}</WobblyCard>
+    : <View style={styles.badgeCard}>{content}</View>;
+}
+
+function ordinal(rank: number) {
+  if (rank % 100 >= 11 && rank % 100 <= 13) return `${rank}th`;
+  return `${rank}${({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[rank % 10] ?? "th"}`;
+}
+
+export function RankingActivityCard({ dogName, event, wobbly = false }: { dogName: string; event: ActivityEvent; wobbly?: boolean }) {
+  const newRank = Number(event.metadata.new_rank);
+  const message = newRank === 1
+    ? `${dogName} took 1st place in distance!`
+    : `${dogName} climbed to ${ordinal(newRank)} place!`;
+  const content = <>
+    <View style={styles.rankingIcon}><Trophy size={27} strokeWidth={2} color="#8A7440" /></View>
+    <View style={styles.flex}>
+      <Text style={styles.badgeMessage}>{message}</Text>
+      <Text style={styles.date}>{new Date(event.created_at).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", timeZone: "Australia/Sydney" })}</Text>
+    </View>
+  </>;
   return wobbly
     ? <WobblyCard contentStyle={styles.badgeCardWobbly}>{content}</WobblyCard>
     : <View style={styles.badgeCard}>{content}</View>;
@@ -164,6 +187,7 @@ const styles = StyleSheet.create({
   walkCard: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16, gap: 11 },
   badgeCard: { borderWidth: 1, borderColor: "#DDD8CF", borderRadius: 8, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 },
   badgeCardWobbly: { flexDirection: "row", alignItems: "center", gap: 12 },
+  rankingIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#F5E7B8", alignItems: "center", justifyContent: "center" },
   walkCardWobbly: { gap: 11 },
   badgeMessage: { fontSize: 15, fontWeight: "800", color: "#332E29", lineHeight: 21 },
   header: { flexDirection: "row", justifyContent: "space-between", gap: 10 },
