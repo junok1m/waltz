@@ -3,6 +3,7 @@ import { Balloon, Bird, Coffee, Fish, Flag, Flame, Footprints, MoonStar, Mountai
 import { Dog } from "../types/dog";
 import { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "../utils/streak";
+import { monthKey } from "../utils/badgeLogic";
 
 export type ChallengeInfo = {
   id: string;
@@ -49,14 +50,16 @@ export function HubLeaderboard({ walks, dog }: { walks: Walk[]; dog: Dog }) {
 }
 
 export function HubChallenges({ walks, dog, onSelect }: { walks: Walk[]; dog: Dog; onSelect: (challenge: ChallengeInfo) => void }) {
-  const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
-  const streak = calculateWalkStreak(walks);
-  const earlyBirdWalks = walks.filter((walk) => new Date(walk.ended_at).getHours() < 8).length;
-  const nightShiftWalks = walks.filter((walk) => new Date(walk.ended_at).getHours() >= 20).length;
-  const taggedWalks = (tag: WalkTag) => walks.filter((walk) => walk.tags?.includes(tag)).length;
+  const activeMonth = monthKey();
+  const monthlyWalks = walks.filter((walk) => monthKey(walk.ended_at) === activeMonth);
+  const totalDistance = monthlyWalks.reduce((sum, walk) => sum + walk.distance_km, 0);
+  const streak = calculateWalkStreak(monthlyWalks);
+  const earlyBirdWalks = monthlyWalks.filter((walk) => new Date(walk.ended_at).getHours() < 8).length;
+  const nightShiftWalks = monthlyWalks.filter((walk) => new Date(walk.ended_at).getHours() >= 20).length;
+  const taggedWalks = (tag: WalkTag) => monthlyWalks.filter((walk) => walk.tags?.includes(tag)).length;
   const badges: ChallengeInfo[] = [
     { id: "keep-flame", title: "Keep the flame", progress: `${Math.min(streak, 7)}/7`, description: "Complete a walk on 7 consecutive days.", done: streak >= 7, icon: <Flame size={31} strokeWidth={2} color="#E87859" />, color: "#F7DDD4" },
-    { id: "tiny-adventures", title: "Tiny adventures", progress: `${Math.min(walks.length, 10)}/10`, description: "Complete 10 walks.", done: walks.length >= 10, icon: <Balloon size={31} strokeWidth={2} color="#6F7D54" />, color: "#E5EBDD" },
+    { id: "tiny-adventures", title: "Tiny adventures", progress: `${Math.min(monthlyWalks.length, 10)}/10`, description: "Complete 10 walks this month.", done: monthlyWalks.length >= 10, icon: <Balloon size={31} strokeWidth={2} color="#6F7D54" />, color: "#E5EBDD" },
     { id: "trail", title: "Trail", progress: `${Math.min(taggedWalks("trail"), 5)}/5`, description: "Complete 5 walks tagged as Trail.", done: taggedWalks("trail") >= 5, icon: <Mountain size={31} strokeWidth={2} color="#796B54" />, color: "#EEE0C8" },
     { id: "gone-fishing", title: "Gone fishing", progress: `${Math.min(taggedWalks("swim"), 5)}/5`, description: "Have a swim or splash on 5 walks and tag them Gone fishing.", done: taggedWalks("swim") >= 5, icon: <Fish size={31} strokeWidth={2} color="#557784" />, color: "#DDEAF0" },
     { id: "coffee-stop", title: "Coffee stop", progress: `${Math.min(taggedWalks("coffee"), 10)}/10`, description: "Make a coffee stop on 10 walks.", done: taggedWalks("coffee") >= 10, icon: <Coffee size={31} strokeWidth={2} color="#806451" />, color: "#EADDD2" },
@@ -64,11 +67,11 @@ export function HubChallenges({ walks, dog, onSelect }: { walks: Walk[]; dog: Do
     { id: "night-shift", title: "Night shift", progress: `${Math.min(nightShiftWalks, 3)}/3`, description: "Complete 3 walks after 8pm.", done: nightShiftWalks >= 3, icon: <MoonStar size={31} strokeWidth={2} color="#666584" />, color: "#E3E0F1" },
     { id: "rainy-day", title: "Rainy day", progress: "0/1", description: "Complete a walk while it is raining. Automatic weather detection is coming soon.", done: false, icon: <Umbrella size={31} strokeWidth={2} color="#5D7680" />, color: "#DDE8EA" },
   ];
-  const mileage: ChallengeInfo[] = [10, 100, 500, 1000].map((km, index) => ({
+  const mileage: ChallengeInfo[] = [1, 10, 30, 50].map((km, index) => ({
     id: `mileage-${km}`,
     title: `First ${km.toLocaleString()} km`,
     progress: `${Math.min(totalDistance, km).toFixed(1)}/${km.toLocaleString()} km`,
-    description: `Walk a total of ${km.toLocaleString()} km with ${dog.name}.`,
+    description: `Walk ${km.toLocaleString()} km with ${dog.name} this month.`,
     done: totalDistance >= km,
     icon: <Flag size={30} strokeWidth={2} color="#687455" />,
     color: ["#E5EBDD", "#F6EBC4", "#F1DCD3", "#DDE8EA"][index],
@@ -76,9 +79,9 @@ export function HubChallenges({ walks, dog, onSelect }: { walks: Walk[]; dog: Do
 
   return (
     <>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Badges</Text><Text style={styles.sectionCopy}>Tap a badge to see how to earn it.</Text></View>
+      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Badges</Text><Text style={styles.sectionCopy}>A fresh set of goals every month.</Text></View>
       <View style={styles.badgeGrid}>{badges.map((challenge) => <Badge key={challenge.id} challenge={challenge} onPress={() => onSelect(challenge)} />)}</View>
-      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Mileage</Text><Text style={styles.sectionCopy}>Tiny paws, suspiciously large numbers.</Text></View>
+      <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Monthly mileage</Text><Text style={styles.sectionCopy}>Tiny paws, suspiciously large numbers. Resets each month.</Text></View>
       <View style={styles.mileageGrid}>{mileage.map((challenge) => <MileageBadge key={challenge.id} challenge={challenge} onPress={() => onSelect(challenge)} />)}</View>
     </>
   );
