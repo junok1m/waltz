@@ -178,7 +178,7 @@ export function MeScreen({
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 42, marginBottom: 14 },
-  content: { paddingBottom: 24, gap: 22 },
+  content: { paddingBottom: 24, gap: 14 },
   editButton: { paddingVertical: 8 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
   badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12, marginTop: 12 },
