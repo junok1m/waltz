@@ -57,9 +57,34 @@ export function WobblyCard({ children, contentStyle }: { children: ReactNode; co
   );
 }
 
+export function WobblyFrame({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  return (
+    <View
+      style={[styles.frame, style]}
+      onLayout={({ nativeEvent: { layout } }) => {
+        if (layout.width > 0 && layout.height > 0 && (layout.width !== size.width || layout.height !== size.height)) {
+          setSize({ width: layout.width, height: layout.height });
+        }
+      }}
+    >
+      <View style={styles.frameContent}>{children}</View>
+      {size.width > 0 && size.height > 0 ? (
+        <Svg pointerEvents="none" width={size.width} height={size.height} style={styles.frameBorder} viewBox={`0 0 ${size.width} ${size.height}`}>
+          <Path d={wobblyCardBorder(size.width, size.height)} fill="none" stroke="#D8D1C7" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: { position: "relative" },
   border: { position: "absolute", top: 0, left: 0 },
   content: { position: "relative", zIndex: 1, padding: 16 },
+  frame: { position: "relative", padding: 4, backgroundColor: "#F8F3E9" },
+  frameContent: { flex: 1, overflow: "hidden", borderRadius: 9, backgroundColor: "#EFE8DC" },
+  frameBorder: { position: "absolute", top: 0, left: 0, zIndex: 2 },
   divider: { height: 5 },
 });

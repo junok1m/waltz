@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Share as NativeShare, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
-import { ArrowLeft, Calendar, Cloudy, Coffee, Ellipsis, Fish, MapPin, Mountain, Ruler, Share, Sun, Timer, Umbrella } from "@sketchyicons/react-native";
+import { ArrowLeft, Calendar, Cloudy, Coffee, Ellipsis, Fish, MapPin, MapPlus, Mountain, Ruler, Share, Sun, Timer, Umbrella } from "@sketchyicons/react-native";
 import { weatherLabel } from "../services/weather";
 import { Walk, WalkTag } from "../types/walk";
 import { fallbackWalkTitle } from "./MeActivityCards";
 import { WaltzMap } from "./WaltzMap";
 import { WalkTagIcons } from "./WalkTagIcons";
-import { WobblyCard } from "./WobblyCard";
+import { WobblyFrame } from "./WobblyCard";
 
 type Props = {
   walk: Walk;
@@ -46,8 +46,11 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
   const visibility = walk.route_visibility ?? (walk.share_route ? "full" : "private");
   const visibilityLabel = { private: "Only me", stats_only: "Stats only", hidden_ends: "Start & finish hidden", full: "Full route" }[visibility];
   const date = new Date(walk.ended_at).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Australia/Sydney" });
-  const places = [...(walk.walk_places ?? [])].sort((a, b) => a.visit_order - b.visit_order).map((place) => place.place_name);
-  const location = places.length ? [...new Set(places)].join(" · ") : walk.suburb_name;
+  const places = [...new Set([...(walk.walk_places ?? [])]
+    .sort((a, b) => a.visit_order - b.visit_order)
+    .map((place) => place.place_name))];
+  const shownPlaces = places.length ? places : walk.suburb_name ? [walk.suburb_name] : [];
+  const location = shownPlaces.join(" · ");
   const weather = walk.weather_temperature_c != null && walk.weather_condition
     ? weatherLabel({ temperatureC: walk.weather_temperature_c, condition: walk.weather_condition, code: walk.weather_code ?? null })
     : null;
@@ -116,12 +119,12 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.map, { height: Math.max(280, Math.min(390, height * 0.43)) }]}>
+        <WobblyFrame style={[styles.map, { height: Math.max(280, Math.min(390, height * 0.43)) }]}>
           {points.length && visibility !== "stats_only"
             ? <WaltzMap points={points} dogName={dogName} interactive />
             : <View style={styles.noMap}><MapPin size={38} strokeWidth={2} color="#8C9670" /><Text style={styles.noMapTitle}>Route tucked away</Text><Text style={styles.noMapCopy}>This waltz was saved without a map.</Text></View>}
           <View pointerEvents="none" style={styles.routePill}><Text style={styles.routePillText}>{visibilityLabel}</Text></View>
-        </View>
+        </WobblyFrame>
 
         <View style={styles.headingRow}>
           <View style={styles.headingCopy}>
@@ -132,19 +135,14 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
         </View>
 
         <View style={styles.statsRow}>
-          <Stat icon={<Ruler size={23} strokeWidth={2} color="#78845C" />} label="DISTANCE" value={`${walk.distance_km.toFixed(2)} km`} />
-          <Stat icon={<Timer size={23} strokeWidth={2} color="#78845C" />} label="TIME" value={formatDuration(walk.duration_seconds)} />
+          <Stat icon={<Ruler size={25} strokeWidth={2} color="#78845C" />} value={`${walk.distance_km.toFixed(2)} km`} />
+          <Stat icon={<Timer size={25} strokeWidth={2} color="#78845C" />} value={formatDuration(walk.duration_seconds)} />
           {weather && walk.weather_condition
-            ? <Stat icon={<WeatherIcon condition={walk.weather_condition} />} label="WEATHER" value={weather} />
-            : <Stat icon={<Cloudy size={23} strokeWidth={2} color="#B3AA9F" />} label="WEATHER" value="Not recorded" muted />}
+            ? <Stat icon={<WeatherIcon condition={walk.weather_condition} />} value={weather} />
+            : null}
         </View>
 
-        {location ? <WobblyCard contentStyle={styles.placeCard}><MapPin size={24} strokeWidth={2} color="#78845C" /><View style={styles.placeCopy}><Text style={styles.placeLabel}>PLACES ALONG THE WAY</Text><Text style={styles.placeName}>{location}</Text></View></WobblyCard> : null}
-
-        <Pressable style={styles.shareButton} onPress={() => { void shareWalk(); }} accessibilityRole="button">
-          <Share size={23} strokeWidth={2} color="#FFFDF8" />
-          <Text style={styles.shareText}>SHARE THIS WALTZ</Text>
-        </Pressable>
+        {shownPlaces.length ? <View style={styles.places}>{shownPlaces.map((place) => <View key={place} style={styles.placeRow}><MapPlus size={23} strokeWidth={2} color="#78845C" /><Text style={styles.placeName}>{place}</Text></View>)}</View> : null}
       </ScrollView>
 
       <Modal visible={editing} transparent animationType="slide" onRequestClose={() => setEditing(false)}>
@@ -167,8 +165,8 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
   );
 }
 
-function Stat({ icon, label, value, muted = false }: { icon: React.ReactNode; label: string; value: string; muted?: boolean }) {
-  return <View style={styles.stat}><View style={styles.statIcon}>{icon}</View><Text style={styles.statLabel}>{label}</Text><Text style={[styles.statValue, muted && styles.muted]} numberOfLines={1}>{value}</Text></View>;
+function Stat({ icon, value }: { icon: React.ReactNode; value: string }) {
+  return <View style={styles.stat}><View style={styles.statIcon}>{icon}</View><Text style={styles.statValue} numberOfLines={1}>{value}</Text></View>;
 }
 
 const styles = StyleSheet.create({
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: "row", alignItems: "center", gap: 5 },
   iconButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
   content: { paddingBottom: 34, gap: 18 },
-  map: { borderRadius: 24, overflow: "hidden", backgroundColor: "#EFE8DC", borderWidth: 1, borderColor: "#D8D1C7" },
+  map: { backgroundColor: "#F8F3E9" },
   noMap: { flex: 1, alignItems: "center", justifyContent: "center", gap: 7, padding: 28 },
   noMapTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 26, color: "#332E29" },
   noMapCopy: { color: "#82786E", fontSize: 12 },
@@ -188,18 +186,13 @@ const styles = StyleSheet.create({
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
   dateRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 5 },
   date: { fontSize: 11, color: "#82786E" },
-  statsRow: { flexDirection: "row", gap: 8 },
-  stat: { flex: 1, minWidth: 0, backgroundColor: "#FFFDF8", borderRadius: 16, paddingVertical: 13, paddingHorizontal: 9, alignItems: "center" },
-  statIcon: { height: 27, justifyContent: "center" },
-  statLabel: { fontSize: 8, fontWeight: "800", color: "#978D82", marginTop: 6 },
-  statValue: { fontSize: 12, fontWeight: "800", color: "#332E29", marginTop: 3 },
-  muted: { color: "#978D82", fontSize: 10 },
-  placeCard: { flexDirection: "row", alignItems: "center", gap: 12 },
-  placeCopy: { flex: 1 },
-  placeLabel: { fontSize: 8, fontWeight: "800", color: "#978D82" },
-  placeName: { fontSize: 14, lineHeight: 20, fontWeight: "800", color: "#332E29", marginTop: 3 },
-  shareButton: { minHeight: 55, borderRadius: 999, backgroundColor: "#8C9670", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
-  shareText: { fontFamily: "Schoolbell_400Regular", fontSize: 21, letterSpacing: 1, color: "#FFFDF8" },
+  statsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingVertical: 3 },
+  stat: { minWidth: 88, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  statIcon: { justifyContent: "center" },
+  statValue: { fontSize: 14, fontWeight: "800", color: "#655D54" },
+  places: { gap: 12, paddingHorizontal: 8, paddingTop: 2 },
+  placeRow: { flexDirection: "row", alignItems: "center", gap: 11 },
+  placeName: { fontSize: 15, fontWeight: "700", color: "#332E29" },
   scrim: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(29,26,23,.25)" },
   sheet: { backgroundColor: "#F8F3E9", borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 23, paddingBottom: 34, gap: 11 },
   sheetTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 31, color: "#1D1A17", marginBottom: 3 },
