@@ -90,6 +90,8 @@ export function AppRouter(props: Props) {
       onEdit={props.onEditWalk}
       onHide={async (walkId) => { await props.onHideWalk(walkId); setSelectedWalkId(null); }}
       onDelete={async (walkId) => { await props.onDeleteWalk(walkId); setSelectedWalkId(null); }}
+      onNavigate={(nextTab) => { setSelectedWalkId(null); onNavigate(nextTab); }}
+      onStartWalk={() => { setSelectedWalkId(null); onStartWalk(); }}
     />;
   } else if (publicDogId) {
     content = <PublicDogProfileScreen dogId={publicDogId} viewerDog={activeDog} onBack={() => setPublicDogId(null)} onNavigate={(nextTab) => { setPublicDogId(null); onNavigate(nextTab); }} onStartWalk={() => { setPublicDogId(null); onStartWalk(); }} />;

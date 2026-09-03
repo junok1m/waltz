@@ -6,6 +6,8 @@ import { fallbackWalkTitle } from "./MeActivityCards";
 import { WaltzMap } from "./WaltzMap";
 import { WalkTagIcons } from "./WalkTagIcons";
 import { WobblyFrame } from "./WobblyCard";
+import { BottomNav } from "./BottomNav";
+import { AppTab } from "./HubScreen";
 
 type Props = {
   walk: Walk;
@@ -14,6 +16,8 @@ type Props = {
   onEdit: (walkId: number, title: string, tags: WalkTag[]) => Promise<void>;
   onHide: (walkId: number) => Promise<void>;
   onDelete: (walkId: number) => Promise<void>;
+  onNavigate: (tab: AppTab) => void;
+  onStartWalk: () => void;
 };
 
 const TAGS: Array<{ value: WalkTag; label: string; icon: React.ReactNode }> = [
@@ -34,7 +38,7 @@ function WeatherIcon({ condition }: { condition: NonNullable<Walk["weather_condi
   return <Cloudy {...props} />;
 }
 
-export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDelete }: Props) {
+export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDelete, onNavigate, onStartWalk }: Props) {
   const { height } = useWindowDimensions();
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(walk.title?.trim() || fallbackWalkTitle(walk.ended_at));
@@ -114,7 +118,7 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.dateAndTags}>
-          <View style={styles.dateRow}><Calendar size={21} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
+          <View style={styles.dateRow}><Calendar size={18} strokeWidth={2} color="#82786E" /><Text style={styles.date}>{date}</Text></View>
           <WalkTagIcons tags={walk.tags} />
         </View>
 
@@ -133,6 +137,8 @@ export function WalkDetailScreen({ walk, dogName, onBack, onEdit, onHide, onDele
             : null}
         </View>
       </ScrollView>
+
+      <BottomNav active="me" onNavigate={onNavigate} onStartPress={onStartWalk} />
 
       <Modal visible={editing} transparent animationType="slide" onRequestClose={() => setEditing(false)}>
         <Pressable style={styles.scrim} onPress={() => setEditing(false)}>
@@ -174,7 +180,7 @@ const styles = StyleSheet.create({
   routePillText: { fontSize: 10, fontWeight: "800", color: "#78845C" },
   dateAndTags: { minHeight: 30, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 7, marginBottom: -5 },
   dateRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  date: { fontSize: 14, fontWeight: "700", color: "#655D54" },
+  date: { fontSize: 13, color: "#82786E" },
   statsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingVertical: 3 },
   stat: { minWidth: 88, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   statIcon: { justifyContent: "center" },
