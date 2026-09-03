@@ -4,7 +4,8 @@ export type ActivityEventType =
   | "shared_walk"
   | "area_unlocked"
   | "local_legend"
-  | "challenge_complete";
+  | "challenge_complete"
+  | "ranking_climbed";
 
 export type ActivityEvent = {
   id: number;
