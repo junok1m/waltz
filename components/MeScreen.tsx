@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Dog as DogIcon, Pencil } from "@sketchyicons/react-native";
+import { ActivityIndicator, Alert, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pencil } from "@sketchyicons/react-native";
 import { monthKey } from "../services/badges";
 import { DogBadge } from "../types/badge";
 import { Dog } from "../types/dog";
 import { Walk } from "../types/walk";
-import { calculateWalkStreak } from "../utils/streak";
 import { BadgeIcon } from "./BadgeIcon";
 import { BottomNav } from "./BottomNav";
+import { DogProfileHero } from "./DogProfileHero";
 import { AppTab } from "./HubScreen";
 import { fallbackWalkTitle, MeBadgeActivityCard, MeWalkActivityCard, RankingActivityCard } from "./MeActivityCards";
 import { fetchDogProfileEvents, setActivityEventHiddenFromProfile } from "../services/activity";
+import { fetchBoopCountsByWalkIds } from "../services/boops";
 import type { ActivityEvent } from "../types/activity";
 
 type Props = {
@@ -43,13 +44,9 @@ export function MeScreen({
   const [profileEvents, setProfileEvents] = useState<ActivityEvent[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [totalBoops, setTotalBoops] = useState(0);
   const loadMoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const totalDistance = walks.reduce((sum, walk) => sum + walk.distance_km, 0);
-  const streak = calculateWalkStreak(walks);
-  const activePeriod = monthKey();
-  const monthlyBadges = badges.filter((badge) => badge.badge_type === "monthly" && badge.period_key === activePeriod);
-  const mileageBadges = badges.filter((badge) => badge.badge_type === "mileage" && badge.period_key === activePeriod);
-  const limitedBadges = badges.filter((badge) => badge.badge_type === "limited");
   const profileWalks = walks
     .filter((walk) => !walk.is_mock && !walk.hidden_from_profile)
     .sort((a, b) => new Date(b.ended_at).getTime() - new Date(a.ended_at).getTime());
@@ -58,10 +55,6 @@ export function MeScreen({
     ...profileEvents.map((event) => ({ kind: "event" as const, date: event.created_at, event })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const visibleActivity = timeline.slice(0, visibleCount);
-  const monthTitle = new Date().toLocaleDateString("en-AU", {
-    month: "long",
-    timeZone: "Australia/Sydney",
-  });
 
   useEffect(() => {
     let active = true;
@@ -72,6 +65,16 @@ export function MeScreen({
       .catch((error) => console.error("Load profile activity error:", error));
     return () => { active = false; };
   }, [dog.id]);
+
+  useEffect(() => {
+    let active = true;
+    fetchBoopCountsByWalkIds(walks.map((walk) => walk.id))
+      .then((counts) => {
+        if (active) setTotalBoops(Object.values(counts).reduce((sum, count) => sum + count, 0));
+      })
+      .catch((error) => console.error("Load profile Boops error:", error));
+    return () => { active = false; };
+  }, [dog.id, walks]);
 
   useEffect(() => () => {
     if (loadMoreTimer.current) clearTimeout(loadMoreTimer.current);
@@ -135,44 +138,21 @@ export function MeScreen({
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Text style={styles.title}>{dog.name}</Text>
         <Pressable style={styles.editButton} onPress={onEditDog} hitSlop={8} accessibilityRole="button" accessibilityLabel="Edit profile">
           <Pencil size={22} strokeWidth={2} color="#78845C" />
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} onScroll={loadMore} scrollEventThrottle={160}>
-        <View style={styles.profile}>
-          {dog.avatar_url
-            ? <Image source={{ uri: dog.avatar_url }} style={styles.avatarImage} />
-            : <View style={styles.avatarFallback}><DogIcon size={42} strokeWidth={2} color="#665D54" /></View>}
-          <Text style={styles.profileLine}>{dog.profile_line || "Very good dog"}</Text>
-          <Text style={styles.summary}>{walks.length} waltzes · {totalDistance.toFixed(1)} km · {streak} day streak</Text>
-        </View>
+        <DogProfileHero dog={dog} totalWaltzes={walks.length} totalDistance={totalDistance} totalBoops={totalBoops} />
 
-        <Text style={styles.sectionTitle}>{monthTitle} Badges</Text>
-        <Text style={styles.sectionCopy}>
-          {monthlyBadges.length ? `${monthlyBadges.length} collected this month` : "A fresh sticker book for a new month."}
-        </Text>
-        {monthlyBadges.length ? <BadgeRow badges={monthlyBadges} /> : null}
-
-        {mileageBadges.length ? (
-          <>
-            <Text style={styles.sectionTitle}>{monthTitle} Mileage Clubs</Text>
-            <Text style={styles.sectionCopy}>Monthly distance milestones. A fresh start next month.</Text>
-            <BadgeRow badges={mileageBadges} />
-          </>
-        ) : null}
-
-        {limitedBadges.length ? (
-          <>
-            <Text style={styles.sectionTitle}>Limited Keepsakes</Text>
-            <Text style={styles.sectionCopy}>Little pieces of Waltz history.</Text>
-            <BadgeRow badges={limitedBadges} />
-          </>
+        {badges.length ? (
+          <View>
+            <Text style={styles.sectionTitle}>Stamps</Text>
+            <View style={styles.badges}>{badges.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
+          </View>
         ) : null}
 
         <Text style={styles.sectionTitle}>Recent activity</Text>
-        <Text style={styles.sectionCopy}>Waltzes and tiny victories from {dog.name}, newest first.</Text>
         {visibleActivity.length ? visibleActivity.map((item) => (
           item.kind === "walk"
             ? <MeWalkActivityCard key={`walk-${item.walk.id}`} walk={item.walk} onPress={() => onOpenWalk(item.walk.id)} onMenu={() => openWalkMenu(item.walk)} wobbly />
@@ -180,7 +160,7 @@ export function MeScreen({
               ? <MeBadgeActivityCard
                   key={`event-${item.event.id}`}
                   dogName={dog.name}
-                  badge={{ id: item.event.id, dog_id: dog.id, badge_id: item.event.badge_id, badge_type: item.event.badge_id.startsWith("mileage-") ? "mileage" : "monthly", period_key: activePeriod, earned_at: item.event.created_at }}
+                  badge={{ id: item.event.id, dog_id: dog.id, badge_id: item.event.badge_id, badge_type: item.event.badge_id.startsWith("mileage-") ? "mileage" : "monthly", period_key: monthKey(item.event.created_at), earned_at: item.event.created_at }}
                   wobbly
                   onMenu={() => openEventMenu(item.event)}
                 />
@@ -195,28 +175,13 @@ export function MeScreen({
   );
 }
 
-function BadgeRow({ badges }: { badges: DogBadge[] }) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgeRow}>
-      {badges.map((badge) => <BadgeIcon key={badge.id} badgeId={badge.badge_id} />)}
-    </ScrollView>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 42, marginBottom: 14 },
-  title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  content: { paddingBottom: 24, gap: 14 },
-  profile: { alignItems: "center", paddingVertical: 10 },
-  avatarImage: { width: 92, height: 92, borderRadius: 46 },
-  avatarFallback: { width: 92, height: 92, borderRadius: 46, backgroundColor: "#F1E7D7", alignItems: "center", justifyContent: "center" },
-  profileLine: { fontSize: 14, color: "#655D54", marginTop: 10 },
-  summary: { fontSize: 12, fontWeight: "700", color: "#78845C", marginTop: 9 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", minHeight: 42, marginBottom: 14 },
+  content: { paddingBottom: 24, gap: 22 },
   editButton: { paddingVertical: 8 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
-  sectionCopy: { fontSize: 11, color: "#756B60", marginTop: -8, lineHeight: 16 },
-  badgeRow: { gap: 10, paddingVertical: 3, paddingRight: 10 },
+  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12, marginTop: 12 },
   empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
   emptyText: { color: "#655D54", lineHeight: 19 },
   loadingMore: { paddingVertical: 12 },
