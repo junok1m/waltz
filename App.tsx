@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { Schoolbell_400Regular, useFonts } from "@expo-google-fonts/schoolbell";
@@ -101,6 +101,20 @@ export default function App() {
     await setWalkHiddenFromProfile(walkId, true);
     hideWalkLocally(walkId);
     void refreshWalks();
+    Alert.alert("Hidden from profile", "This waltz still counts toward your stats.", [
+      {
+        text: "Undo",
+        onPress: () => {
+          void setWalkHiddenFromProfile(walkId, false)
+            .then(() => {
+              hideWalkLocally(walkId, false);
+              void refreshWalks();
+            })
+            .catch((error) => Alert.alert("Couldn't restore waltz", error instanceof Error ? error.message : "Unknown error"));
+        },
+      },
+      { text: "OK" },
+    ]);
   }
   async function removeWalk(walkId: number) {
     await deleteWalk(walkId);
