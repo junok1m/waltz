@@ -5,7 +5,7 @@ type BadgeMeta={title:string;color:string;icon:(size:number)=>React.ReactNode};
 
 export const BADGE_META:Record<string,BadgeMeta>={
   "keep-flame":{title:"Keep the flame",color:"#F7DDD4",icon:size=><Flame size={size} strokeWidth={2} color="#E87859"/>},
-  "tiny-adventures":{title:"Tiny adventures",color:"#E5EBDD",icon:size=><Balloon size={size} strokeWidth={2} color="#6F7D54"/>},
+  "limited-welcome-to-waltz":{title:"Welcome to Waltz",color:"#E5EBDD",icon:size=><Balloon size={size} strokeWidth={2} color="#6F7D54"/>},
   trail:{title:"Trail",color:"#EEE0C8",icon:size=><Mountain size={size} strokeWidth={2} color="#796B54"/>},
   "gone-fishing":{title:"Gone fishing",color:"#DDEAF0",icon:size=><Fish size={size} strokeWidth={2} color="#557784"/>},
   "coffee-stop":{title:"Coffee stop",color:"#EADDD2",icon:size=><Coffee size={size} strokeWidth={2} color="#806451"/>},
@@ -24,7 +24,9 @@ export function BadgeIcon({badgeId,size=56,showLabel=true,labelLines=1}:{badgeId
   const meta=BADGE_META[badgeId];
   if(!meta)return null;
   const iconSize=Math.round(size*.45);
-  return <View style={[s.item,{width:showLabel?Math.max(size+18,74):size}]}><View style={[s.circle,{width:size,height:size,borderRadius:size/2,backgroundColor:meta.color}]}>{meta.icon(iconSize)}</View>{showLabel?<Text numberOfLines={labelLines} style={[s.label,labelLines > 1 && s.labelTwoLines,{width:Math.max(size+18,74)}]}>{meta.title}</Text>:null}</View>;
+  const compact=size<=32;
+  const itemWidth=showLabel?(compact?42:Math.max(size+18,74)):size;
+  return <View style={[s.item,compact&&s.compactItem,{width:itemWidth}]}><View style={[s.circle,{width:size,height:size,borderRadius:size/2,backgroundColor:meta.color}]}>{meta.icon(iconSize)}</View>{showLabel?<Text numberOfLines={labelLines} style={[s.label,compact&&s.compactLabel,labelLines > 1 && (compact?s.compactLabelTwoLines:s.labelTwoLines),{width:itemWidth}]}>{meta.title}</Text>:null}</View>;
 }
 
-const s=StyleSheet.create({item:{alignItems:"center",gap:5},circle:{alignItems:"center",justifyContent:"center"},label:{fontSize:9,lineHeight:11,fontWeight:"700",color:"#655D54",textAlign:"center"},labelTwoLines:{minHeight:22}});
+const s=StyleSheet.create({item:{alignItems:"center",gap:5},compactItem:{gap:3},circle:{alignItems:"center",justifyContent:"center"},label:{fontSize:9,lineHeight:11,fontWeight:"700",color:"#655D54",textAlign:"center"},compactLabel:{fontSize:7,lineHeight:8},labelTwoLines:{minHeight:22},compactLabelTwoLines:{minHeight:16}});
