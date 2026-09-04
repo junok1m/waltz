@@ -76,5 +76,7 @@ test("profile stamps show each lifetime design only once", () => {
     { id: 3, badge_id: "early-bird", earned_at: "2026-08-02T00:00:00Z" },
     { id: 4, badge_id: "tiny-adventures", earned_at: "2026-08-01T00:00:00Z" },
   ];
-  assert.deepEqual(profileStamps(badges).map((badge) => badge.id), [2, 3]);
+  const stamps = profileStamps(badges);
+  assert.deepEqual(stamps.map((badge) => badge.id), [2, 3]);
+  assert.deepEqual(stamps.map((badge) => badge.count), [2, 1]);
 });
