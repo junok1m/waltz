@@ -90,6 +90,12 @@ function shortDate(value: string) {
   return new Date(value).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "Australia/Sydney" });
 }
 
+function visitHistory(place: PlaceSummary) {
+  const first = shortDate(place.firstVisited);
+  const last = shortDate(place.lastVisited);
+  return first === last ? `Discovered ${first}` : `First ${first} · Last ${last}`;
+}
+
 export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
   const places = placeSummaries(walks);
   const mapPlaces = places
@@ -116,21 +122,21 @@ export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
           {places.length ? (
             <>
               <PlacesMap places={mapPlaces} />
-              <Text style={styles.summary}>{places.length} place{places.length === 1 ? "" : "s"} discovered</Text>
-              {places.map((place) => (
-                <View key={place.key} style={styles.placeCard}>
-                  <View style={styles.icon}>
-                    <MapPinned size={24} strokeWidth={2} color="#78845C" />
-                  </View>
+              <View style={styles.journalHeader}>
+                <Text style={styles.journalTitle}>{places.length} place{places.length === 1 ? "" : "s"} found</Text>
+                <Text style={styles.journalCopy}>Every dot is somewhere you wandered together.</Text>
+              </View>
+              <View style={styles.placeList}>{places.map((place) => (
+                <View key={place.key} style={styles.placeRow}>
                   <View style={styles.placeCopy}>
-                    <Text style={styles.placeName}>{place.name}</Text>
-                    <Text style={styles.placeMeta}>{[place.region, place.postcode].filter(Boolean).join(" · ")}</Text>
-                    <Text style={styles.placeHistory}>
-                      {place.walkCount} walk{place.walkCount === 1 ? "" : "s"} · First {shortDate(place.firstVisited)} · Last {shortDate(place.lastVisited)}
-                    </Text>
+                    <View style={styles.placeTitleRow}>
+                      <Text style={styles.placeName}>{place.name}</Text>
+                      <Text style={styles.walkCount}>{place.walkCount} waltz{place.walkCount === 1 ? "" : "es"}</Text>
+                    </View>
+                    <Text style={styles.placeMeta}>{[place.region, place.postcode, visitHistory(place)].filter(Boolean).join(" · ")}</Text>
                   </View>
                 </View>
-              ))}
+              ))}</View>
             </>
           ) : (
             <View style={styles.emptyCard}>
@@ -156,14 +162,17 @@ const styles = StyleSheet.create({
   headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
   backButton: { paddingVertical: 6 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  content: { paddingBottom: 24, gap: 12 },
-  summary: { fontSize: 11, fontWeight: "800", color: "#78845C", marginHorizontal: 4, marginTop: 2 },
-  placeCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFDF8", borderRadius: 20, padding: 16 },
-  icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: "#F2EEE4", alignItems: "center", justifyContent: "center", marginRight: 13 },
+  content: { paddingBottom: 24, gap: 14 },
+  journalHeader: { paddingHorizontal: 4, marginTop: 2 },
+  journalTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 28, color: "#332E29" },
+  journalCopy: { fontSize: 10, color: "#8A8176", marginTop: 1 },
+  placeList: { paddingHorizontal: 4 },
+  placeRow: { paddingVertical: 15, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#CEC6B9" },
   placeCopy: { flex: 1 },
-  placeName: { fontFamily: "Schoolbell_400Regular", fontSize: 25, color: "#332E29" },
-  placeMeta: { fontSize: 10, fontWeight: "800", color: "#78845C", marginTop: 1 },
-  placeHistory: { fontSize: 10, lineHeight: 15, color: "#82786E", marginTop: 5 },
+  placeTitleRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 14 },
+  placeName: { flex: 1, fontFamily: "Schoolbell_400Regular", fontSize: 25, color: "#332E29" },
+  walkCount: { fontSize: 11, fontWeight: "800", color: "#78845C" },
+  placeMeta: { fontSize: 9, lineHeight: 14, color: "#8A8176", marginTop: 2 },
   emptyCard: { backgroundColor: "#FFFDF8", borderRadius: 24, paddingHorizontal: 24, paddingVertical: 34, alignItems: "center" },
   emptyIcon: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F2EEE4", alignItems: "center", justifyContent: "center", marginBottom: 14 },
   emptyTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 25, color: "#332E29", textAlign: "center" },
