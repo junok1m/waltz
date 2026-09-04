@@ -127,7 +127,7 @@ export function AppRouter(props: Props) {
   } else if (tab === "community") {
     content = <FeedScreen dog={activeDog} viewerWalks={walks} onNavigate={onNavigate} onStartWalk={onStartWalk} onOpenDogProfile={setPublicDogId} />;
   } else if (tab !== "home") {
-    content = <HubScreen tab={tab} walks={walks} dog={activeDog} onNavigate={onNavigate} onStartWalk={onStartWalk} />;
+    content = <HubScreen tab={tab} walks={walks} dog={activeDog} onNavigate={onNavigate} onStartWalk={onStartWalk} onOpenDogProfile={setPublicDogId} />;
   } else {
     content = <HomeScreen walks={walks} dog={activeDog} onStartWalk={onStartWalk} onNavigate={onNavigate} onOpenDogs={() => props.onOpenDogs(null)} />;
   }
