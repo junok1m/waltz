@@ -122,10 +122,6 @@ export function PlacesScreen({ walks, onNavigate, onStartWalk }: Props) {
           {places.length ? (
             <>
               <PlacesMap places={mapPlaces} />
-              <View style={styles.journalHeader}>
-                <Text style={styles.journalTitle}>{places.length} place{places.length === 1 ? "" : "s"} found</Text>
-                <Text style={styles.journalCopy}>Every dot is somewhere you wandered together.</Text>
-              </View>
               <View style={styles.placeList}>{places.map((place) => (
                 <View key={place.key} style={styles.placeRow}>
                   <View style={styles.placeCopy}>
@@ -162,15 +158,12 @@ const styles = StyleSheet.create({
   headerTitleRow: { flexDirection: "row", alignItems: "center", gap: 9 },
   backButton: { paddingVertical: 6 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  content: { paddingBottom: 24, gap: 14 },
-  journalHeader: { paddingHorizontal: 4, marginTop: 2 },
-  journalTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 28, color: "#332E29" },
-  journalCopy: { fontSize: 10, color: "#8A8176", marginTop: 1 },
+  content: { paddingBottom: 24, gap: 8 },
   placeList: { paddingHorizontal: 4 },
-  placeRow: { paddingVertical: 15, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#CEC6B9" },
+  placeRow: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#CEC6B9" },
   placeCopy: { flex: 1 },
   placeTitleRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: 14 },
-  placeName: { flex: 1, fontFamily: "Schoolbell_400Regular", fontSize: 25, color: "#332E29" },
+  placeName: { flex: 1, fontSize: 16, fontWeight: "700", color: "#332E29" },
   walkCount: { fontSize: 11, fontWeight: "800", color: "#78845C" },
   placeMeta: { fontSize: 9, lineHeight: 14, color: "#8A8176", marginTop: 2 },
   emptyCard: { backgroundColor: "#FFFDF8", borderRadius: 24, paddingHorizontal: 24, paddingVertical: 34, alignItems: "center" },
