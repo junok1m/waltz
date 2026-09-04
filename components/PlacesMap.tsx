@@ -88,7 +88,7 @@ export function PlacesMap({ places }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { height: 235, borderRadius: 24, overflow: "hidden", backgroundColor: "#EFE8DC" },
+  wrap: { height: 285, borderRadius: 24, overflow: "hidden", backgroundColor: "#EFE8DC" },
   dotOuter: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#FFFDF8", alignItems: "center", justifyContent: "center" },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#78845C" },
 });
