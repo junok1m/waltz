@@ -2,7 +2,7 @@ import type { BadgeType } from "../types/badge";
 import type { Walk, WalkTag } from "../types/walk";
 import { calculateWalkStreak } from "./streak";
 
-export const BADGE_IDS = ["keep-flame","tiny-adventures","trail","gone-fishing","coffee-stop","early-bird","night-shift","mileage-1","mileage-10","mileage-30","mileage-50"] as const;
+export const BADGE_IDS = ["limited-welcome-to-waltz","keep-flame","trail","gone-fishing","coffee-stop","early-bird","night-shift","mileage-1","mileage-10","mileage-30","mileage-50"] as const;
 
 export function monthKey(date: Date | string = new Date()) {
   const value = typeof date === "string" ? new Date(date) : date;
@@ -33,13 +33,13 @@ export function earnedBadgeIds(walks: Walk[], now = new Date()) {
   const night = monthlyWalks.filter((walk) => new Date(walk.ended_at).getHours() >= 20).length;
   const ids: string[] = [];
 
-  if (streak >= 7) ids.push("keep-flame");
-  if (monthlyWalks.length >= 10) ids.push("tiny-adventures");
+  if (walks.length >= 1) ids.push("limited-welcome-to-waltz");
+  if (streak >= 28) ids.push("keep-flame");
   if (countTag("trail") >= 5) ids.push("trail");
   if (countTag("swim") >= 5) ids.push("gone-fishing");
-  if (countTag("coffee") >= 10) ids.push("coffee-stop");
-  if (early >= 3) ids.push("early-bird");
-  if (night >= 3) ids.push("night-shift");
+  if (countTag("coffee") >= 7) ids.push("coffee-stop");
+  if (early >= 7) ids.push("early-bird");
+  if (night >= 7) ids.push("night-shift");
 
   for (const km of [1, 10, 30, 50]) {
     if (distance >= km) ids.push(`mileage-${km}`);
