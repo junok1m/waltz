@@ -56,7 +56,15 @@ export function MeScreen({
     ...profileEvents.map((event) => ({ kind: "event" as const, date: event.created_at, event })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const visibleActivity = timeline.slice(0, visibleCount);
-  const stamps = profileStamps(badges);
+  const welcomeBadge: DogBadge | null = walks.length > 0 && !badges.some((badge) => badge.badge_id === "limited-welcome-to-waltz") ? {
+    id: -1,
+    dog_id: dog.id,
+    badge_id: "limited-welcome-to-waltz",
+    badge_type: "limited",
+    period_key: "permanent",
+    earned_at: walks.reduce((first, walk) => walk.ended_at < first ? walk.ended_at : first, walks[0].ended_at),
+  } : null;
+  const stamps = profileStamps(welcomeBadge ? [welcomeBadge, ...badges] : badges);
 
   useEffect(() => {
     let active = true;
@@ -162,7 +170,7 @@ export function MeScreen({
         {stamps.length ? (
           <View>
             <Text style={styles.sectionTitle}>Stamps</Text>
-            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={24} labelLines={2} />)}</View>
+            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={24} showLabel={false} count={badge.badge_type === "monthly" ? badge.count : 1} />)}</View>
           </View>
         ) : null}
 
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   headerButton: { paddingVertical: 8 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
-  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 2, rowGap: 8, marginTop: 10 },
+  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 12, rowGap: 12, marginTop: 10 },
   empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
   emptyText: { color: "#655D54", lineHeight: 19 },
   loadingMore: { paddingVertical: 12 },
