@@ -18,6 +18,7 @@ test("badge types and period keys stay separated", () => {
   assert.equal(badgeType("trail"), "monthly");
   assert.equal(badgeType("mileage-100"), "mileage");
   assert.equal(badgeType("limited-summer"), "limited");
+  assert.equal(badgeType("limited-welcome-to-waltz"), "limited");
   assert.equal(badgePeriodKey("mileage-10", new Date("2026-08-15T12:00:00")), "2026-08");
   assert.equal(badgePeriodKey("limited-summer", new Date("2026-08-15T12:00:00")), "permanent");
 });
@@ -31,12 +32,26 @@ test("badge calculation awards monthly and mileage milestones", () => {
   }));
 
   const ids = earnedBadgeIds(walks, now);
-  assert.ok(ids.includes("keep-flame"));
-  assert.ok(ids.includes("tiny-adventures"));
+  assert.equal(ids.includes("keep-flame"), false);
+  assert.ok(ids.includes("limited-welcome-to-waltz"));
   assert.ok(ids.includes("trail"));
   assert.ok(ids.includes("early-bird"));
   assert.ok(ids.includes("mileage-10"));
   assert.equal(ids.includes("mileage-30"), false);
+});
+
+test("achievement thresholds use 28 streak days and seven special walks", () => {
+  const now = new Date("2026-08-28T12:00:00+10:00");
+  const walks = Array.from({ length: 28 }, (_, i) => walk({
+    endedAt: `2026-08-${String(28 - i).padStart(2, "0")}T06:30:00+10:00`,
+    tags: i < 7 ? ["coffee"] : [],
+  }));
+
+  const ids = earnedBadgeIds(walks, now);
+  assert.ok(ids.includes("keep-flame"));
+  assert.ok(ids.includes("coffee-stop"));
+  assert.ok(ids.includes("early-bird"));
+  assert.equal(ids.includes("night-shift"), false);
 });
 
 test("previous-month walks do not count toward monthly badges or mileage", () => {
@@ -51,7 +66,7 @@ test("previous-month walks do not count toward monthly badges or mileage", () =>
   ];
 
   const ids = earnedBadgeIds(walks, now);
-  assert.deepEqual(ids, []);
+  assert.deepEqual(ids, ["limited-welcome-to-waltz"]);
 });
 
 test("profile stamps show each lifetime design only once", () => {
@@ -59,6 +74,7 @@ test("profile stamps show each lifetime design only once", () => {
     { id: 2, badge_id: "night-shift", earned_at: "2026-09-03T00:00:00Z" },
     { id: 1, badge_id: "night-shift", earned_at: "2026-08-03T00:00:00Z" },
     { id: 3, badge_id: "early-bird", earned_at: "2026-08-02T00:00:00Z" },
+    { id: 4, badge_id: "tiny-adventures", earned_at: "2026-08-01T00:00:00Z" },
   ];
   assert.deepEqual(profileStamps(badges).map((badge) => badge.id), [2, 3]);
 });
