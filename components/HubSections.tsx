@@ -38,7 +38,7 @@ export function HubStats({ walks }: { walks: Walk[] }) {
   );
 }
 
-export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
+export function HubLeaderboard({ dog, onOpenDogProfile }: { walks: Walk[]; dog: Dog; onOpenDogProfile: (dogId: string) => void }) {
   const [ranking, setRanking] = useState<MonthlyDogRank[]>([]);
   const [category, setCategory] = useState<RankingCategory>("distance");
   const [loading, setLoading] = useState(true);
@@ -123,7 +123,13 @@ export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
           const rank = rankFor(entry);
           const rankLabel = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
           return (
-            <View key={entry.dog_id} style={[styles.rankingRow, isCurrentDog && styles.currentDogRow]}>
+            <Pressable
+              key={entry.dog_id}
+              style={[styles.rankingRow, isCurrentDog && styles.currentDogRow]}
+              onPress={() => onOpenDogProfile(entry.dog_id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${entry.dog_name}'s profile`}
+            >
               <Text style={styles.rank}>{rankLabel}</Text>
               <View style={styles.rankingAvatar}>
                 {avatarSource
@@ -135,7 +141,7 @@ export function HubLeaderboard({ dog }: { walks: Walk[]; dog: Dog }) {
                 <Text style={styles.rankingWalks}>{detailFor(entry)}</Text>
               </View>
               <Text style={styles.rankingDistance}>{metricFor(entry)}</Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
