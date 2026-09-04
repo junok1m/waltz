@@ -152,13 +152,13 @@ export function HubChallenges({ walks, dog, onSelect }: { walks: Walk[]; dog: Do
   const nightShiftWalks = monthlyWalks.filter((walk) => new Date(walk.ended_at).getHours() >= 20).length;
   const taggedWalks = (tag: WalkTag) => monthlyWalks.filter((walk) => walk.tags?.includes(tag)).length;
   const badges: ChallengeInfo[] = [
-    { id: "keep-flame", title: "Keep the flame", progress: `${Math.min(streak, 7)}/7`, description: "Complete a walk on 7 consecutive days.", done: streak >= 7, icon: <Flame size={31} strokeWidth={2} color="#E87859" />, color: "#F7DDD4" },
-    { id: "tiny-adventures", title: "Tiny adventures", progress: `${Math.min(monthlyWalks.length, 10)}/10`, description: "Complete 10 walks this month.", done: monthlyWalks.length >= 10, icon: <Balloon size={31} strokeWidth={2} color="#6F7D54" />, color: "#E5EBDD" },
+    { id: "keep-flame", title: "Keep the flame", progress: `${Math.min(streak, 28)}/28`, description: "Complete a walk on 28 consecutive days.", done: streak >= 28, icon: <Flame size={31} strokeWidth={2} color="#E87859" />, color: "#F7DDD4" },
+    { id: "limited-welcome-to-waltz", title: "Welcome to Waltz", progress: `${Math.min(walks.length, 1)}/1`, description: "Complete your first waltz.", done: walks.length >= 1, icon: <Balloon size={31} strokeWidth={2} color="#6F7D54" />, color: "#E5EBDD" },
     { id: "trail", title: "Trail", progress: `${Math.min(taggedWalks("trail"), 5)}/5`, description: "Complete 5 walks tagged as Trail.", done: taggedWalks("trail") >= 5, icon: <Mountain size={31} strokeWidth={2} color="#796B54" />, color: "#EEE0C8" },
     { id: "gone-fishing", title: "Gone fishing", progress: `${Math.min(taggedWalks("swim"), 5)}/5`, description: "Have a swim or splash on 5 walks and tag them Gone fishing.", done: taggedWalks("swim") >= 5, icon: <Fish size={31} strokeWidth={2} color="#557784" />, color: "#DDEAF0" },
-    { id: "coffee-stop", title: "Coffee stop", progress: `${Math.min(taggedWalks("coffee"), 10)}/10`, description: "Make a coffee stop on 10 walks.", done: taggedWalks("coffee") >= 10, icon: <Coffee size={31} strokeWidth={2} color="#806451" />, color: "#EADDD2" },
-    { id: "early-bird", title: "Early bird", progress: `${Math.min(earlyBirdWalks, 3)}/3`, description: "Complete 3 walks before 8am.", done: earlyBirdWalks >= 3, icon: <Bird size={31} strokeWidth={2} color="#7A6F51" />, color: "#F6EBC4" },
-    { id: "night-shift", title: "Night shift", progress: `${Math.min(nightShiftWalks, 3)}/3`, description: "Complete 3 walks after 8pm.", done: nightShiftWalks >= 3, icon: <MoonStar size={31} strokeWidth={2} color="#666584" />, color: "#E3E0F1" },
+    { id: "coffee-stop", title: "Coffee stop", progress: `${Math.min(taggedWalks("coffee"), 7)}/7`, description: "Make a coffee stop on 7 walks.", done: taggedWalks("coffee") >= 7, icon: <Coffee size={31} strokeWidth={2} color="#806451" />, color: "#EADDD2" },
+    { id: "early-bird", title: "Early bird", progress: `${Math.min(earlyBirdWalks, 7)}/7`, description: "Complete 7 walks before 8am.", done: earlyBirdWalks >= 7, icon: <Bird size={31} strokeWidth={2} color="#7A6F51" />, color: "#F6EBC4" },
+    { id: "night-shift", title: "Night shift", progress: `${Math.min(nightShiftWalks, 7)}/7`, description: "Complete 7 walks after 8pm.", done: nightShiftWalks >= 7, icon: <MoonStar size={31} strokeWidth={2} color="#666584" />, color: "#E3E0F1" },
     { id: "rainy-day", title: "Rainy day", progress: "0/1", description: "Complete a walk while it is raining. Automatic weather detection is coming soon.", done: false, icon: <Umbrella size={31} strokeWidth={2} color="#5D7680" />, color: "#DDE8EA" },
   ];
   const mileage: ChallengeInfo[] = [1, 10, 30, 50].map((km, index) => ({
