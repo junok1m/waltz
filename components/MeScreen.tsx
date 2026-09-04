@@ -170,7 +170,7 @@ export function MeScreen({
         {stamps.length ? (
           <View>
             <Text style={styles.sectionTitle}>Stamps</Text>
-            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={24} showLabel={false} count={badge.badge_type === "monthly" ? badge.count : 1} />)}</View>
+            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={48} showLabel={false} count={badge.badge_type === "monthly" ? badge.count : 1} />)}</View>
           </View>
         ) : null}
 
