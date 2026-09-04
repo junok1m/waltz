@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Coffee, Fish, Mountain, PartyPopper } from "@sketchyicons/react-native";
 import { Point, RoutePrivacy, WalkTag } from "../types/walk";
@@ -19,13 +18,12 @@ export function defaultWalkTitle(date: Date) {
 type Props = { seconds:number; distance:number; points:Point[]; dogName:string; title:string; routePrivacy:RoutePrivacy; tags:WalkTag[]; isSaving:boolean; saveFailed:boolean; onTitleChange:(title:string)=>void; onTagsChange:(tags:WalkTag[])=>void; onRoutePrivacyChange:(privacy:RoutePrivacy)=>void; onSave:()=>void; onDiscard:()=>void };
 
 export function WalkCompleteScreen({ seconds,distance,points,dogName,title,routePrivacy,tags,isSaving,saveFailed,onTitleChange,onTagsChange,onRoutePrivacyChange,onSave,onDiscard }: Props) {
-  useEffect(()=>{if(!title)onTitleChange(defaultWalkTitle(new Date()));},[title,onTitleChange]);
   const toggleTag=(tag:WalkTag)=>onTagsChange(tags.includes(tag)?tags.filter((x)=>x!==tag):[...tags,tag]);
 
   return <View style={styles.screen}><ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
     <View style={styles.titleRow}><Text style={styles.complete}>Walk complete!</Text><PartyPopper size={28} strokeWidth={2} color="#E87859" /></View>
     <View style={styles.metricsRow}><View><Text style={styles.metricLabel}>DISTANCE</Text><Text style={styles.resultDistance}>{distance.toFixed(2)} km</Text></View><View><Text style={styles.metricLabel}>TIME</Text><Text style={styles.resultTime}>{formatTime(seconds)}</Text></View></View>
-    <View><Text style={styles.fieldLabel}>Activity title</Text><TextInput value={title} onChangeText={onTitleChange} maxLength={60} editable={!isSaving} placeholder={defaultWalkTitle(new Date())} style={styles.titleInput}/></View>
+    <View><Text style={styles.fieldLabel}>Activity title</Text><TextInput value={title} onChangeText={onTitleChange} maxLength={60} editable={!isSaving} placeholder={defaultWalkTitle(new Date())} selectTextOnFocus style={styles.titleInput}/></View>
     <View style={styles.mapWrap}>{points.length?<WaltzMap points={points} dogName={dogName} interactive/>:<View style={styles.noRoute}><Text style={styles.noRouteText}>No route points recorded for this walk.</Text></View>}</View>
     <View style={styles.tagsCard}><Text style={styles.shareTitle}>Add some tags</Text><Text style={styles.tagHint}>Optional. Pick anything that happened on this waltz.</Text><View style={styles.tagsRow}><Tag selected={tags.includes("trail")} disabled={isSaving} onPress={()=>toggleTag("trail")} icon={<Mountain size={20} strokeWidth={2}/>} label="Trail"/><Tag selected={tags.includes("swim")} disabled={isSaving} onPress={()=>toggleTag("swim")} icon={<Fish size={20} strokeWidth={2}/>} label="Gone fishing"/><Tag selected={tags.includes("coffee")} disabled={isSaving} onPress={()=>toggleTag("coffee")} icon={<Coffee size={20} strokeWidth={2}/>} label="Coffee stop"/></View></View>
     <View style={styles.shareCard}><View style={styles.shareCopyWrap}><Text style={styles.shareTitle}>Who can see this?</Text><Text style={styles.shareCopy}>Review your choice before saving. Stats only does not keep a map.</Text></View>
