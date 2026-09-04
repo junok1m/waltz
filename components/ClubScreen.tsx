@@ -14,32 +14,35 @@ export function ClubScreen({ onNavigate, onStartWalk }: Props) {
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>Club</Text>
-        <Text style={styles.subtitle}>Play now. Keep the memories.</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ClubRow
-          icon={<CalendarDays size={24} strokeWidth={2} color="#78845C" />}
+          number="01"
+          icon={<CalendarDays size={37} strokeWidth={1.8} color="#78845C" />}
           title="Report"
-          copy="Your walks, distance, time and little stories."
+          copy="Walks, distance and time"
           onPress={() => onNavigate("report")}
         />
         <ClubRow
-          icon={<Trophy size={24} strokeWidth={2} color="#78845C" />}
+          number="02"
+          icon={<Trophy size={37} strokeWidth={1.8} color="#78845C" />}
           title="Ranking"
-          copy="See where your dog sits in this month's pack."
+          copy="This month’s pack"
           onPress={() => onNavigate("leaderboard")}
         />
         <ClubRow
-          icon={<Medal size={24} strokeWidth={2} color="#78845C" />}
+          number="03"
+          icon={<Medal size={37} strokeWidth={1.8} color="#78845C" />}
           title="Achievements"
-          copy="Goals, milestones and things worth bragging about."
+          copy="Goals and milestones"
           onPress={() => onNavigate("achievements")}
         />
         <ClubRow
-          icon={<MapPinned size={24} strokeWidth={2} color="#78845C" />}
+          number="04"
+          icon={<MapPinned size={37} strokeWidth={1.8} color="#78845C" />}
           title="Places"
-          copy="Everywhere you've wandered together, kept for good."
+          copy="Everywhere you wandered"
           onPress={() => onNavigate("places")}
         />
       </ScrollView>
@@ -50,54 +53,53 @@ export function ClubScreen({ onNavigate, onStartWalk }: Props) {
 }
 
 function ClubRow({
+  number,
   icon,
   title,
   copy,
   onPress,
 }: {
+  number: string;
   icon: React.ReactNode;
   title: string;
   copy: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
-      <View style={styles.icon}>{icon}</View>
+    <Pressable style={({ pressed }) => [styles.row, pressed && styles.rowPressed]} onPress={onPress} accessibilityRole="button" accessibilityLabel={`Open ${title}`}>
+      <Text style={styles.number}>{number}</Text>
       <View style={styles.rowCopy}>
         <Text style={styles.rowTitle}>{title}</Text>
         <Text style={styles.copy}>{copy}</Text>
       </View>
-      <Text style={styles.chevron}>›</Text>
+      <View style={styles.icon}>{icon}</View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, justifyContent: "space-between" },
-  header: { marginBottom: 14 },
+  header: { marginBottom: 10 },
   title: { fontFamily: "Schoolbell_400Regular", fontSize: 34, color: "#1D1A17" },
-  subtitle: { fontSize: 11, color: "#8B8278", marginTop: -2 },
-  content: { paddingBottom: 20, gap: 10 },
+  content: { paddingBottom: 20, paddingHorizontal: 4 },
   row: {
-    minHeight: 104,
-    borderRadius: 22,
-    backgroundColor: "#FFFDF8",
-    paddingHorizontal: 16,
-    paddingVertical: 15,
+    minHeight: 94,
+    paddingVertical: 17,
     flexDirection: "row",
     alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#CEC6B9",
   },
+  rowPressed: { opacity: 0.55 },
+  number: { width: 34, alignSelf: "flex-start", paddingTop: 5, fontSize: 9, fontWeight: "800", letterSpacing: 1, color: "#9B9288" },
   icon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: "#F2EEE4",
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 13,
+    marginLeft: 14,
   },
   rowCopy: { flex: 1 },
-  rowTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 24, lineHeight: 27, color: "#332E29" },
-  copy: { fontSize: 10, lineHeight: 14, color: "#82786E", marginTop: 2, maxWidth: 240 },
-  chevron: { fontSize: 28, color: "#AAA196", marginLeft: 8, marginTop: -2 },
+  rowTitle: { fontSize: 18, lineHeight: 23, fontWeight: "700", color: "#332E29" },
+  copy: { fontSize: 10, lineHeight: 14, color: "#82786E", marginTop: 3 },
 });
