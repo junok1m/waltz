@@ -162,7 +162,7 @@ export function MeScreen({
         {stamps.length ? (
           <View>
             <Text style={styles.sectionTitle}>Stamps</Text>
-            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={48} labelLines={2} />)}</View>
+            <View style={styles.badges}>{stamps.map((badge) => <BadgeIcon key={badge.badge_id} badgeId={badge.badge_id} size={24} labelLines={2} />)}</View>
           </View>
         ) : null}
 
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   headerButton: { paddingVertical: 8 },
   sectionTitle: { fontFamily: "Schoolbell_400Regular", fontSize: 27, color: "#1D1A17", marginTop: 8 },
-  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 4, rowGap: 12, marginTop: 12 },
+  badges: { flexDirection: "row", flexWrap: "wrap", columnGap: 2, rowGap: 8, marginTop: 10 },
   empty: { padding: 22, borderRadius: 8, borderWidth: 1, borderColor: "#DDD8CF" },
   emptyText: { color: "#655D54", lineHeight: 19 },
   loadingMore: { paddingVertical: 12 },
