@@ -8,9 +8,9 @@ import { Walk } from "../types/walk";
 
 export type AppTab = "home" | "club" | "community" | "me" | "report" | "leaderboard" | "stats" | "achievements" | "places";
 type HubTab = Extract<AppTab, "leaderboard" | "stats" | "achievements">;
-type Props = { tab: HubTab; walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: () => void };
+type Props = { tab: HubTab; walks: Walk[]; dog: Dog; onNavigate: (tab: AppTab) => void; onStartWalk: () => void; onOpenDogProfile: (dogId: string) => void };
 
-export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
+export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk, onOpenDogProfile }: Props) {
   const [selectedChallenge, setSelectedChallenge] = useState<ChallengeInfo | null>(null);
   const title = { leaderboard: "Ranking", stats: "Stats", achievements: "Achievements" }[tab];
 
@@ -26,7 +26,7 @@ export function HubScreen({ tab, walks, dog, onNavigate, onStartWalk }: Props) {
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {tab === "stats" ? <HubStats walks={walks} /> : null}
-        {tab === "leaderboard" ? <HubLeaderboard walks={walks} dog={dog} /> : null}
+        {tab === "leaderboard" ? <HubLeaderboard walks={walks} dog={dog} onOpenDogProfile={onOpenDogProfile} /> : null}
         {tab === "achievements" ? <HubChallenges walks={walks} dog={dog} onSelect={setSelectedChallenge} /> : null}
       </ScrollView>
       <BottomNav active="club" onNavigate={onNavigate} onStartPress={onStartWalk} />
