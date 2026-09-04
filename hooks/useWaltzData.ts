@@ -58,9 +58,9 @@ export function useWaltzData(userId: string | null) {
     }
   }, []);
 
-  const hideWalkLocally = useCallback((walkId: number) => {
+  const hideWalkLocally = useCallback((walkId: number, hidden = true) => {
     setAllWalks((current) => current.map((walk) =>
-      walk.id === walkId ? { ...walk, hidden_from_profile: true } : walk
+      walk.id === walkId ? { ...walk, hidden_from_profile: hidden } : walk
     ));
   }, []);
 
