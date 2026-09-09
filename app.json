@@ -33,50 +33,17 @@
       ],
       "package": "com.junok1m.waltz"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": { "favicon": "./assets/favicon.png" },
     "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#F8F3E9",
-          "image": "./assets/waltz-loading.png",
-          "imageWidth": 220,
-          "resizeMode": "contain"
-        }
-      ],
+      ["expo-splash-screen", { "backgroundColor": "#F8F3E9", "image": "./assets/waltz-loading.png", "imageWidth": 220, "resizeMode": "contain" }],
       "expo-font",
       "expo-web-browser",
       "expo-sqlite",
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Waltz uses your photo library so you can choose a profile picture for your dog.",
-          "microphonePermission": false
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Waltz uses your location to draw your walk and show your current position on the map.",
-          "locationAlwaysAndWhenInUsePermission": "Waltz uses your location during an active walk so your route keeps recording when your screen is locked or you use another app.",
-          "isIosBackgroundLocationEnabled": true,
-          "isAndroidBackgroundLocationEnabled": true,
-          "isAndroidForegroundServiceEnabled": true
-        }
-      ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsVersion": "11.20.1"
-        }
-      ]
+      "expo-notifications",
+      ["expo-image-picker", { "photosPermission": "Waltz uses your photo library so you can choose a profile picture for your dog.", "microphonePermission": false }],
+      ["expo-location", { "locationWhenInUsePermission": "Waltz uses your location to draw your walk and show your current position on the map.", "locationAlwaysAndWhenInUsePermission": "Waltz uses your location during an active walk so your route keeps recording when your screen is locked or you use another app.", "isIosBackgroundLocationEnabled": true, "isAndroidBackgroundLocationEnabled": true, "isAndroidForegroundServiceEnabled": true }],
+      ["@rnmapbox/maps", { "RNMapboxMapsVersion": "11.20.1" }]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "627bb4c4-133d-4c46-9919-7c7ed8acd134"
-      }
-    }
+    "extra": { "eas": { "projectId": "627bb4c4-133d-4c46-9919-7c7ed8acd134" } }
   }
 }
